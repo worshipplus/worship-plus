@@ -42,34 +42,57 @@ Este repositório contém **toda a documentação compartilhada** do projeto:
 ```
 worship-plus/
 ├── README.md                          # Este arquivo
-├── REPOSITORY-STRUCTURE.md            # Estrutura de todos os repos
+├── ONBOARDING.md                      # 🚀 Guia para novos colaboradores (COMECE AQUI!)
 │
-├── 📘 Guias Principais
-├── DDD-GUIDE.md                       # Domain-Driven Design guide
-├── ARCHITECTURE-DECISIONS.md          # Decisões arquiteturais (SOLID, DI, etc.)
-├── MVP-ROADMAP.md                     # Roadmap completo do MVP (US-001 a US-012)
-├── AGENTS-GUIDE.md                    # Guia operacional para agents
+├── docs/
+│   ├── architecture/                  # 🏗️ Arquitetura e Design
+│   │   ├── DDD-GUIDE.md              # Domain-Driven Design completo
+│   │   ├── ARCHITECTURE-DECISIONS.md  # Decisões técnicas (SOLID, DI, Commits)
+│   │   └── rfcs/                     # Requests for Comments
+│   │       ├── RFC-0001-media-storage.md
+│   │       └── RFC-0002-project-overview.md
+│   │
+│   ├── planning/                      # 📋 Planejamento e Roadmap
+│   │   ├── MVP-ROADMAP.md            # User Stories (US-001 a US-012)
+│   │   ├── PROJECT_ANALYSIS.md       # Análise técnica completa
+│   │   ├── TECHNICAL_SPECS.md        # Especificações técnicas
+│   │   ├── brainstorm-insights.md    # Insights de brainstorming
+│   │   ├── project-details.md        # Detalhes do projeto
+│   │   └── tasks.md                  # Tarefas e backlog
+│   │
+│   ├── guides/                        # 📖 Guias e Tutoriais
+│   │   ├── AGENTS-GUIDE.md           # Como usar AI agents
+│   │   └── REPOSITORY-STRUCTURE.md   # Estrutura multi-repo (7 repos)
+│   │
+│   └── templates/                     # 📝 Templates de READMEs
+│       ├── README-worship-plus-frontend.md
+│       ├── README-worship-plus-backend.md
+│       └── README-worship-plus-infra.md
 │
-├── 📄 RFCs (Request for Comments)
-├── RFC-0001-media-storage.md          # Estratégia de armazenamento de mídia
-├── RFC-0002-project-overview.md       # Visão geral do projeto
+├── scripts/                           # 🛠️ Scripts utilitários
+│   ├── palette-extractor.js          # Extrai paletas de cores
+│   ├── image-processor.js            # Processa imagens
+│   └── video-processor.js            # Processa vídeos
 │
-├── 📊 Análises e Especificações
-├── PROJECT_ANALYSIS.md                # Análise técnica completa
-├── TECHNICAL_SPECS.md                 # Especificações técnicas
-├── CONVERSATION_SUMMARY.md            # Histórico de decisões
-│
-└── 📝 Planejamento Inicial
-    ├── project-details.md             # Detalhes e objetivos
-    ├── brainstorm-insights.md         # Insights de brainstorming
-    └── tasks.md                       # Plano de reorganização
+└── setup-repositories.sh              # Script de setup da org
 ```
+
+---
+
+## �️ Roteiro de Leitura
+
+**Novo no projeto?** Comece por aqui:
+
+1. **[ONBOARDING.md](ONBOARDING.md)** 🚀 — Guia completo para novos colaboradores
+2. **[docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md)** — Entender o domínio e bounded contexts
+3. **[docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md)** — Ver User Stories e sprints
+4. **[docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md)** — Padrões e convenções
 
 ---
 
 ## 📚 Documentos Principais
 
-### 1. [DDD-GUIDE.md](DDD-GUIDE.md) — Domain-Driven Design
+### 1. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md) — Domain-Driven Design
 
 **O que contém:**
 - 4 Bounded Contexts: Events, Music, Team, Media
@@ -88,7 +111,7 @@ worship-plus/
 
 ---
 
-### 2. [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md) — Decisões Arquiteturais
+### 2. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md) — Decisões Arquiteturais
 
 **O que contém:**
 - **BFF (Backend For Frontend):** Análise técnica e quando usar
@@ -108,7 +131,7 @@ worship-plus/
 
 ---
 
-### 3. [MVP-ROADMAP.md](MVP-ROADMAP.md) — Roadmap do MVP
+### 3. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) — Roadmap do MVP
 
 **O que contém:**
 - **P0 (Crítico):** 12 User Stories, 62 pontos, 7 semanas
@@ -136,7 +159,7 @@ worship-plus/
 
 ---
 
-### 4. [AGENTS-GUIDE.md](AGENTS-GUIDE.md) — Guia para Agents
+### 4. [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) — Guia para Agents
 
 **O que contém:**
 - Como usar DDD-GUIDE.md
@@ -153,7 +176,7 @@ worship-plus/
 
 ### 5. RFCs (Request for Comments)
 
-#### [RFC-0001-media-storage.md](RFC-0001-media-storage.md)
+#### [docs/architecture/rfcs/RFC-0001-media-storage.md](docs/architecture/rfcs/RFC-0001-media-storage.md)
 **Status:** Aprovado para P1  
 **Conteúdo:**
 - Estratégia S3 + Glacier
@@ -162,7 +185,7 @@ worship-plus/
 - Presigned URLs para upload direto
 - Otimizações mobile-first
 
-#### [RFC-0002-project-overview.md](RFC-0002-project-overview.md)
+#### [docs/architecture/rfcs/RFC-0002-project-overview.md](docs/architecture/rfcs/RFC-0002-project-overview.md)
 **Status:** Aprovado  
 **Conteúdo:**
 - Visão geral do Worship+
@@ -182,13 +205,14 @@ git clone https://github.com/worshipplus/worship-plus.git
 cd worship-plus
 
 # Leia primeiro
-open DDD-GUIDE.md
-open ARCHITECTURE-DECISIONS.md
-open MVP-ROADMAP.md
+open ONBOARDING.md
+open docs/architecture/DDD-GUIDE.md
+open docs/architecture/ARCHITECTURE-DECISIONS.md
+open docs/planning/MVP-ROADMAP.md
 
 # Consulte durante desenvolvimento
-grep -r "Availability" DDD-GUIDE.md  # Buscar termo
-grep "US-005" MVP-ROADMAP.md         # Ver User Story
+grep -r "Availability" docs/architecture/DDD-GUIDE.md  # Buscar termo
+grep "US-005" docs/planning/MVP-ROADMAP.md         # Ver User Story
 ```
 
 ---
