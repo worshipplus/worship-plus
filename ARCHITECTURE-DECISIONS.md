@@ -11,6 +11,7 @@
 1. [BFF (Backend For Frontend)](#1-bff-backend-for-frontend)
 2. [Filosofia de Desenvolvimento](#2-filosofia-de-desenvolvimento)
 3. [Padrões Arquiteturais](#3-padrões-arquiteturais)
+4. [Dependency Injection](#4-dependency-injection)
 
 ---
 
@@ -1226,9 +1227,482 @@ src/
 
 ---
 
-## 4. Checklist de Code Review
+## 4. Dependency Injection
 
-### 4.1 SOLID
+### 4.1 Contexto
+
+**Pergunta:** Usar biblioteca de DI (TSyringe, InversifyJS) ou Composition Root pattern manual?
+
+**Considerações:**
+- TypeScript não tem DI nativo (como Angular ou NestJS)
+- Decorators são experimental (Stage 3 proposal, `experimentalDecorators: true`)
+- MVP em 7 semanas exige foco em features
+- Time pequeno precisa minimizar carga cognitiva
+
+---
+
+### 4.2 Análise Comparativa
+
+#### **Opção 1: DI Libraries**
+
+##### **TSyringe** (Microsoft)
+```typescript
+import "reflect-metadata"
+import { injectable, inject, container } from "tsyringe"
+
+@injectable()
+class EventRepository {
+  constructor(@inject("SupabaseClient") private supabase: SupabaseClient) {}
+  
+  async findById(id: string): Promise<Event | null> {
+    const { data } = await this.supabase.from('events').select('*').eq('id', id).single()
+    return data
+  }
+}
+
+@injectable()
+class EventService {
+  constructor(private eventRepo: EventRepository) {}
+  
+  async getEvent(id: string) {
+    return this.eventRepo.findById(id)
+  }
+}
+
+// Container registration
+container.register("SupabaseClient", { useValue: supabaseClient })
+container.register(EventRepository, { useClass: EventRepository })
+container.register(EventService, { useClass: EventService })
+
+// Resolução automática
+const service = container.resolve(EventService)
+```
+
+**Vantagens:**
+- ✅ Auto-wiring (resolve dependências automaticamente)
+- ✅ Decorators elegantes (`@injectable`, `@inject`)
+- ✅ Scopes (singleton, transient, scoped)
+- ✅ Menor boilerplate para muitas classes
+
+**Desvantagens:**
+- ❌ Requer `reflect-metadata` (runtime overhead)
+- ❌ Decorators experimentais (tsconfig: `experimentalDecorators: true`)
+- ❌ "Mágica" dificulta debug (dependências ocultas)
+- ❌ Curva de aprendizado para novos devs
+- ❌ Erros em runtime (não em compile time)
+
+---
+
+##### **InversifyJS**
+```typescript
+import "reflect-metadata"
+import { injectable, inject, Container } from "inversify"
+
+@injectable()
+class EventService {
+  constructor(
+    @inject("EventRepository") private eventRepo: IEventRepository
+  ) {}
+}
+
+const container = new Container()
+container.bind<IEventRepository>("EventRepository").to(EventRepository)
+container.bind<EventService>(EventService).toSelf()
+
+const service = container.get<EventService>(EventService)
+```
+
+**Vantagens:**
+- ✅ Mais poderoso que TSyringe (middleware, contexts, scopes avançados)
+- ✅ Type-safe com symbols
+- ✅ Bindings explícitos
+
+**Desvantagens:**
+- ❌ Mais complexo (overkill para MVP)
+- ❌ Mesmos problemas de TSyringe (reflect-metadata, decorators)
+- ❌ Boilerplate maior (TYPES symbols, bindings)
+
+---
+
+##### **NestJS (Framework Full)**
+```typescript
+import { Injectable } from '@nestjs/common'
+
+@Injectable()
+export class EventService {
+  constructor(private eventRepo: EventRepository) {}
+}
+
+@Module({
+  providers: [EventService, EventRepository],
+  exports: [EventService]
+})
+export class EventsModule {}
+```
+
+**Vantagens:**
+- ✅ DI integrado ao framework
+- ✅ Decorators padronizados
+- ✅ Ecosystem completo (guards, pipes, interceptors)
+
+**Desvantagens:**
+- ❌ Framework opinativo (lock-in)
+- ❌ Overhead para MVP (se não usar backend BFF)
+- ❌ Curva de aprendizado alta
+
+---
+
+#### **Opção 2: Composition Root Pattern (Manual)**
+
+```typescript
+// domain/repositories/event.repository.interface.ts
+export interface IEventRepository {
+  findById(id: string): Promise<Event | null>
+  create(event: CreateEventDTO): Promise<Event>
+}
+
+// infrastructure/repositories/event.repository.ts
+export class SupabaseEventRepository implements IEventRepository {
+  constructor(private supabase: SupabaseClient) {}
+  
+  async findById(id: string): Promise<Event | null> {
+    const { data } = await this.supabase.from('events').select('*').eq('id', id).single()
+    return data
+  }
+  
+  async create(event: CreateEventDTO): Promise<Event> {
+    const { data } = await this.supabase.from('events').insert(event).select().single()
+    return data
+  }
+}
+
+// application/services/event.service.ts
+export class EventService {
+  constructor(private eventRepo: IEventRepository) {}
+  
+  async getEvent(id: string) {
+    return this.eventRepo.findById(id)
+  }
+  
+  async createEvent(dto: CreateEventDTO) {
+    return this.eventRepo.create(dto)
+  }
+}
+
+// main.ts (Composition Root)
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const eventRepo = new SupabaseEventRepository(supabase)
+const eventService = new EventService(eventRepo)
+
+export { eventService } // Export singleton
+```
+
+**Vantagens:**
+- ✅ **Zero dependencies** (sem biblioteca extra)
+- ✅ **Type-safe em compile time** (TypeScript nativo)
+- ✅ **Explícito** (todas dependências visíveis)
+- ✅ **Fácil debug** (stack trace claro)
+- ✅ **Zero runtime overhead**
+- ✅ **Fácil de entender** (qualquer dev JS entende)
+
+**Desvantagens:**
+- ❌ Boilerplate para muitas classes (manual wiring)
+- ❌ Composition Root pode ficar grande (100+ classes)
+- ❌ Sem scopes automáticos (precisa gerenciar manualmente)
+
+---
+
+### 4.3 Property Wrappers em TypeScript
+
+**Pergunta:** TypeScript tem biblioteca nativa para property wrappers?
+
+**Resposta:** **NÃO há biblioteca nativa**, mas há alternativas:
+
+#### **1. Decorators (Experimental)**
+
+```typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+
+// Property decorator
+function Inject(target: any, propertyKey: string) {
+  // Lógica de injeção
+}
+
+class EventService {
+  @Inject
+  private eventRepo!: IEventRepository
+}
+```
+
+**Status:**
+- Stage 3 proposal (pode mudar)
+- Requer `experimentalDecorators: true`
+- Runtime metadata via `reflect-metadata`
+
+---
+
+#### **2. Proxy Pattern (TypeScript Nativo)**
+
+```typescript
+function createProxy<T extends object>(
+  target: T,
+  handler: ProxyHandler<T>
+): T {
+  return new Proxy(target, handler)
+}
+
+const eventService = createProxy(new EventService(eventRepo), {
+  get(target, prop) {
+    console.log(`Accessing ${String(prop)}`)
+    return target[prop as keyof typeof target]
+  }
+})
+```
+
+**Uso:** Logging, lazy loading, validation
+
+---
+
+#### **3. Higher-Order Functions (Functional Approach)**
+
+```typescript
+function withRepository<T>(
+  ServiceClass: new (repo: IEventRepository) => T,
+  repo: IEventRepository
+): T {
+  return new ServiceClass(repo)
+}
+
+const eventService = withRepository(EventService, eventRepo)
+```
+
+---
+
+### 4.4 Decisão: Progressive Approach
+
+#### **MVP (P0-P1): Composition Root Manual**
+
+**Justificativa:**
+- ✅ MVP em 7 semanas → simplicidade > elegância
+- ✅ Poucas classes (~10-15 services, ~5 repositories)
+- ✅ Time pequeno → menos carga cognitiva
+- ✅ Type-safe nativo (sem erros runtime)
+- ✅ Zero setup (sem bibliotecas extras)
+
+**Implementação:**
+```typescript
+// src/config/container.ts (Composition Root)
+import { createClient } from '@supabase/supabase-js'
+import { SupabaseEventRepository } from '@/infrastructure/repositories/event.repository'
+import { SupabaseTeamRepository } from '@/infrastructure/repositories/team.repository'
+import { SupabaseMusicRepository } from '@/infrastructure/repositories/music.repository'
+import { EventService } from '@/application/services/event.service'
+import { TeamService } from '@/application/services/team.service'
+import { MusicService } from '@/application/services/music.service'
+
+// Singleton Supabase client
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+// Repositories (Singleton)
+export const eventRepo = new SupabaseEventRepository(supabase)
+export const teamRepo = new SupabaseTeamRepository(supabase)
+export const musicRepo = new SupabaseMusicRepository(supabase)
+
+// Services (Singleton)
+export const eventService = new EventService(eventRepo)
+export const teamService = new TeamService(teamRepo)
+export const musicService = new MusicService(musicRepo)
+
+// Para testing: factory para criar instâncias com mocks
+export function createEventService(repo: IEventRepository) {
+  return new EventService(repo)
+}
+```
+
+**Uso em React:**
+```typescript
+// src/features/events/hooks/useEvents.ts
+import { eventService } from '@/config/container'
+
+export function useEvents() {
+  const [events, setEvents] = useState<Event[]>([])
+  
+  useEffect(() => {
+    eventService.getAll().then(setEvents)
+  }, [])
+  
+  return { events }
+}
+```
+
+**Testes:**
+```typescript
+import { createEventService } from '@/config/container'
+
+describe('EventService', () => {
+  it('should create event', async () => {
+    const mockRepo: IEventRepository = {
+      create: vi.fn().mockResolvedValue({ id: '1', title: 'Test' })
+    }
+    
+    const service = createEventService(mockRepo)
+    const event = await service.createEvent({ title: 'Test' })
+    
+    expect(event.id).toBe('1')
+  })
+})
+```
+
+---
+
+#### **P2-P3: Considerar DI Library (Se Necessário)**
+
+**Sinais para adicionar TSyringe/InversifyJS:**
+
+- [ ] Mais de 30 classes com dependências complexas
+- [ ] Necessidade de scopes avançados (request-scoped, transient)
+- [ ] Middleware/interceptors complexos
+- [ ] Time cresceu (3+ devs confortáveis com DI)
+
+**Sinais para adicionar NestJS:**
+
+- [ ] Adicionou BFF (backend separado)
+- [ ] Precisa de GraphQL, WebSockets, Microservices
+- [ ] Time familiarizado com Angular (mesma arquitetura)
+
+---
+
+### 4.5 Comparação Resumida
+
+| Critério | Composition Root | TSyringe | InversifyJS | NestJS |
+|----------|------------------|----------|-------------|--------|
+| **Setup** | ✅ Zero | ⚠️ reflect-metadata | ⚠️ reflect-metadata | ⚠️ Framework |
+| **Type Safety** | ✅ Compile time | ❌ Runtime | ⚠️ Symbols | ⚠️ Decorators |
+| **Curva Aprendizado** | ✅ Baixa | ⚠️ Média | ❌ Alta | ❌ Alta |
+| **Boilerplate** | ⚠️ Manual wiring | ✅ Auto-wiring | ⚠️ Bindings | ✅ Decorators |
+| **Debug** | ✅ Stack trace claro | ❌ Difícil | ❌ Difícil | ⚠️ Médio |
+| **Performance** | ✅ Zero overhead | ⚠️ Reflection | ⚠️ Reflection | ⚠️ Framework |
+| **Testabilidade** | ✅ Factory fácil | ✅ Mocks com container | ✅ Rebind | ✅ Testing module |
+| **Escalabilidade** | ⚠️ Manual (30+ classes) | ✅ Alto | ✅ Muito alto | ✅ Muito alto |
+
+---
+
+### 4.6 Exemplo Completo: Composition Root no Worship+
+
+```typescript
+// src/config/container.ts
+import { createClient } from '@supabase/supabase-js'
+
+// Infrastructure Layer
+import { SupabaseEventRepository } from '@/infrastructure/repositories/event.repository'
+import { SupabaseTeamRepository } from '@/infrastructure/repositories/team.repository'
+import { SupabaseMusicRepository } from '@/infrastructure/repositories/music.repository'
+import { SupabaseAvailabilityRepository } from '@/infrastructure/repositories/availability.repository'
+
+// Application Layer
+import { EventService } from '@/application/services/event.service'
+import { TeamService } from '@/application/services/team.service'
+import { MusicService } from '@/application/services/music.service'
+import { AvailabilityService } from '@/application/services/availability.service'
+
+// Use Cases (P2)
+// import { CreateEventUseCase } from '@/application/use-cases/create-event.usecase'
+// import { PublishEventUseCase } from '@/application/use-cases/publish-event.usecase'
+
+// ============================================================================
+// SINGLETON INSTANCES (Composition Root)
+// ============================================================================
+
+// External Dependencies
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+// Repositories
+const eventRepository = new SupabaseEventRepository(supabase)
+const teamRepository = new SupabaseTeamRepository(supabase)
+const musicRepository = new SupabaseMusicRepository(supabase)
+const availabilityRepository = new SupabaseAvailabilityRepository(supabase)
+
+// Services
+const eventService = new EventService(eventRepository)
+const teamService = new TeamService(teamRepository, availabilityRepository)
+const musicService = new MusicService(musicRepository)
+const availabilityService = new AvailabilityService(availabilityRepository)
+
+// Use Cases (P2)
+// const createEventUseCase = new CreateEventUseCase(eventRepository, teamRepository)
+// const publishEventUseCase = new PublishEventUseCase(eventRepository, notificationService)
+
+// ============================================================================
+// EXPORTS (Public API)
+// ============================================================================
+
+export {
+  // Services (MVP)
+  eventService,
+  teamService,
+  musicService,
+  availabilityService,
+  
+  // Use Cases (P2)
+  // createEventUseCase,
+  // publishEventUseCase,
+}
+
+// ============================================================================
+// FACTORY FUNCTIONS (Testing)
+// ============================================================================
+
+export function createEventServiceForTest(repo: IEventRepository) {
+  return new EventService(repo)
+}
+
+export function createTeamServiceForTest(
+  teamRepo: ITeamRepository,
+  availabilityRepo: IAvailabilityRepository
+) {
+  return new TeamService(teamRepo, availabilityRepo)
+}
+```
+
+---
+
+### 4.7 Recomendação Final
+
+#### **Resposta Direta:**
+
+1. **Usar Composition Root manual no MVP** (P0-P1)
+   - Simples, type-safe, zero overhead
+   - Perfeito para 10-20 classes
+   - Fácil migração para DI library depois
+
+2. **TypeScript NÃO tem property wrappers nativos**
+   - Use decorators experimentais (se confortável)
+   - Ou use Composition Root (recomendado)
+
+3. **Considerar TSyringe em P2** (se passar de 30 classes)
+   - Ou NestJS se adicionar BFF backend
+
+#### **Filosofia:**
+
+> "Start simple, evolve when pain is real, not anticipated."
+
+---
+
+## 5. Checklist de Code Review
+
+### 5.1 SOLID
 
 - [ ] Cada classe/componente tem UMA responsabilidade?
 - [ ] Código fechado para modificação, aberto para extensão?
@@ -1236,24 +1710,31 @@ src/
 - [ ] Interfaces são específicas (não "gordas")?
 - [ ] Dependências são abstrações (não implementações)?
 
-### 4.2 DRY
+### 5.2 DRY
 
 - [ ] Lógica duplicada foi abstraída em hook/função?
 - [ ] Código compartilhado está em `/shared`?
 
-### 4.3 KISS
+### 5.3 KISS
 
 - [ ] Código é compreensível em 5 minutos?
 - [ ] Não há over-engineering (framework caseiro)?
 - [ ] Abstrações facilitam ou complicam?
 
-### 4.4 Patterns
+### 5.4 Patterns
 
 - [ ] Decorators usados para cross-cutting concerns?
 - [ ] Repository abstrai data source?
 - [ ] Strategy usado para comportamentos intercambiáveis?
 
-### 4.5 Carga Cognitiva
+### 5.5 Dependency Injection
+
+- [ ] Composition Root está em arquivo separado (`container.ts`)?
+- [ ] Dependências injetadas via constructor (não imports diretos)?
+- [ ] Factories criadas para testes?
+- [ ] Singleton exports para produção?
+
+### 5.6 Carga Cognitiva
 
 - [ ] Nomenclatura clara e específica?
 - [ ] Nível de abstração adequado ao contexto?
@@ -1261,11 +1742,17 @@ src/
 
 ---
 
-## 5. Referências
+## 6. Referências
 
 - **DDD-GUIDE.md:** Bounded Contexts, Agregados, Linguagem Úbiqua
 - **MVP-ROADMAP.md:** Priorização e escopo
 - **AGENTS-GUIDE.md:** Processo de atualização de documentação
+
+**Bibliotecas DI avaliadas:**
+- [TSyringe](https://github.com/microsoft/tsyringe) - Microsoft, leve, auto-wiring
+- [InversifyJS](https://inversify.io/) - Mais poderoso, middleware avançado
+- [TypeDI](https://github.com/typestack/typedi) - Simples, sem reflect-metadata
+- [NestJS](https://nestjs.com/) - Framework full com DI integrado
 
 ---
 
