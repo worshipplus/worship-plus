@@ -1,0 +1,170 @@
+/* ==========================================================================
+   Rows — date-chip, event-row, member-row, song-row
+   ========================================================================== */
+
+/* Date chip (events) ------------------------------------------------------- */
+.date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: var(--color-primary-100);
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+}
+
+.date-chip__day {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.date-chip__month {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.date-chip.past { background: var(--color-border); }
+.date-chip.past .date-chip__day,
+.date-chip.past .date-chip__month { color: var(--color-muted); }
+
+/* Event Row ---------------------------------------------------------------- */
+.event-list { display: flex; flex-direction: column; }
+
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 14px var(--s3);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+}
+
+.event-row:last-child { border-bottom: none; }
+.event-row:hover { background: rgba(0,0,0,0.025); }
+
+.event-row__info { flex: 1; min-width: 0; }
+
+.event-row__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.event-row__desc {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-top: 1px;
+}
+
+.event-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.event-row:hover .event-row__actions { opacity: 1; }
+
+/* Member Row --------------------------------------------------------------- */
+.member-list { display: flex; flex-direction: column; }
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 12px var(--s3);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+}
+
+.member-row:last-child { border-bottom: none; }
+.member-row:hover { background: rgba(0,0,0,0.025); }
+
+.member-row__info { flex: 1; min-width: 0; }
+
+.member-row__name {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.member-row__meta {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.member-row:hover .member-row__actions { opacity: 1; }
+
+/* Song Row ----------------------------------------------------------------- */
+.song-list { display: flex; flex-direction: column; }
+
+.song-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 12px var(--s3);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+}
+
+.song-row:last-child { border-bottom: none; }
+.song-row:hover { background: rgba(0,0,0,0.025); }
+
+.song-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--color-primary-100);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.song-row__info { flex: 1; min-width: 0; }
+
+.song-row__title {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.song-row__author {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-top: 1px;
+}
+
+.song-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.song-row:hover .song-row__actions { opacity: 1; }

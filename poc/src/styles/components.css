@@ -1,0 +1,534 @@
+/* ==========================================================================
+   Components — btn, avatar, badge, audio-player, modal, form fields,
+                songs-pill, song-picker, member-chips, empty-state, list-card
+   ========================================================================== */
+
+/* Button ------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background var(--t-fast);
+  white-space: nowrap;
+}
+
+.btn:hover { background: var(--color-primary-600); }
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: rgba(0,0,0,0.04);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-muted);
+  padding: 6px 8px;
+  border: none;
+}
+
+.btn-ghost:hover { background: rgba(0,0,0,0.06); color: var(--color-text); }
+
+.btn-danger {
+  background: transparent;
+  color: #dc2626;
+  border: none;
+  padding: 6px 8px;
+}
+
+.btn-danger:hover { background: #fef2f2; }
+
+.btn-sm { padding: 5px 10px; font-size: var(--text-xs); }
+
+/* Avatar ------------------------------------------------------------------- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  background: #e5e0dc;
+  overflow: hidden;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-stack { display: flex; align-items: center; }
+.avatar-stack .avatar { border: 2px solid var(--color-bg); }
+.avatar-stack .avatar:not(:first-child) { margin-left: -7px; }
+
+.avatar-stack-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--color-border);
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 700;
+  border: 2px solid var(--color-bg);
+  margin-left: -7px;
+  flex-shrink: 0;
+}
+
+/* Badge -------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--r-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.badge-cantor { background: #f5e0e5; color: #7B112F; }
+.badge-musico { background: #e8e4f5; color: #4a3b8c; }
+.badge-midia  { background: #dff0e8; color: #1a6640; }
+.badge-som    { background: #fdf0d8; color: #8a5a00; }
+.badge-admin  { background: #1c1c1c; color: #fff; }
+
+/* Audio Player ------------------------------------------------------------- */
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-md);
+  padding: 6px 10px;
+  min-width: 150px;
+}
+
+.audio-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-full);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+}
+
+.audio-play-btn:hover { background: var(--color-primary-600); }
+
+.audio-play-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.audio-time {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Modal -------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--s4);
+  animation: fade-in 150ms ease;
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--r-lg);
+  width: 100%;
+  max-width: 540px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slide-up 180ms ease;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) var(--s4) var(--s3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.modal-close:hover { background: rgba(0,0,0,0.06); color: var(--color-text); }
+
+.modal-body {
+  padding: var(--s4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Form fields -------------------------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.field-input, .field-select, .field-textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-family: var(--font);
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  width: 100%;
+}
+
+.field-input:focus, .field-select:focus, .field-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.field-input::placeholder, .field-textarea::placeholder { color: var(--color-muted); }
+
+.field-textarea { resize: vertical; min-height: 80px; }
+
+.field-select { appearance: none; cursor: pointer; }
+
+.field-label-count {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-primary);
+  background: var(--color-primary-100);
+  padding: 1px 7px;
+  border-radius: var(--r-full);
+}
+
+/* Songs pill (indicador de músicas na linha de evento) --------------------- */
+.songs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px 3px 7px;
+  border-radius: var(--r-full);
+  background: var(--color-primary-100);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.songs-pill svg { flex-shrink: 0; }
+
+/* Song Picker (seleção de músicas no formulário de evento) ----------------- */
+.song-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.song-picker__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.song-picker__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 9px;
+  border-radius: var(--r-full);
+  background: var(--color-primary-100);
+  border: 1px solid rgba(123,17,47,0.2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-primary);
+  max-width: 180px;
+}
+
+.song-picker__tag-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-picker__tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(123,17,47,0.15);
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+  line-height: 1;
+}
+
+.song-picker__tag-remove:hover { background: rgba(123,17,47,0.3); }
+
+.song-picker__search { position: relative; }
+
+.song-picker__search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.song-picker__search input {
+  width: 100%;
+  padding: 7px 10px 7px 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-family: var(--font);
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.song-picker__search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.song-picker__search input::placeholder { color: var(--color-muted); }
+
+.song-picker__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+}
+
+.song-picker__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--t-fast);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.song-picker__row:last-child { border-bottom: none; }
+.song-picker__row:hover { background: rgba(0,0,0,0.03); }
+.song-picker__row.selected { background: rgba(123,17,47,0.04); }
+
+.song-picker__check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: transparent;
+  transition: all var(--t-fast);
+}
+
+.song-picker__row.selected .song-picker__check {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.song-picker__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.song-picker__row-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-picker__row.selected .song-picker__row-title { color: var(--color-primary); font-weight: 600; }
+
+.song-picker__row-author {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-picker__empty {
+  padding: var(--s4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* Member chips (escalados no formulário de evento) ------------------------- */
+.member-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.member-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.member-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.member-chip.selected {
+  background: var(--color-primary-100);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Delete confirm inline ---------------------------------------------------- */
+.delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.delete-confirm strong { color: #dc2626; }
+
+/* Empty state -------------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s6) var(--s4);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.empty-state svg { opacity: 0.35; }
+.empty-state p { font-size: var(--text-sm); max-width: 260px; }
+
+/* List card (wrapper de listas) ------------------------------------------- */
+.list-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}

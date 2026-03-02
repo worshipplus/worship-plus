@@ -1,0 +1,11 @@
+/* ==========================================================================
+   Worship+ — Entry point de estilos
+   O Vite processa cada arquivo separadamente: alterações num módulo
+   disparam HMR apenas naquele chunk, sem reprocessar o CSS inteiro.
+   ========================================================================== */
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/layout.css';
+@import './styles/rows.css';
+@import './styles/components.css';
+@import './styles/responsive.css';
