@@ -1,0 +1,17 @@
+{
+  "name": "worship-inspiration-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "process": "node process-inspiration.js --input ../agents/worship+/frontend-developer-agent/inspiration-images --thumb-dir ../agents/worship+/frontend-developer-agent/Design System/inspiration-thumbs --poster-dir ../agents/worship+/frontend-developer-agent/Design System/inspiration-posters --palettes ../agents/worship+/frontend-developer-agent/Design System/palettes.json",
+    "dry": "node process-inspiration.js --dry-run --input ../agents/worship+/frontend-developer-agent/inspiration-images"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.1.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "mkdirp": "^2.1.0",
+    "node-vibrant": "^3.2.0",
+    "sharp": "^0.32.0",
+    "yargs": "^17.7.2"
+  }
+}

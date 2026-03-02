@@ -12,6 +12,7 @@
 2. [Filosofia de Desenvolvimento](#2-filosofia-de-desenvolvimento)
 3. [Padrões Arquiteturais](#3-padrões-arquiteturais)
 4. [Dependency Injection](#4-dependency-injection)
+5. [Conventional Commits](#5-conventional-commits)
 
 ---
 
@@ -1700,9 +1701,589 @@ export function createTeamServiceForTest(
 
 ---
 
-## 5. Checklist de Code Review
+## 5. Conventional Commits
 
-### 5.1 SOLID
+### 5.1 Contexto
+
+**Objetivo:** Padronizar mensagens de commit para:
+- ✅ Facilitar rastreamento de features/bugs
+- ✅ Gerar changelogs automaticamente
+- ✅ Associar commits às User Stories do MVP
+- ✅ Melhorar debug e code review
+
+**Referência:** [Conventional Commits 1.0.0](https://www.conventionalcommits.org/)
+
+---
+
+### 5.2 Formato Padrão
+
+```
+<type>(<scope>): <description> [US-XXX]
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Componentes:**
+
+1. **`<type>`:** Categoria do commit (obrigatório)
+2. **`<scope>`:** Contexto/módulo afetado (opcional mas recomendado)
+3. **`<description>`:** Descrição curta imperativa (obrigatório, max 72 chars)
+4. **`[US-XXX]`:** Referência à User Story do MVP-ROADMAP (obrigatório para features)
+5. **`body`:** Explicação detalhada (opcional, útil para breaking changes)
+6. **`footer`:** Metadata (breaking changes, closes issues, co-authored-by)
+
+---
+
+### 5.3 Types (Tipos de Commit)
+
+| Type | Quando Usar | Exemplo |
+|------|-------------|---------|
+| `feat` | Nova funcionalidade | `feat(events): adiciona criação de eventos [US-007]` |
+| `fix` | Correção de bug | `fix(auth): corrige validação de email [US-001]` |
+| `docs` | Apenas documentação | `docs(architecture): atualiza análise de DI` |
+| `style` | Formatação, lint (sem alterar lógica) | `style(components): ajusta indentação` |
+| `refactor` | Refatoração (sem mudar comportamento) | `refactor(events): extrai lógica para hook` |
+| `perf` | Melhoria de performance | `perf(setlist): otimiza query de músicas` |
+| `test` | Adiciona ou corrige testes | `test(availability): adiciona testes de override` |
+| `build` | Build system ou dependências | `build: atualiza vite para 6.0` |
+| `ci` | CI/CD (GitHub Actions, workflows) | `ci: adiciona lint no PR workflow` |
+| `chore` | Tarefas diversas (configs, scripts) | `chore: atualiza .gitignore` |
+| `revert` | Reverte commit anterior | `revert: reverte feat(events) [US-007]` |
+
+---
+
+### 5.4 Scopes (Contextos)
+
+**Frontend:**
+- `auth` - Autenticação e autorização
+- `events` - Gestão de eventos
+- `setlist` - Setlist e músicas
+- `team` - Membros e escalação
+- `availability` - Disponibilidade de membros
+- `components` - Componentes compartilhados
+- `hooks` - Custom hooks
+
+**Backend (Futuro BFF):**
+- `api` - Endpoints e rotas
+- `repository` - Camada de dados
+- `service` - Lógica de negócio
+- `middleware` - Autenticação, logging, etc.
+
+**Infraestrutura:**
+- `config` - Configurações (env, build)
+- `database` - Schema, migrations
+- `storage` - S3, arquivos de mídia
+- `ci` - CI/CD, GitHub Actions
+
+**Documentação:**
+- `architecture` - DDD-GUIDE, ARCHITECTURE-DECISIONS
+- `roadmap` - MVP-ROADMAP
+- `agents` - AGENTS-GUIDE, agent configs
+
+---
+
+### 5.5 Referenciando User Stories
+
+**Formato:** `[US-XXX]` no título ou corpo do commit
+
+**Regras:**
+
+1. **Features (feat):** OBRIGATÓRIO referenciar US
+   ```
+   feat(events): implementa criação de eventos [US-007]
+   
+   - Adiciona EventForm component
+   - Integra com Supabase events table
+   - Validação de campos obrigatórios
+   
+   User Story: MVP-ROADMAP.md section 2.3
+   ```
+
+2. **Fixes relacionados a US:** OBRIGATÓRIO referenciar
+   ```
+   fix(availability): corrige verificação de override [US-006]
+   
+   Bug: DateOverride não tinha prioridade sobre RecurringAvailability
+   Fix: Altera ordem de verificação em checkAvailability()
+   ```
+
+3. **Refactors/Tests de features:** RECOMENDADO referenciar
+   ```
+   refactor(events): extrai validação para custom hook [US-007]
+   test(availability): adiciona testes de edge cases [US-005]
+   ```
+
+4. **Docs/Chores não relacionados a US:** OPCIONAL
+   ```
+   docs(architecture): adiciona análise de DI
+   chore: atualiza .gitignore com padrões Node
+   ```
+
+---
+
+### 5.6 Exemplos Práticos
+
+#### **Exemplo 1: Feature Nova (Sprint 1)**
+
+```bash
+git commit -m "feat(auth): implementa autenticação básica [US-001]
+
+- Integra Supabase Auth (email/password)
+- Cria hook useAuth() com signin/signout
+- Adiciona ProtectedRoute HOC
+- Testes unitários para useAuth
+
+Acceptance Criteria (MVP-ROADMAP section 5.1):
+✅ Login com email/password
+✅ Redirect para / após login
+✅ Botão de logout visível
+✅ Sessão persiste em reload
+
+User Story: MVP-ROADMAP.md #US-001"
+```
+
+---
+
+#### **Exemplo 2: Bug Fix (Sprint 2)**
+
+```bash
+git commit -m "fix(availability): override não tem prioridade [US-006]
+
+Bug Report:
+- DateOverride deveria ter prioridade sobre RecurringAvailability
+- checkAvailability() verificava recurring primeiro
+
+Fix:
+- Altera ordem em checkAvailability()
+- Adiciona teste de edge case
+
+Affected User Story: US-006 (Adicionar exceções de disponibilidade)
+Related: DDD-GUIDE.md section 5.4 (Aggregate Availability)"
+```
+
+---
+
+#### **Exemplo 3: Refactor (P1)**
+
+```bash
+git commit -m "refactor(events): aplica Repository Pattern [US-007]
+
+- Extrai SupabaseEventRepository
+- Cria IEventRepository interface
+- EventService agora usa abstração
+- Facilita testes com mock repositories
+
+Context: ARCHITECTURE-DECISIONS.md section 4.4 (Composition Root)
+Related US: US-007 (Cadastro de eventos)
+Phase: P1 (Repository Pattern adoption)"
+```
+
+---
+
+#### **Exemplo 4: Documentation**
+
+```bash
+git commit -m "docs(architecture): adiciona filosofia de desenvolvimento
+
+- Cria ARCHITECTURE-DECISIONS.md
+- Documenta SOLID, DRY, KISS
+- Análise BFF vs Supabase direto
+- Padrões: Decorators, Repository, Strategy
+
+Reference: AGENTS-GUIDE section 7 (Living Documents)"
+```
+
+---
+
+#### **Exemplo 5: Breaking Change**
+
+```bash
+git commit -m "feat(events): adiciona campo mandatory youtubeUrl [US-004]
+
+BREAKING CHANGE: youtubeUrl agora é obrigatório em Song entity
+
+Migration Guide:
+- Todas músicas devem ter youtubeUrl válido
+- VS upload movido para P1
+- YouTube Link substitui VS no MVP
+
+Context:
+- MVP-ROADMAP section 1.3 (YouTube alternative)
+- DDD-GUIDE v1.1 section 8.3 (MVP Priority)
+- Reduces MVP scope by 30%
+
+User Story: US-004 (Cadastro de músicas com YouTube Link)"
+```
+
+---
+
+### 5.7 Workflow de Commit
+
+#### **1. Antes de Commitar**
+
+```bash
+# Ver mudanças
+git status
+git diff
+
+# Validar build
+npm run build
+
+# Rodar testes
+npm test
+
+# Lint
+npm run lint
+```
+
+---
+
+#### **2. Staging**
+
+```bash
+# Adicionar arquivos específicos
+git add src/features/events/EventForm.tsx
+git add src/features/events/hooks/useEvents.ts
+
+# Ou adicionar todos (com cautela)
+git add .
+```
+
+---
+
+#### **3. Commit com Conventional Format**
+
+```bash
+# Commit simples
+git commit -m "feat(events): adiciona EventForm [US-007]"
+
+# Commit com corpo detalhado
+git commit -m "feat(events): adiciona EventForm [US-007]" -m "
+- Implementa formulário de criação
+- Validação com useEventValidation hook
+- Integra com eventService
+- Testes com React Testing Library
+
+Acceptance Criteria: MVP-ROADMAP US-007
+"
+```
+
+---
+
+#### **4. Push**
+
+```bash
+git push origin main
+# ou
+git push origin feature/US-007-event-creation
+```
+
+---
+
+### 5.8 Commit Message Template
+
+**Criar template no git:**
+
+```bash
+# Criar arquivo de template
+cat > ~/.gitmessage << 'EOF'
+# <type>(<scope>): <description> [US-XXX]
+# 
+# [optional body]
+# - 
+# - 
+# 
+# User Story: MVP-ROADMAP.md #US-XXX
+# Acceptance Criteria:
+# ✅ 
+# ✅ 
+# 
+# [optional footer]
+EOF
+
+# Configurar globalmente
+git config --global commit.template ~/.gitmessage
+```
+
+**Agora `git commit` abre editor com template:**
+
+```bash
+git commit  # Abre editor com template pré-preenchido
+```
+
+---
+
+### 5.9 Validação Automática (CI)
+
+**GitHub Action para validar commits:**
+
+```yaml
+# .github/workflows/commit-lint.yml
+name: Commit Lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: .commitlintrc.json
+```
+
+**`.commitlintrc.json`:**
+
+```json
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat",
+        "fix",
+        "docs",
+        "style",
+        "refactor",
+        "perf",
+        "test",
+        "build",
+        "ci",
+        "chore",
+        "revert"
+      ]
+    ],
+    "scope-enum": [
+      2,
+      "always",
+      [
+        "auth",
+        "events",
+        "setlist",
+        "team",
+        "availability",
+        "components",
+        "hooks",
+        "api",
+        "repository",
+        "service",
+        "config",
+        "database",
+        "storage",
+        "architecture",
+        "roadmap",
+        "agents"
+      ]
+    ],
+    "subject-max-length": [2, "always", 72],
+    "body-max-line-length": [2, "always", 100]
+  }
+}
+```
+
+---
+
+### 5.10 Mapeamento US → Commits
+
+**Exemplo: Sprint 2 (US-004, US-005, US-006)**
+
+```bash
+# US-004: Cadastro de músicas com YouTube Link (5 pontos)
+git commit -m "feat(setlist): adiciona Song entity [US-004]"
+git commit -m "feat(setlist): adiciona SongForm com youtubeUrl [US-004]"
+git commit -m "feat(setlist): valida YouTube URL regex [US-004]"
+git commit -m "test(setlist): adiciona testes de validação [US-004]"
+git commit -m "docs(ddd): atualiza glossário com YouTube Link [US-004]"
+
+# US-005: Definir disponibilidade semanal (5 pontos)
+git commit -m "feat(availability): adiciona RecurringAvailability [US-005]"
+git commit -m "feat(availability): implementa WeeklyPatternForm [US-005]"
+git commit -m "feat(availability): hook useAvailability() [US-005]"
+git commit -m "test(availability): testes de recurring pattern [US-005]"
+
+# US-006: Adicionar exceções de disponibilidade (5 pontos)
+git commit -m "feat(availability): adiciona DateOverride [US-006]"
+git commit -m "feat(availability): MonthlyCalendar component [US-006]"
+git commit -m "fix(availability): prioridade de override [US-006]"
+git commit -m "test(availability): edge cases de override [US-006]"
+```
+
+**Rastreamento:**
+
+```bash
+# Ver todos commits de uma User Story
+git log --all --grep="US-004"
+
+# Ver commits de um sprint
+git log --since="2026-03-15" --until="2026-03-29" --grep="US-"
+
+# Gerar changelog de sprint
+git log --since="2026-03-15" --until="2026-03-29" --pretty=format:"%s" | grep -E "feat|fix"
+```
+
+---
+
+### 5.11 Boas Práticas
+
+#### ✅ **DO (Faça)**
+
+1. **Commits atômicos:** Um commit = Uma mudança lógica
+   ```bash
+   ✅ feat(events): adiciona EventForm [US-007]
+   ✅ feat(events): adiciona validação de data [US-007]
+   ```
+
+2. **Imperativo:** Use presente imperativo (adiciona, corrige, implementa)
+   ```bash
+   ✅ feat(events): adiciona EventForm
+   ❌ feat(events): adicionei EventForm
+   ❌ feat(events): adding EventForm
+   ```
+
+3. **Minúsculas:** Type e scope em lowercase
+   ```bash
+   ✅ feat(events): adiciona form
+   ❌ Feat(Events): Adiciona form
+   ```
+
+4. **Sem ponto final:** Description não termina com `.`
+   ```bash
+   ✅ feat(events): adiciona form
+   ❌ feat(events): adiciona form.
+   ```
+
+5. **Referência à US em features:** Sempre incluir [US-XXX]
+   ```bash
+   ✅ feat(events): adiciona EventForm [US-007]
+   ❌ feat(events): adiciona EventForm
+   ```
+
+---
+
+#### ❌ **DON'T (Não faça)**
+
+1. **Commits gigantes:** Múltiplas features em um commit
+   ```bash
+   ❌ feat: adiciona eventos, setlist, disponibilidade e auth
+   ```
+
+2. **Mensagens vagas:** "fix bug", "update code"
+   ```bash
+   ❌ fix: corrige bug
+   ✅ fix(availability): corrige prioridade de override [US-006]
+   ```
+
+3. **Misturar types:** feat + fix no mesmo commit
+   ```bash
+   ❌ feat(events): adiciona form e corrige validação
+   ✅ feat(events): adiciona EventForm [US-007]
+   ✅ fix(events): corrige validação de data [US-007]
+   ```
+
+4. **Commits de merge:** Use rebase ou squash
+   ```bash
+   ❌ Merge branch 'main' into feature/events
+   ✅ git pull --rebase origin main
+   ```
+
+---
+
+### 5.12 Integração com MVP-ROADMAP
+
+**MVP-ROADMAP.md contém:**
+- US-001 a US-012 (P0 - MVP)
+- Seções 2.1 a 2.4 (Sprints 1-4)
+
+**Commits DEVEM referenciar:**
+
+```markdown
+# MVP-ROADMAP.md
+
+## 2.2 Sprint 2 (15 pontos)
+
+### US-004: Cadastro de músicas com YouTube Link obrigatório
+**Pontos:** 5  
+**Prioridade:** P0 (Crítico)
+
+**Descrição:**
+Como ministro, quero cadastrar músicas com link do YouTube para que minha equipe acesse a versão de referência.
+
+**Acceptance Criteria:**
+- [ ] Formulário com campos: título, autor, youtubeUrl (obrigatório)
+- [ ] Validação regex de YouTube URL
+- [ ] Preview embed do YouTube ao colar URL
+- [ ] Botão "Salvar" desabilitado se URL inválida
+```
+
+**Commits correspondentes:**
+
+```bash
+feat(setlist): adiciona SongForm component [US-004]
+feat(setlist): valida YouTube URL com regex [US-004]
+feat(setlist): preview embed do YouTube [US-004]
+test(setlist): testes de validação de URL [US-004]
+```
+
+---
+
+### 5.13 Ferramentas Recomendadas
+
+| Ferramenta | Propósito | Link |
+|------------|-----------|------|
+| **commitlint** | Valida formato de commits | [commitlint.js.org](https://commitlint.js.org/) |
+| **husky** | Git hooks (pre-commit) | [typicode.com/husky](https://typicode.com/husky) |
+| **commitizen** | CLI interativo para commits | [commitizen.github.io](http://commitizen.github.io/) |
+| **standard-version** | Gera changelogs e versões | [github.com/conventional-changelog](https://github.com/conventional-changelog/standard-version) |
+
+---
+
+### 5.14 Setup Rápido (Opcional P1)
+
+```bash
+# Instalar ferramentas
+npm install --save-dev @commitlint/cli @commitlint/config-conventional husky commitizen
+
+# Inicializar husky
+npx husky-init && npm install
+
+# Configurar commitlint
+echo "module.exports = {extends: ['@commitlint/config-conventional']}" > .commitlintrc.js
+
+# Hook pre-commit (lint + test)
+npx husky add .husky/pre-commit "npm run lint && npm test"
+
+# Hook commit-msg (valida formato)
+npx husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'
+
+# Commitizen (interactive)
+npx commitizen init cz-conventional-changelog --save-dev --save-exact
+```
+
+**Uso:**
+
+```bash
+# Commit interativo
+npm run commit  # Abre wizard
+
+# Commit manual
+git commit -m "feat(events): adiciona form [US-007]"
+```
+
+---
+
+## 6. Checklist de Code Review
+
+### 6.1 SOLID
 
 - [ ] Cada classe/componente tem UMA responsabilidade?
 - [ ] Código fechado para modificação, aberto para extensão?
@@ -1710,31 +2291,40 @@ export function createTeamServiceForTest(
 - [ ] Interfaces são específicas (não "gordas")?
 - [ ] Dependências são abstrações (não implementações)?
 
-### 5.2 DRY
+### 6.2 DRY
 
 - [ ] Lógica duplicada foi abstraída em hook/função?
 - [ ] Código compartilhado está em `/shared`?
 
-### 5.3 KISS
+### 6.3 KISS
 
 - [ ] Código é compreensível em 5 minutos?
 - [ ] Não há over-engineering (framework caseiro)?
 - [ ] Abstrações facilitam ou complicam?
 
-### 5.4 Patterns
+### 6.4 Patterns
 
 - [ ] Decorators usados para cross-cutting concerns?
 - [ ] Repository abstrai data source?
 - [ ] Strategy usado para comportamentos intercambiáveis?
 
-### 5.5 Dependency Injection
+### 6.5 Dependency Injection
 
 - [ ] Composition Root está em arquivo separado (`container.ts`)?
 - [ ] Dependências injetadas via constructor (não imports diretos)?
 - [ ] Factories criadas para testes?
 - [ ] Singleton exports para produção?
 
-### 5.6 Carga Cognitiva
+### 6.6 Conventional Commits
+
+- [ ] Type correto (feat, fix, docs, refactor, etc.)?
+- [ ] Scope presente e específico?
+- [ ] Description em imperativo e minúsculas?
+- [ ] User Story referenciada [US-XXX] para features?
+- [ ] Breaking changes declaradas em footer?
+- [ ] Acceptance criteria checados antes do commit?
+
+### 6.7 Carga Cognitiva
 
 - [ ] Nomenclatura clara e específica?
 - [ ] Nível de abstração adequado ao contexto?
@@ -1742,10 +2332,10 @@ export function createTeamServiceForTest(
 
 ---
 
-## 6. Referências
+## 7. Referências
 
 - **DDD-GUIDE.md:** Bounded Contexts, Agregados, Linguagem Úbiqua
-- **MVP-ROADMAP.md:** Priorização e escopo
+- **MVP-ROADMAP.md:** Priorização e escopo, User Stories (US-001 a US-012)
 - **AGENTS-GUIDE.md:** Processo de atualização de documentação
 
 **Bibliotecas DI avaliadas:**
@@ -1753,6 +2343,12 @@ export function createTeamServiceForTest(
 - [InversifyJS](https://inversify.io/) - Mais poderoso, middleware avançado
 - [TypeDI](https://github.com/typestack/typedi) - Simples, sem reflect-metadata
 - [NestJS](https://nestjs.com/) - Framework full com DI integrado
+
+**Conventional Commits:**
+- [Conventional Commits Spec](https://www.conventionalcommits.org/)
+- [commitlint](https://commitlint.js.org/) - Validação de commits
+- [commitizen](http://commitizen.github.io/) - CLI interativo
+- [standard-version](https://github.com/conventional-changelog/standard-version) - Changelog automático
 
 ---
 
