@@ -181,6 +181,16 @@ worship-plus/
 ├── ONBOARDING.md                      # Este arquivo (começar por aqui!)
 │
 ├── docs/
+│   ├── summaries/                     # 📦 Summaries (Context Economy)
+│   │   ├── ddd-summary.md            # 5KB vs DDD-GUIDE 48KB (90% savings)
+│   │   ├── arch-decisions-summary.md # 3KB resumo de padrões
+│   │   └── tech-stack.md             # 2KB referência rápida
+│   │
+│   ├── user-stories/                  # 📝 User Stories (Template + Exemplos)
+│   │   ├── _template/                # Template padrão (4 arquivos base)
+│   │   ├── US-001-autenticacao/      # Exemplo simples
+│   │   └── US-050-upload-vs/         # Exemplo complexo (ADR + diagrama)
+│   │
 │   ├── architecture/                  # 🏗️ Arquitetura e Design
 │   │   ├── DDD-GUIDE.md              # Domain-Driven Design completo
 │   │   ├── ARCHITECTURE-DECISIONS.md  # Decisões técnicas (SOLID, DI, etc.)
@@ -197,7 +207,7 @@ worship-plus/
 │   │   └── tasks.md                  # Tarefas e backlog
 │   │
 │   ├── guides/                        # 📖 Guias e Tutoriais
-│   │   ├── AGENTS-GUIDE.md           # Como usar AI agents
+│   │   ├── AGENTS-GUIDE.md           # Como usar AI agents (v2.0 - Multi-Agent Workflow)
 │   │   └── REPOSITORY-STRUCTURE.md   # Estrutura multi-repo
 │   │
 │   └── templates/                     # 📝 Templates de READMEs
@@ -206,6 +216,9 @@ worship-plus/
 │       └── README-worship-plus-infra.md
 │
 ├── scripts/                           # 🛠️ Scripts utilitários
+│   ├── create-user-story.sh          # Criar User Story (15min → 5min)
+│   ├── validate-user-story.sh        # Validar checklist automatizado
+│   ├── sprint-report.sh              # Gerar relatório de sprint
 │   ├── palette-extractor.js          # Extrai paletas de cores
 │   ├── image-processor.js            # Processa imagens
 │   └── video-processor.js            # Processa vídeos
@@ -222,10 +235,12 @@ worship-plus/
 
 **Para Desenvolvedores:**
 1. **ONBOARDING.md** (você está aqui!)
-2. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md) - Entender o domínio
-3. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md) - Padrões e convenções
-4. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) - Ver User Stories
-5. [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) - Setup de AI agents
+2. [docs/summaries/ddd-summary.md](docs/summaries/ddd-summary.md) - Resumo DDD (5KB, leitura rápida)
+3. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md) - DDD completo (quando precisar de detalhes)
+4. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md) - Padrões e convenções
+5. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) - Ver User Stories
+6. [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) - Workflow Multi-Agent (v2.0)
+7. [docs/user-stories/_template/README.md](docs/user-stories/_template/README.md) - Template de User Story
 
 **Para Arquitetos:**
 1. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md)
@@ -403,7 +418,76 @@ export function useAuth() {
 
 ---
 
-### 6.4 Testar
+### 6.4 Workflow Multi-Agent (Novo ✨)
+
+**O projeto agora usa um workflow event-driven com economia de contexto de 93%!**
+
+#### Como Funciona:
+
+```
+PM Agent
+  │ Cria story.md usando summaries (8KB vs 125KB tradicional)
+  ├─→ ./scripts/create-user-story.sh --id 025 --title "feature"
+  ├─→ ./scripts/validate-user-story.sh --id 025
+  ▼
+Architecture Agent
+  │ Define contract.yaml (OpenAPI 3.1.0)
+  │ Gera scenarios.feature (BDD Gherkin)
+  │ Gera acceptance-tests.md (QA checklist)
+  │ Se complexo: cria ADR + sequence diagram (Mermaid)
+  ▼
+Frontend + Backend (PARALELO)
+  │ Consomem apenas contract.yaml (2.5KB)
+  │ Implementam simultaneamente
+  └─→ Deploy
+```
+
+#### Economia de Custo:
+
+| Métrica | Tradicional | Otimizado | Economia |
+|---------|-------------|-----------|----------|
+| Context/US | 80-125KB | 6.5-12KB | **85-93%** |
+| Custo/US | $0.015 | $0.0004 | **97%** |
+| MVP 50 US | $0.75 | $0.025 | **$0.72** |
+| Tempo | 100h | 12.5h | **87.5h** |
+
+#### Scripts de Automação:
+
+```bash
+# Criar nova User Story (15min → 5min = 66% economia)
+./scripts/create-user-story.sh --id 025 --title "marcar-disponibilidade" \
+  --context Team --priority P1 --estimate 5
+
+# Validar User Story (checklist automatizado)
+./scripts/validate-user-story.sh --id 025
+# Output: ✅ READY FOR DEVELOPMENT (11 checks passed)
+
+# Gerar relatório de sprint
+./scripts/sprint-report.sh --sprint 1
+# Output: docs/sprint-reports/sprint-1-report.md
+```
+
+#### Estrutura de User Story:
+
+**Base (toda US - 4 arquivos):**
+- `story.md` (1.5KB) - Source of truth
+- `contract.yaml` (2.5KB) - OpenAPI 3.1.0 spec
+- `scenarios.feature` (1KB) - Gherkin BDD
+- `acceptance-tests.md` (1KB) - QA checklist
+
+**Seletivo (US complexa - +2 arquivos):**
+- `adr-XXX.md` (3KB) - Architecture Decision Record com Mermaid
+- `sequence-diagram.mmd` (2KB) - Diagrama Mermaid (5+ flows)
+
+**Exemplos:**
+- [US-001](docs/user-stories/US-001-autenticacao/) (simples - 4 arquivos)
+- [US-050](docs/user-stories/US-050-upload-vs/) (complexo - 6 arquivos com ADR + diagrama)
+
+**Guia completo:** [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) v2.0 (seção 3)
+
+---
+
+### 6.5 Testar
 
 ```bash
 # Testes unitários
@@ -420,7 +504,7 @@ npm run test:coverage
 
 ---
 
-### 6.5 Commit (Conventional Commits)
+### 6.6 Commit (Conventional Commits)
 
 ```bash
 git add .
@@ -450,7 +534,7 @@ test(team): adiciona testes para MemberCard component [US-004]
 
 ---
 
-### 6.6 Push e Pull Request
+### 6.7 Push e Pull Request
 
 ```bash
 git push -u origin feature/US-001-authentication
@@ -484,7 +568,7 @@ gh pr create --title "feat(auth): adiciona autenticação [US-001]" \
 
 ---
 
-### 6.7 Code Review
+### 6.8 Code Review
 
 **Checklist do Reviewer:**
 
