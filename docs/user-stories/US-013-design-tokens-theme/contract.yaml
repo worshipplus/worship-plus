@@ -1,53 +1,51 @@
-# US-XXX: [Feature Name] API Contract
+# US-013: Design Tokens & Theme Specification
 # Gerado por: Architecture Agent
-# Data: [data]
-# Consumidores: Frontend Agent, Backend Agent (P2)
+# Data: 2026-03-03
+# Consumidores: Frontend Developer Agent
 
-openapi: 3.1.0
-info:
-  title: Worship+ [Feature] API
-  version: 1.0.0
-  description: |
-    API contract para [feature name].
-    
-    **Bounded Context:** [Context]  
-    **Aggregate:** [Aggregate Root]
+# Design Tokens Contract v1.0.0
+# Bounded Context: User Management (Generic - Design System)
+# Priority: P0 - CRÍTICO
 
-servers:
-  - url: https://xxx.supabase.co/rest/v1
-    description: Supabase REST API (MVP)
-  - url: https://api.worshipplus.com/v1
-    description: BFF NestJS (P2 - futuro)
+---
 
-tags:
-  - name: [Feature]
-    description: Operações de [feature]
+## 1. CSS Custom Properties (Design Tokens)
 
-paths:
-  /resource:
-    get:
-      operationId: listResources
-      summary: Lista todos os recursos
-      tags: [Feature]
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 10
-            maximum: 100
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-      responses:
-        '200':
-          description: Lista de recursos
-          content:
-            application/json:
-              schema:
-                type: array
+### 1.1 Colors (Light Mode - Default)
+
+```css
+/* Primary Palette */
+:root {
+  --color-primary: #8B5CF6;        /* Purple main */
+  --color-primary-hover: #7C3AED;  /* Darker on hover */
+  --color-primary-light: #A78BFA;  /* Lighter variant */
+  --color-primary-dark: #6D28D9;   /* Darker variant */
+  
+  /* Secondary Palette */
+  --color-secondary: #10B981;      /* Green accent */
+  --color-secondary-hover: #059669;
+  --color-secondary-light: #34D399;
+  --color-secondary-dark: #047857;
+  
+  /* Neutral Scale (Light Mode) */
+  --color-neutral-0: #FFFFFF;      
+  --color-neutral-50: #F9FAFB;     
+  --color-neutral-100: #F3F4F6;    
+  --color-neutral-200: #E5E7EB;    
+  --color-neutral-300: #D1D5DB;    
+  --color-neutral-400: #9CA3AF;    
+  --color-neutral-500: #6B7280;    
+  --color-neutral-600: #4B5563;    
+  --color-neutral-700: #374151;    
+  --color-neutral-800: #1F2937;    
+  --color-neutral-900: #111827;    
+  --color-neutral-1000: #000000;   
+  
+  /* Semantic Colors */
+  --color-success: #10B981;        
+  --color-warning: #F59E0B;        
+  --color-error: #EF4444;          
+  --color-info: #3B82F6;
                 items:
                   $ref: '#/components/schemas/Resource'
         '401':
