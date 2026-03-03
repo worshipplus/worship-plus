@@ -1,23 +1,38 @@
-# US-XXX: [Feature Name] API Contract
+# US-017: Services Layer - TypeScript Interfaces
 # Gerado por: Architecture Agent
-# Data: [data]
-# Consumidores: Frontend Agent, Backend Agent (P2)
+# Data: 2026-03-03
+# Versão: 1.0.0
 
-openapi: 3.1.0
-info:
-  title: Worship+ [Feature] API
-  version: 1.0.0
-  description: |
-    API contract para [feature name].
-    
-    **Bounded Context:** [Context]  
-    **Aggregate:** [Aggregate Root]
+## Services
 
-servers:
-  - url: https://xxx.supabase.co/rest/v1
-    description: Supabase REST API (MVP)
-  - url: https://api.worshipplus.com/v1
-    description: BFF NestJS (P2 - futuro)
+### AuthService
+- Methods: signIn, signUp, signOut, getUser, refreshToken, isSessionValid
+- Storage: sessionStorage (token cache)
+- Events: UserSignedIn, UserSignedOut, AuthTokenRefreshed
+
+### StorageService
+- Methods: get<T>, set<T>, remove, clear, keys, has, getSize
+- Abstraction: localStorage/sessionStorage with prefix
+- Error handling: QuotaExceededError
+
+### ApiClient
+- Methods: get, post, patch, delete
+- Features: retry (3x exponential backoff), timeout (30s), interceptors
+- Retry: only 5xx errors (not 4xx)
+- Interceptors: Authorization header (auto), token refresh (401)
+
+## DI Container (src/config/container.ts)
+- Composition root: initializeContainer(), getContainer()
+- Services: { authService, storageService, apiClient }
+- Interceptors: auto-inject JWT token, auto-refresh on 401
+
+## Events
+- AuthTokenRefreshed: after token refresh
+- ApiRequestFailed: after 3 retries exhausted
+
+## Testing
+- Mocks: src/services/__mocks__/ (for component tests)
+- Coverage: ≥80%
 
 tags:
   - name: [Feature]

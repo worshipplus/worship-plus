@@ -1,23 +1,39 @@
-# US-XXX: [Feature Name] API Contract
+# US-016: Custom Hooks - TypeScript Signatures
 # Gerado por: Architecture Agent
-# Data: [data]
-# Consumidores: Frontend Agent, Backend Agent (P2)
+# Data: 2026-03-03
+# Versão: 1.0.0
 
-openapi: 3.1.0
-info:
-  title: Worship+ [Feature] API
-  version: 1.0.0
-  description: |
-    API contract para [feature name].
-    
-    **Bounded Context:** [Context]  
-    **Aggregate:** [Aggregate Root]
+## Custom Hooks
 
-servers:
-  - url: https://xxx.supabase.co/rest/v1
-    description: Supabase REST API (MVP)
-  - url: https://api.worshipplus.com/v1
-    description: BFF NestJS (P2 - futuro)
+### useAuth
+- Returns: { user, signIn, signOut, isLoading, error, isAuthenticated }
+- Cache: sessionStorage (5min)
+
+### useLocalStorage<T>
+- Signature: (key, initialValue, options) => [value, setValue]
+- Features: Cross-tab sync (storage event)
+
+### useDebounce<T>
+- Signature: (value, { delay = 300ms }) => debouncedValue
+- Cleanup: clearTimeout on unmount
+
+### useMediaQuery
+- Signature: (query) => boolean
+- Performance: window.matchMedia (event-driven)
+- Helpers: useIsMobile(), useIsTablet(), useIsDesktop()
+
+### useOnClickOutside
+- Signature: (ref, handler, options) => void
+- Events: mousedown, touchstart
+
+### useAsync<T>
+- Returns: { data, error, isLoading, status, execute, reset }
+- Cleanup: prevent state updates after unmount
+
+## Rules
+- All hooks: useX prefix, cleanup on unmount, useCallback for stable refs
+- TypeScript generics for reusability
+- Testing: ≥80% coverage with @testing-library/react-hooks
 
 tags:
   - name: [Feature]

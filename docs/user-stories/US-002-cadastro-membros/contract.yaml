@@ -1,23 +1,35 @@
-# US-002: [Feature Name] API Contract
+# US-002: Team Members API Contract
 # Gerado por: Architecture Agent
-# Data: [data]
-# Consumidores: Frontend Agent, Backend Agent (P2)
+# Data: 2026-03-03
+# Versão: 1.0.0
 
-openapi: 3.1.0
-info:
-  title: Worship+ [Feature] API
-  version: 1.0.0
-  description: |
-    API contract para [feature name].
-    
-    **Bounded Context:** [Context]  
-    **Aggregate:** [Aggregate Root]
+## API Endpoints (Supabase REST)
 
-servers:
-  - url: https://xxx.supabase.co/rest/v1
-    description: Supabase REST API (MVP)
-  - url: https://api.worshipplus.com/v1
-    description: BFF NestJS (P2 - futuro)
+### POST /team_members
+Cadastro de novo membro (apenas Ministros)
+- **Request:** nome, email (unique), area, instrumento (opcional), avatar_url
+- **Response 201:** TeamMember object
+- **Validations:** Email único, credenciais temporárias enviadas por email
+
+### GET /team_members
+Lista membros com filtros
+- **Params:** area, status, search, limit, offset
+- **Response 200:** Array<TeamMember>
+
+### GET /team_members/:id  
+Busca membro por ID
+
+### PATCH /team_members/:id
+Atualiza membro (apenas Ministros)
+
+### DELETE /team_members/:id  
+Soft delete (set status=inativo)
+
+## Schema: TeamMember
+- id (uuid), nome, email (unique), area (enum), instrumento, avatar_url
+- status (ativo/inativo), created_at, updated_at, deleted_at
+
+##Security: Bearer JWT + RLS policies
 
 tags:
   - name: [Feature]

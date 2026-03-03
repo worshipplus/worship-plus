@@ -1,23 +1,34 @@
-# US-XXX: [Feature Name] API Contract
+# US-014: Componentes Base - TypeScript Interfaces
 # Gerado por: Architecture Agent
-# Data: [data]
-# Consumidores: Frontend Agent, Backend Agent (P2)
+# Data: 2026-03-03
+# Versão: 1.0.0
 
-openapi: 3.1.0
-info:
-  title: Worship+ [Feature] API
-  version: 1.0.0
-  description: |
-    API contract para [feature name].
-    
-    **Bounded Context:** [Context]  
-    **Aggregate:** [Aggregate Root]
+## Component Interfaces
 
-servers:
-  - url: https://xxx.supabase.co/rest/v1
-    description: Supabase REST API (MVP)
-  - url: https://api.worshipplus.com/v1
-    description: BFF NestJS (P2 - futuro)
+### Button
+- ButtonProps: variant (primary/secondary/ghost/danger), size (sm/md/lg), disabled, loading, icon
+- Touch targets ≥44px (iOS requirement)
+
+### Input
+- InputProps: type, value, onChange, label, error, helperText, required
+- ARIA: aria-invalid, aria-describedby
+
+### Card (Compound Components)
+- CardProps: variant (flat/outlined/elevated), clickable
+- Card.Header, Card.Body, Card.Footer
+
+### Badge
+- BadgeProps: variant (success/warning/error/info), size, icon, dot
+
+### Avatar
+- AvatarProps: src, alt, size (sm/md/lg/xl), fallback, status
+- Fallback: initials with deterministic color (hash)
+
+## Accessibility
+- Touch targets ≥44px, focus outline 2px, ARIA attributes
+- Disabled opacity 0.4, loading spinner
+
+## Testing: ≥80% coverage, Storybook stories for all variants
 
 tags:
   - name: [Feature]
