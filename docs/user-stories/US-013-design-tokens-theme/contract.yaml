@@ -1,66 +1,124 @@
-# US-013: Design Tokens & Theme Specification
+# US-013: Design Tokens & Theme Specification - Premium Glassmorphism
 # Gerado por: Architecture Agent
 # Data: 2026-03-03
-# Versão: 1.0.0
+# Versão: 2.0.0 - Premium Glassmorphism Edition
 
-## 1. CSS Custom Properties
+## 1. CSS Custom Properties (Premium Glass Tokens)
 
-### Colors (Light Mode)
-- Primary: #8B5CF6 (purple), hover, light, dark variants
-- Secondary: #10B981 (green), hover, light, dark variants
-- Neutral scale: 0-1000 (white to black)
-- Semantic: success, warning, error, info
-- Surface: background, surface, elevated, overlay
-- Text: primary, secondary, tertiary, inverse, link
+### Colors - Primary (Burgundy with Opacity Variations)
+- --color-primary: #7F1D2E (burgundy solid)
+- --color-primary-hover: #6B1825 (darker on hover)
+- --color-primary-light: #A8344A (lighter variant)
+- --color-primary-dark: #5A1420 (darkest)
+- --color-primary-rgb: 127, 29, 46 (for rgba() usage)
+- Opacity layers: 10%, 20%, 40%, 60%, 80% (glassmorphism)
 
-### Colors (Dark Mode)
-- data-theme="dark": inverted neutral scale
-- Maintained primary/secondary colors, adjusted hovers
-- localStorage persistence with THEME_STORAGE_KEY
+### Colors - Neutral (Ultra Light Offwhite)
+- --color-background: #FCFCFB (ultra-light offwhite)
+- --color-surface-glass: rgba(255, 255, 255, 0.6) (glass base)
+- --color-surface-elevated: rgba(255, 255, 255, 0.85) (elevated glass)
+- Neutral scale: 50-900 (refined warm grays)
+- Text primary: #0F0F0F (deeper black for contrast)
+
+### Colors - Semantic
+- Success: #10B981, Warning: #F59E0B, Error: #EF4444, Info: #3B82F6
+- Badge tints: pink-100/800, green-100/800, neutral-100/600
+
+### Glassmorphism Effects
+- Backdrop blur levels: sm (8px), md (16px), lg (24px), xl (40px)
+- Glass borders: rgba(255, 255, 255, 0.8) semi-transparent
+- Inner glow: inset 0 1px 0 rgba(255, 255, 255, 0.5)
+
+### Shadows (Soft Glass + Glow)
+- Glass shadows: 0 8px 32px rgba(0, 0, 0, 0.08)
+- Glow primary: 0 0 20px rgba(127, 29, 46, 0.3)
+- Focus ring: 0 0 0 3px primary-20, 0 0 12px primary-40
 
 ### Spacing (4px base grid)
 - 0, 1 (4px), 2 (8px), 3 (12px), 4 (16px), 5 (20px), 6 (24px)
 - 8 (32px), 10 (40px), 12 (48px), 16 (64px), 20 (80px), 24 (96px)
 
-### Typography (Fluid with clamp())
-- Font families: sans (system-ui), mono (monospace)
-- Sizes: xs (12-14px), sm (14-16px), base (16-18px), lg, xl, 2xl, 3xl, 4xl
-- Weights: normal (400), medium (500), semibold (600), bold (700)
-- Line heights: none, tight, snug, normal, relaxed, loose
+### Typography (Fluid with Black Weight)
+- Fonts: Outfit (400-900 including Black), Inter (400-700)
+- Display: clamp(2.5rem, 4vw + 1rem, 4rem), weight 900 (Black)
+- Headings: H1 (800), H2 (700), H3 (600)
+- Body: 16-18px fluid, line-height 1.65, letter-spacing 0.01em
+- Button: 16px fixed, weight 600
 
-### Borders & Radius
-- Widths: 0, 1px, 2px, 4px
-- Radius: none, sm (4px), md (8px), lg (12px), xl (16px), 2xl (24px), full (circle)
+### Borders & Radius (Ultra Rounded)
+- Radius: sm (8px), md (12px), lg (16px), xl (24px), 2xl (32px), full (circle)
+- Glass borders: 1px solid with high opacity
+- Navigation: 28px ultra-rounded corners
 
-### Shadows & Transitions
-- Elevations: xs, sm, md, lg, xl, 2xl, focus (2px primary-light)
-- Durations: fast (150ms), base (200ms), slow (300ms), slower (500ms)
-- Timings: ease-in, ease-out, ease-in-out
+### Micro-interactions (Organic & Fluid)
+- Durations: instant (150ms), fast (300ms), base (450ms), slow (600ms), slower (900ms for blur)
+- Easing: smooth, bounce, elegant, out-expo (custom curves)
+- Hover: translateY(-3px) + glow shadow
+- Active: scale(1.02) subtle press
+- Glass transitions: backdrop-filter 900ms smooth
 
 ### Breakpoints (Mobile-First)
 - sm: 360px, md: 768px, lg: 1024px, xl: 1440px
 - Use min-width queries only
 
-## 2. Accessibility (WCAG AA)
-- Contrast ratios ≥4.5:1 for normal text, ≥3:1 for large text
-- Focus outline 2px, focus-visible styles
-- Validated color combinations in light and dark modes
+## 2. Premium Components Specifications
 
-## 3. Theme Provider (React Context)
+### Floating Bottom Nav (Mobile)
+- Position: fixed, bottom: 16px, left/right: 16px (floating)
+- Glass: backdrop-filter blur(40px), bg rgba(255, 255, 255, 0.7)
+- Border: 1px solid rgba(255, 255, 255, 0.9)
+- Radius: 28px (ultra rounded)
+- Shadow: glass-lg + inner glow
+- Active icons: glow effect (drop-shadow primary)
+
+### Glass Sidebar (Desktop)
+- Position: fixed with 16px gaps on all sides
+- Glass: backdrop-filter blur(40px), bg rgba(255, 255, 255, 0.65)
+- Border radius: 24px
+- Active item: solid primary bg + glow shadow
+- Hover: translateX(4px) smooth
+
+### Glass Cards
+- Backdrop-filter: blur(40px)
+- Background: rgba(255, 255, 255, 0.65)
+- Border: 1px solid rgba(255, 255, 255, 0.8)
+- Inner glow: inset shadow
+- Hover: blur(48px), bg 0.75 opacity, translateY(-4px)
+
+### Premium Buttons
+- Primary: solid burgundy + border rgba(255, 255, 255, 0.2)
+- Radius: 24px (pill shape)
+- Hover: translateY(-3px) scale(1.02) + glow
+- Shadow: glass-md + primary-40 color shadow
+- Min height: 48px (premium touch target)
+
+## 3. Accessibility (WCAG AA + Premium UX)
+- Contrast ratios ≥4.5:1 (primary #7F1D2E on white: 8.2:1 ✅)
+- Touch targets ≥48px (premium feel)
+- Focus ring: glow effect (accessibility + aesthetic)
+- Backdrop-filter fallbacks for unsupported browsers
+- GPU acceleration: will-change transform on interactive elements
+
+## 4. Theme Provider (React Context)
 - ThemeContext: { theme, toggleTheme, setTheme }
 - localStorage sync, cross-tab updates
 - Event: THEME_CHANGED_EVENT
+- Glass opacity adjustments in dark mode
 
-## 4. Validation Rules
-- All colors via var() (no hardcoded values)
-- Dark mode via data-theme attribute
+## 5. Validation Rules
+- All colors via var() (no hardcoded)
+- Glassmorphism via backdrop-filter (with -webkit prefix)
 - Mobile-first breakpoints (min-width)
 - Spacing multiples of 4px
 - Fluid typography with clamp()
+- Transitions ≥300ms (organic feel)
+- Ultra-rounded corners (≥16px for main elements)
 
-## 5. Dependencies
-- PostCSS (custom properties fallback)
+## 6. Dependencies
+- PostCSS (custom properties + fallback)
+- Autoprefixer (webkit-backdrop-filter for Safari)
 - Storybook addon-themes
+- Google Fonts: Outfit (400-900), Inter (400-700)
 - scripts/palette-extractor.js
                 items:
                   $ref: '#/components/schemas/Resource'
