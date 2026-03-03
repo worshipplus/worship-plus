@@ -1,0 +1,408 @@
+# US-001: Authentication API Contract
+# Gerado por: Architecture Agent
+# Data: 3 de Março de 2026
+# Consumidores: Frontend Agent, Backend Agent (P2 - futuro)
+# Stack: Supabase Auth (MVP), NestJS Passport JWT (P2)
+
+openapi: 3.1.0
+info:
+  title: Worship+ Authentication API
+  version: 1.0.0
+  description: |
+    API de autenticação do Worship+.
+    
+    **Bounded Context:** User Management (Generic)  
+    **Aggregate:** User, Session  
+    **Stack MVP:** Supabase GoTrue (Auth subsystem)
+
+servers:
+  - url: https://xxx.supabase.co/auth/v1
+    description: Supabase Auth API (MVP)
+  - url: https://api.worshipplus.com/v1/auth
+    description: BFF NestJS (P2 - futuro)
+
+tags:
+  - name: Authentication
+    description: Operações de autenticação e gerenciamento de sessão
+
+paths:
+  /token:
+    post:
+      operationId: login
+      summary: Autentica usuário com email e senha
+      tags: [Authentication]
+      description: |
+        Endpoint de login que retorna JWT access token e refresh token.
+        
+        **Rate Limiting:** 5 tentativas/min por IP  
+        **Security:** bcrypt password hash, JWT com 7 dias de expiração
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, grant_type]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email do usuário (único no sistema)
+                  example: "jubarte@adpg.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  description: Senha (mínimo 8 caracteres)
+                  example: "SecurePass123"
+                grant_type:
+                  type: string
+                  enum: [password]
+                  default: password
+                  description: Tipo de autenticação (OAuth2 grant type)
+      
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                token_type: "bearer"
+                expires_in: 604800
+                expires_at: 1709990400
+                refresh_token: "v1|8f3e4d2c1b0a9..."
+                user:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "jubarte@adpg.com"
+                  email_confirmed_at: "2026-03-01T10:00:00Z"
+                  role: "authenticated"
+                  app_metadata:
+                    provider: "email"
+                  user_metadata:
+                    name: "Jubarte Silva"
+                    avatar_url: "https://..."
+        
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_email:
+                  value:
+                    error: "invalid_request"
+                    error_description: "Formato de email inválido"
+                missing_field:
+                  value:
+                    error: "invalid_request"
+                    error_description: "Campo 'password' é obrigatório"
+        
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_credentials:
+                  value:
+                    error: "invalid_grant"
+                    error_description: "Email ou senha incorretos"
+                user_not_found:
+                  value:
+                    error: "invalid_grant"
+                    error_description: "Email não encontrado"
+        
+        '429':
+          description: Muitas tentativas (rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "too_many_requests"
+                error_description: "Múltiplas tentativas de login falhas. Aguarde 15 minutos."
+                retry_after: 900
+
+  /token?grant_type=refresh_token:
+    post:
+      operationId: refreshToken
+      summary: Renova access token usando refresh token
+      tags: [Authentication]
+      description: |
+        Endpoint para renovar sessão expirada sem re-autenticar.
+        
+        **Security:** Refresh token válido por 7 dias, rotacionado a cada uso
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token, grant_type]
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token retornado no login
+                  example: "v1|8f3e4d2c1b0a9..."
+                grant_type:
+                  type: string
+                  enum: [refresh_token]
+                  default: refresh_token
+      
+      responses:
+        '200':
+          description: Token renovado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        
+        '401':
+          description: Refresh token inválido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "invalid_grant"
+                error_description: "Refresh token inválido ou expirado"
+
+  /logout:
+    post:
+      operationId: logout
+      summary: Encerra sessão do usuário
+      tags: [Authentication]
+      description: |
+        Invalida refresh token e limpa sessão.
+        
+        **Side Effects:** Evento `UserLoggedOut` disparado (Analytics Context)
+      
+      security:
+        - BearerAuth: []
+      
+      responses:
+        '204':
+          description: Logout bem-sucedido (no content)
+        
+        '401':
+          description: Token inválido ou ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "unauthorized"
+                error_description: "Token de autenticação ausente ou inválido"
+
+  /recover:
+    post:
+      operationId: recoverPassword
+      summary: Envia email de recuperação de senha
+      tags: [Authentication]
+      description: |
+        Envia email com link para redefinir senha.
+        
+        **Security:** Link válido por 1 hora, token único
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email do usuário
+                  example: "jubarte@adpg.com"
+      
+      responses:
+        '200':
+          description: Email enviado (sempre 200, mesmo se email não existe - security)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Se o email estiver cadastrado, você receberá um link de recuperação"
+        
+        '429':
+          description: Muitas tentativas (rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "too_many_requests"
+                error_description: "Aguarde 5 minutos antes de solicitar novamente"
+
+  /user:
+    get:
+      operationId: getCurrentUser
+      summary: Retorna dados do usuário autenticado
+      tags: [Authentication]
+      description: |
+        Busca informações do usuário baseado no JWT token.
+        
+        **Permissions:** Apenas o próprio usuário pode acessar seus dados
+      
+      security:
+        - BearerAuth: []
+      
+      responses:
+        '200':
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                email: "jubarte@adpg.com"
+                email_confirmed_at: "2026-03-01T10:00:00Z"
+                role: "authenticated"
+                app_metadata:
+                  provider: "email"
+                user_metadata:
+                  name: "Jubarte Silva"
+                  avatar_url: "https://..."
+                created_at: "2026-03-01T10:00:00Z"
+                updated_at: "2026-03-03T14:30:00Z"
+        
+        '401':
+          description: Não autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    AuthResponse:
+      type: object
+      required: [access_token, token_type, expires_in, user]
+      properties:
+        access_token:
+          type: string
+          description: JWT access token (válido por 7 dias)
+        token_type:
+          type: string
+          enum: [bearer]
+          description: Tipo do token (sempre "bearer")
+        expires_in:
+          type: integer
+          description: Tempo de expiração em segundos (604800 = 7 dias)
+        expires_at:
+          type: integer
+          description: Unix timestamp de expiração
+        refresh_token:
+          type: string
+          description: Refresh token (rotacionado a cada uso)
+        user:
+          $ref: '#/components/schemas/User'
+    
+    User:
+      type: object
+      required: [id, email, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador único (UUID v4)
+        email:
+          type: string
+          format: email
+          description: Email do usuário (único)
+        email_confirmed_at:
+          type: string
+          format: date-time
+          description: Data de confirmação do email
+          nullable: true
+        role:
+          type: string
+          enum: [authenticated, anon]
+          description: Role do usuário (Supabase Auth)
+        app_metadata:
+          type: object
+          description: Metadados gerenciados pelo sistema
+          properties:
+            provider:
+              type: string
+              enum: [email, google, github]
+              description: Provider de autenticação
+        user_metadata:
+          type: object
+          description: Metadados gerenciados pelo usuário
+          properties:
+            name:
+              type: string
+              description: Nome completo
+            avatar_url:
+              type: string
+              format: uri
+              description: URL do avatar
+        created_at:
+          type: string
+          format: date-time
+          description: Data de criação da conta
+        updated_at:
+          type: string
+          format: date-time
+          description: Data da última atualização
+    
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Código de erro (OAuth2 padrão)
+          enum:
+            - invalid_request
+            - invalid_grant
+            - unauthorized
+            - too_many_requests
+        error_description:
+          type: string
+          description: Mensagem legível do erro
+        retry_after:
+          type: integer
+          description: Tempo para retry (segundos) - apenas em 429
+      example:
+        error: "invalid_grant"
+        error_description: "Email ou senha incorretos"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token retornado pelo endpoint /token.
+        
+        **Header:** `Authorization: Bearer <access_token>`
+        
+        **Payload (exemplo):**
+        ```json
+        {
+          "sub": "550e8400-e29b-41d4-a716-446655440000",
+          "email": "jubarte@adpg.com",
+          "role": "authenticated",
+          "iat": 1709383600,
+          "exp": 1709988400
+        }
+        ```
+
+security:
+  - BearerAuth: []

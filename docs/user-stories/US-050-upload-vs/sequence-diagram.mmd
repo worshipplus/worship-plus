@@ -1,0 +1,359 @@
+# US-050: Sequence Diagram — Upload de Virtual Sound (VS)
+
+**Feature:** Upload de VS com Chunked Upload  
+**Bounded Context:** Media Context  
+**Complexidade:** Alta (7 componentes interagindo)  
+**Formato:** Mermaid Sequence Diagram
+
+---
+
+## 1. Fluxo Completo: Upload End-to-End
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant FE as Frontend<br/>(React)
+    participant API as Backend API<br/>(Supabase/NestJS)
+    participant DB as Database<br/>(Postgres)
+    participant S3 as AWS S3<br/>(Active Storage)
+    participant Lambda as Lambda<br/>(Processor)
+    participant CDN as CloudFront<br/>(CDN)
+    participant Notif as Notification<br/>Context
+
+    %% ===== FASE 1: INITIATE UPLOAD =====
+    Note over U,Notif: FASE 1: Initiate Upload
+    U->>+FE: Seleciona arquivo .wav (200MB)
+    FE->>FE: Valida MIME type, tamanho
+    FE->>+API: POST /media/upload-url<br/>{fileName, fileSize, songId}
+    
+    API->>+DB: INSERT media_files<br/>(status='pending')
+    DB-->>-API: mediaFileId
+    
+    API->>+S3: InitiateMultipartUpload<br/>worship-plus-media-active/vs/
+    S3-->>-API: uploadId + presignedUrls[]<br/>(40 chunks de 5MB)
+    
+    API->>DB: UPDATE media_files<br/>SET uploadId, status='uploading'
+    
+    API-->>-FE: {<br/>  mediaFileId,<br/>  uploadId,<br/>  chunkUrls[] (40 URLs),<br/>  expiresIn: 900 (15min)<br/>}
+    
+    FE-->>U: Exibe progress bar<br/>"Preparando upload..."
+    FE->>-FE: Divide arquivo em chunks (5MB cada)
+    
+    %% ===== FASE 2: UPLOAD CHUNKS =====
+    Note over U,Notif: FASE 2: Upload Chunks (Paralelo)
+    
+    loop Para cada chunk (1 a 40)
+        U->>+FE: Upload em progresso...
+        FE->>+S3: PUT /presignedUrl[i]<br/>Body: chunk[i] (5MB)
+        Note over FE,S3: Header: Content-Type=application/octet-stream
+        
+        alt Upload Bem-Sucedido
+            S3-->>FE: 200 OK<br/>ETag: "abc123..."
+            FE->>FE: Armazena ETag<br/>Atualiza progress: (i/40)*100%
+            FE-->>U: Mostra progress: 45%
+        else Upload Falhou (Network Error)
+            S3-->>FE: ❌ 500 / Timeout
+            FE->>FE: Retry (tentativa 1/3)
+            FE->>S3: PUT /presignedUrl[i]<br/>Body: chunk[i] (retry)
+            S3-->>FE: 200 OK (na 2ª tentativa)
+        else Falhou 3 Vezes
+            FE->>API: POST /media/abort<br/>{uploadId}
+            API->>S3: AbortMultipartUpload
+            API->>DB: UPDATE media_files<br/>SET status='failed'
+            API->>Notif: Emit VSUploadFailed
+            Notif-->>U: Push: "Upload falhou"
+            FE-->>-U: Erro: "Upload falhou após 3 tentativas"
+        end
+    end
+    
+    Note over FE: Todos os 40 chunks enviados
+    FE-->>U: Progress: 100%<br/>"Finalizando upload..."
+    
+    %% ===== FASE 3: COMPLETE UPLOAD =====
+    Note over U,Notif: FASE 3: Complete Multipart Upload
+    
+    FE->>+API: POST /media/complete<br/>{uploadId, etags[], mediaFileId}
+    
+    API->>+S3: CompleteMultipartUpload<br/>{uploadId, parts:[{partNumber, etag}]}
+    Note over S3: S3 consolida 40 chunks<br/>em 1 arquivo .wav
+    S3-->>-API: 200 OK<br/>{s3Key, bucket, size}
+    
+    API->>+DB: UPDATE media_files SET<br/>  status='processing',<br/>  s3_key, bucket, size,<br/>  uploaded_at=NOW()
+    DB-->>-API: OK
+    
+    API->>+Lambda: Invoke ProcessVS<br/>{mediaFileId, s3Key}
+    Note over Lambda: Evento assíncrono<br/>(não bloqueia response)
+    Lambda-->>-API: Accepted (202)
+    
+    API-->>-FE: 200 OK {<br/>  mediaFileId,<br/>  status: 'processing',<br/>  message: 'Upload concluído!<br/>  Processando áudio...'<br/>}
+    
+    FE-->>U: Sucesso: "Upload concluído!<br/>Processando áudio..."
+    FE->>-U: Redireciona para lista de VS
+    
+    %% ===== FASE 4: PROCESSING (Assíncrono) =====
+    Note over U,Notif: FASE 4: Processing (Assíncrono)
+    
+    activate Lambda
+    Lambda->>+S3: GetObject<br/>original.wav (200MB)
+    S3-->>-Lambda: Arquivo .wav
+    
+    Lambda->>Lambda: Transcode com ffmpeg:<br/>- original.wav → mp3 (20MB)<br/>- original.wav → aac (15MB)<br/>- original.wav → webm (18MB)
+    
+    Lambda->>+S3: PutObject<br/>versions/mp3, aac, webm
+    S3-->>-Lambda: 200 OK (3 versões salvas)
+    
+    Lambda->>Lambda: Gerar thumbnail<br/>(waveform preview)
+    
+    Lambda->>+S3: PutObject<br/>thumbnails/waveform.png
+    S3-->>-Lambda: 200 OK
+    
+    Lambda->>+DB: UPDATE media_files SET<br/>  status='ready',<br/>  versions={mp3, aac, webm},<br/>  thumbnail_url,<br/>  processed_at=NOW()
+    DB-->>-Lambda: OK
+    
+    Lambda->>+CDN: Invalidate Cache<br/>/vs/{mediaFileId}/*
+    CDN-->>-Lambda: OK
+    
+    Lambda->>+Notif: Emit VSProcessingCompleted<br/>{mediaFileId, userId}
+    Notif->>Notif: Cria notificação no DB
+    Notif-->>U: Push Notification:<br/>"Áudio pronto para uso!"
+    Notif-->>-Lambda: OK
+    
+    deactivate Lambda
+    
+    %% ===== FASE 5: CONSUMO (Usuário Acessa) =====
+    Note over U,Notif: FASE 5: Consumo do VS
+    
+    U->>+FE: Acessa evento<br/>"Culto Domingo"
+    FE->>+API: GET /events/{eventId}/setlist
+    API->>+DB: SELECT songs with media_files
+    DB-->>-API: Songs + VS URLs
+    API-->>-FE: {<br/>  songs: [{<br/>    id, title,<br/>    vs: {<br/>      mp3: cdn.com/vs/123.mp3,<br/>      aac: cdn.com/vs/123.aac<br/>    }<br/>  }]<br/>}
+    
+    FE->>+CDN: GET /vs/123.mp3<br/>(Audio Player)
+    CDN->>CDN: Cache HIT (já servido antes)
+    CDN-->>-FE: 200 OK<br/>audio/mpeg (20MB)
+    
+    FE-->>-U: 🎵 Audio Player<br/>tocando música
+```
+
+---
+
+## 2. Fluxo de Erro: Timeout no Complete
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant API as Backend API
+    participant S3 as AWS S3
+    participant DB as Database
+    participant DLQ as Dead Letter Queue
+    
+    FE->>+API: POST /media/complete
+    API->>+S3: CompleteMultipartUpload
+    
+    Note over S3: S3 demora >30s<br/>(consolidando 40 chunks)
+    
+    S3-->>API: ⏳ Timeout (30s)
+    
+    API->>API: Catch Timeout Exception
+    
+    API->>+DB: UPDATE media_files<br/>SET status='completing'<br/>(estado intermediário)
+    DB-->>-API: OK
+    
+    API->>+DLQ: Enqueue RetryCompleteJob<br/>{uploadId, mediaFileId, retryCount=1}
+    DLQ-->>-API: OK (job enfileirado)
+    
+    API-->>-FE: 202 Accepted {<br/>  status: 'completing',<br/>  message: 'Finalizando upload...<br/>  Pode levar alguns minutos.'<br/>}
+    
+    Note over DLQ: Worker processa job (assíncrono)
+    
+    DLQ->>+S3: CompleteMultipartUpload<br/>(retry com backoff)
+    S3-->>-DLQ: 200 OK
+    
+    DLQ->>+DB: UPDATE media_files<br/>SET status='processing'
+    DB-->>-DLQ: OK
+    
+    DLQ->>API: Invoke Lambda ProcessVS
+    
+    Note over FE: Frontend faz polling<br/>GET /media/{id}/status
+    
+    FE->>+API: GET /media/{id}/status
+    API->>+DB: SELECT status FROM media_files
+    DB-->>-API: {status: 'processing'}
+    API-->>-FE: {status: 'processing'}
+    
+    FE-->>FE: Mostrar spinner<br/>"Processando áudio..."
+```
+
+---
+
+## 3. Fluxo de Lifecycle: Archival (Evento >30 dias)
+
+```mermaid
+sequenceDiagram
+    participant Cron as CloudWatch Event<br/>(Daily Cron)
+    participant Lambda as Archival Lambda
+    participant DB as Database
+    participant S3 as S3 Active
+    participant Glacier as S3 Glacier
+    
+    Note over Cron,Glacier: Executado diariamente às 2am UTC
+    
+    Cron->>+Lambda: Invoke ArchivalLambda
+    
+    Lambda->>+DB: SELECT media_files<br/>WHERE event_date < NOW() - 30 days<br/>AND storage_class='STANDARD'
+    DB-->>-Lambda: [mediaFile1, mediaFile2, ...]
+    
+    loop Para cada mediaFile
+        Lambda->>+S3: CopyObject<br/>from: active/vs/123.wav<br/>to: archive/vs/123.wav<br/>StorageClass: GLACIER
+        S3-->>Glacier: Transfere para Glacier
+        Glacier-->>-Lambda: OK (arquivado)
+        
+        Lambda->>+S3: DeleteObject<br/>active/vs/123.wav
+        S3-->>-Lambda: OK (deletado do Active)
+        
+        Lambda->>+DB: UPDATE media_files SET<br/>  storage_class='GLACIER',<br/>  archived_at=NOW()
+        DB-->>-Lambda: OK
+    end
+    
+    Lambda-->>-Cron: OK (X arquivos arquivados)
+    
+    Note over Cron,Glacier: Custo reduzido:<br/>$0.023/GB (Active) → $0.004/GB (Glacier)
+```
+
+---
+
+## 4. Fluxo de Restore: Usuário Solicita VS Arquivado
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant FE as Frontend
+    participant API as Backend API
+    participant DB as Database
+    participant Glacier as S3 Glacier
+    participant S3 as S3 Active
+    participant Notif as Notification<br/>Context
+    
+    U->>+FE: Clica em "Baixar VS"<br/>(evento antigo)
+    FE->>+API: GET /media/{id}/download-url
+    
+    API->>+DB: SELECT storage_class<br/>FROM media_files<br/>WHERE id={id}
+    DB-->>-API: {storage_class: 'GLACIER'}
+    
+    API->>API: Verifica: Arquivo está em Glacier
+    
+    alt Restore já em progresso
+        API-->>FE: 202 Accepted {<br/>  status: 'restoring',<br/>  estimatedTime: '3-5 horas'<br/>}
+        FE-->>U: "Arquivo em restauração.<br/>Você será notificado."
+    else Iniciar Restore
+        API->>+Glacier: RestoreObject<br/>Tier: Standard (3-5h)<br/>Days: 1
+        Glacier-->>-API: 202 Accepted
+        
+        API->>DB: UPDATE media_files<br/>SET restore_status='restoring',<br/>  restore_initiated_at=NOW()
+        
+        API->>+Notif: Emit VSRestoreInitiated<br/>{mediaFileId, userId}
+        Notif->>DB: INSERT notification
+        Notif-->>-API: OK
+        
+        API-->>-FE: 202 Accepted {<br/>  status: 'restoring',<br/>  estimatedTime: '3-5 horas'<br/>}
+        FE-->>-U: "Restaurando arquivo.<br/>Você será notificado."
+    end
+    
+    Note over Glacier: Glacier processa restore<br/>(3-5 horas)
+    
+    Glacier->>+S3: CopyObject<br/>to: active-temp/vs/123.wav<br/>(disponível por 1 dia)
+    S3-->>-Glacier: OK
+    
+    Glacier->>+API: S3 Event Notification<br/>ObjectRestore:Completed
+    API->>+DB: UPDATE media_files<br/>SET restore_status='ready',<br/>  restore_completed_at=NOW()
+    DB-->>-API: OK
+    
+    API->>+Notif: Emit VSRestoreCompleted<br/>{mediaFileId, userId}
+    Notif-->>U: Push: "Arquivo pronto<br/>para download!"
+    Notif-->>-API: OK
+    
+    U->>+FE: Acessa notificação
+    FE->>+API: GET /media/{id}/download-url
+    API->>+S3: GeneratePresignedUrl<br/>active-temp/vs/123.wav<br/>ExpiresIn: 3600
+    S3-->>-API: presignedUrl
+    API-->>-FE: {downloadUrl, expiresAt}
+    
+    FE->>+S3: GET presignedUrl
+    S3-->>-FE: 200 OK<br/>audio/wav (200MB)
+    FE-->>-U: 🎵 Download iniciado
+```
+
+---
+
+## 5. Diagrama de Estados: Media File Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: Upload URL solicitada
+    pending --> uploading: Chunks sendo enviados
+    
+    uploading --> processing: Complete bem-sucedido
+    uploading --> completing: Complete timeout (retry)
+    uploading --> failed: 3 retries falharam
+    
+    completing --> processing: Retry bem-sucedido
+    completing --> failed: Retry falhou
+    
+    processing --> ready: Transcodificação OK
+    processing --> failed: Erro no Lambda
+    
+    ready --> archived: Evento >30 dias<br/>(Cron diário)
+    
+    archived --> restoring: Usuário solicita restore
+    restoring --> ready: Restore completo (temp 1 dia)
+    ready --> archived: Após 1 dia (lifecycle)
+    
+    failed --> [*]: Delete após 7 dias
+    ready --> [*]: Delete manual (owner)
+```
+
+---
+
+## 6. Resumo de Atores e Responsabilidades
+
+| Ator | Responsabilidade | Papel |
+|------|-----------------|-------|
+| **Frontend** | Dividir arquivo em chunks, enviar para S3, UI de progress | Cliente |
+| **Backend API** | Gerar presigned URLs, orquestrar complete, invocar Lambda | Orquestrador |
+| **AWS S3** | Armazenar chunks e arquivo consolidado | Storage |
+| **Lambda Processor** | Transcodificar áudio, gerar thumbnails | Processamento |
+| **Database** | Persistir metadados, status, URLs | Persistência |
+| **CloudFront CDN** | Servir arquivos com baixa latência | Entrega |
+| **Notification Context** | Notificar usuário sobre progresso | Comunicação |
+| **Glacier** | Armazenar arquivos antigos (custo reduzido) | Archival |
+
+---
+
+## 7. Observações Técnicas
+
+### Paralelização
+- **Chunks:** Podem ser enviados em paralelo (max 5 simultâneos)
+- **Transcodificação:** ffmpeg processa 3 formatos em paralelo
+- **Notificações:** Emitidas de forma assíncrona (não bloqueiam fluxo)
+
+### Resiliência
+- **Retry:** 3 tentativas por chunk com exponential backoff
+- **Timeout:** 60s por chunk, 30s para complete
+- **DLQ:** Jobs falhados vão para Dead Letter Queue para retry manual
+
+### Segurança
+- **Presigned URLs:** Expiram em 15 minutos
+- **MIME Validation:** Cliente e servidor validam tipo de arquivo
+- **Virus Scan:** ClamAV via Lambda pós-upload
+
+### Performance
+- **Chunk Size:** 5MB otimizado para 3G/4G
+- **CDN Cache:** TTL de 7 dias para arquivos ready
+- **Glacier Restore:** Standard tier (3-5h), custo $0.03/GB
+
+---
+
+**Criado em:** 3 de Março de 2026  
+**Mantido por:** Architecture Agent  
+**Última Revisão:** 3 de Março de 2026
