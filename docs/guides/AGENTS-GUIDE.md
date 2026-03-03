@@ -1,8 +1,11 @@
 # Worship+ Agents Guide
 
-**Versão:** 1.0  
-**Data:** 2 de Março de 2026  
+**Versão:** 2.0  
+**Data:** 3 de Março de 2026  
 **Status:** Guia Operacional  
+**Changelog:** 
+- v2.0 (03/03/2026): Adicionado workflow multi-agent com context economy (seções 2.3, 3)
+- v1.0 (02/03/2026): Versão inicial  
 
 ---
 
@@ -10,11 +13,18 @@
 
 1. [Propósito deste Guia](#1-propósito-deste-guia)
 2. [Hierarquia de Documentação](#2-hierarquia-de-documentação)
-3. [Como Cada Agent Deve Usar o DDD-GUIDE](#3-como-cada-agent-deve-usar-o-ddd-guide)
-4. [Fluxo de Trabalho por Agent](#4-fluxo-de-trabalho-por-agent)
-5. [Checklist de Validação](#5-checklist-de-validação)
-6. [Exemplos Práticos](#6-exemplos-práticos)
-7. [Atualização de Documentação (Living Documents)](#7-atualização-de-documentação-living-documents)
+   - 2.3 [Context Economy — Summaries](#23-context-economy--summaries-novo-)
+3. [Multi-Agent Workflow — Event-Driven Communication](#3-multi-agent-workflow--event-driven-communication) ✨ **Novo**
+   - 3.1 [Arquitetura de Comunicação](#31-arquitetura-de-comunicação)
+   - 3.2 [Context Economy por Task](#32-context-economy-por-task)
+   - 3.3 [Workflow de User Story (Passo a Passo)](#33-workflow-de-user-story-passo-a-passo)
+   - 3.4 [Quando Criar ADR ou Diagrama (Selectivity)](#34-quando-criar-adr-ou-diagrama-selectivity)
+4. [Como Cada Agent Deve Usar o DDD-GUIDE (Otimizado)](#4-como-cada-agent-deve-usar-o-ddd-guide-otimizado)
+5. [Fluxo de Trabalho por Agent (Legado)](#5-fluxo-de-trabalho-por-agent-legado)
+6. [Checklist de Validação](#6-checklist-de-validação)
+7. [Exemplos Práticos](#7-exemplos-práticos)
+8. [Resumo Executivo](#8-resumo-executivo)
+9. [Atualização de Documentação (Living Documents)](#9-atualização-de-documentação-living-documents)
 
 ---
 
@@ -63,17 +73,243 @@ Este documento define **como os agents (PM, Arquiteto, Desenvolvedores)** devem 
 
 | Documento | Propósito | Quem Atualiza | Quando Consultar |
 |-----------|-----------|---------------|------------------|
-| **DDD-GUIDE.md** | Modelagem de domínio, decisões técnicas | Software Architecture Agent | SEMPRE antes de criar entidades, escrever stories ou implementar features |
+| **DDD-GUIDE.md** | Modelagem de domínio, decisõestécnicas | Software Architecture Agent | SEMPRE antes de criar entidades, escrever stories ou implementar features |
 | **project-details.md** | Especificações de negócio, regras funcionais | Product Manager Agent | Ao definir requisitos funcionais |
 | **RFC-0001/0002** | Decisões técnicas específicas (mídia, storage) | Software Architecture Agent | Implementação de features relacionadas |
 | **brainstorm-insights.md** | Perguntas e decisões em validação | Product Manager Agent | Refinamento de backlog |
 | **agents/*/AGENT.md** | Responsabilidades e processo de cada agent | Cada Agent | Onboarding e alinhamento de papel |
 
+### 2.3 Context Economy — Summaries (Novo ✨)
+
+**Motivação:** Reduzir custo e aumentar velocidade dos agents evitando carregar documentação completa (DDD-GUIDE 48KB, MVP-ROADMAP 24KB, ARCHITECTURE-DECISIONS 50KB).
+
+**Summaries Disponíveis:**
+
+| Summary | Tamanho | Original | Economia | Quando Usar |
+|---------|---------|----------|----------|-------------|
+| [`docs/summaries/ddd-summary.md`](../summaries/ddd-summary.md) | 5KB | DDD-GUIDE (48KB) | **90%** | Sempre que precisar consultar: bounded contexts, glossário, agregados, eventos |
+| [`docs/summaries/arch-decisions-summary.md`](../summaries/arch-decisions-summary.md) | 3KB | ARCHITECTURE-DECISIONS (50KB) | **94%** | Quando precisar: SOLID, patterns, testing, code review |
+| [`docs/summaries/tech-stack.md`](../summaries/tech-stack.md) | 2KB | Disperso em RFCs (20KB) | **90%** | Quando precisar: versões, comandos, env variables |
+
+**Total: 10KB vs 148KB (93% economia)**
+
+**Regra de Ouro:**
+- ✅ **Always Load:** Summaries (6.5KB)
+- 🔗 **Reference Only:** Full docs (link to specific section when needed)
+- ❌ **Never Load:** Entire large files without specific need
+
 ---
 
-## 3. Como Cada Agent Deve Usar o DDD-GUIDE
+## 3. Multi-Agent Workflow — Event-Driven Communication
 
-### 3.1 Product Manager Agent
+### 3.1 Arquitetura de Comunicação
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Event-Driven Workflow                       │
+└─────────────────────────────────────────────────────────────┘
+
+PM Agent
+  │ 1. Cria story.md (1.5KB)
+  │    Input: ddd-summary (5KB) + template (1.5KB) + requirement (1.5KB) = 8KB
+  ├────────────────────────────────────────────────────────────┐
+  │                                                            │
+  ▼                                                            │
+  Emite: "StoryReady" event                                    │
+  Payload: { storyPath, usId }                                 │
+                                                               │
+Architecture Agent                                             │
+  │ 2. Define contract.yaml (2.5KB)                           │
+  │    Input: story.md (1.5KB) + ddd-summary (5KB) = 6.5KB   │
+  │ 3. Gera scenarios.feature (1KB)                           │
+  │ 4. Gera acceptance-tests.md (1KB)                         │
+  ├────────────────────────────────────────────────────────────┤
+  │                                                            │
+  ▼                                                            │
+  Emite: "ContractDefined" event                               │
+  Payload: { contractPath, scenariosPath, usId }               │
+                                                               │
+┌──────────────────┴──────────────────┐                       │
+│                                     │                       │
+▼                                     ▼                       │
+Frontend Agent (paralelo)      Backend Agent (paralelo)       │
+Input: contract.yaml (2.5KB)   Input: contract.yaml (2.5KB)  │
+Implementa UI                  Implementa API                 │
+```
+
+### 3.2 Context Economy por Task
+
+| Task | Agent | Input Tradicional | Input Otimizado | Economia |
+|------|-------|-------------------|-----------------|----------|
+| **Criar US** | PM | DDD-GUIDE (48KB) + MVP-ROADMAP (24KB) + ARCH (50KB) = 122KB | ddd-summary (5KB) + template (1.5KB) + requirement (1.5KB) = **8KB** | **93%** |
+| **Definir Contract** | Arch | story.md (1.5KB) + DDD-GUIDE (48KB) + ARCH (50KB) = 99.5KB | story.md (1.5KB) + ddd-summary (5KB) = **6.5KB** | **93%** |
+| **Implementar UI** | Frontend | contract.yaml (2.5KB) + DDD-GUIDE (48KB) + DESIGN-SYSTEM (20KB) = 70.5KB | contract.yaml (2.5KB) + design-tokens (2KB) = **4.5KB** | **94%** |
+| **Implementar API** | Backend | contract.yaml (2.5KB) + DDD-GUIDE (48KB) + schema (10KB) = 60.5KB | contract.yaml (2.5KB) + schema (2KB) = **4.5KB** | **93%** |
+
+**Resultado:** 
+- Custo por US: $0.0005 (vs $0.015 tradicional) = **97% savings**
+- MVP 50 US: $0.025 (vs $0.75 tradicional) = **$0.72 saved**
+
+### 3.3 Workflow de User Story (Passo a Passo)
+
+#### **Fase 1: Planejamento (PM Agent)**
+
+```bash
+# 1. PM usa script de automação
+./scripts/create-user-story.sh --id 025 --title "marcar-disponibilidade" \
+  --context Team --priority P1 --estimate 5
+
+# Output:
+# ✅ Cria diretório: docs/user-stories/US-025-marcar-disponibilidade/
+# ✅ Copia 4 arquivos base do template
+# ✅ Substitui placeholders (US-025, [Marcar Disponibilidade])
+# ✅ Abre editor para PM preencher critérios/regras
+
+# 2. PM preenche story.md
+# Input carregado: ddd-summary (5KB) + template (1.5KB) = 6.5KB
+# - Como/Quero/Para que
+# - Critérios de Aceitação (3-7 itens)
+# - Regras de Negócio
+# - Eventos de Domínio
+# - Dependências
+
+# 3. PM valida story
+./scripts/validate-user-story.sh --id 025
+
+# Output:
+# ✅ 1️⃣ Título < 50 caracteres
+# ✅ 2️⃣ Como/Quero/Para que
+# ✅ 3️⃣ Bounded Context (Team Context)
+# ✅ 4️⃣ Prioridade (P1)
+# ✅ 5️⃣ Critérios de Aceitação (5 critérios)
+# ✅ 6️⃣ Termos do glossário DDD
+# ✅ 7️⃣ Estimativa (5 pontos)
+# ✅ 8️⃣ Regras de Negócio
+# ✅ 9️⃣ Eventos de Domínio
+# ✅ 🔟 Dependências
+# ✅ 1️⃣1️⃣ Definição de Pronto
+#
+# 📊 RESULTADO: ✅ READY FOR DEVELOPMENT
+```
+
+**Notification:**
+```
+@Architecture Agent: US-025 ready for contract definition
+Input: docs/user-stories/US-025-marcar-disponibilidade/story.md (1.5KB)
+Context: docs/summaries/ddd-summary.md (5KB)
+Total: 6.5KB (vs 99.5KB traditional)
+```
+
+#### **Fase 2: Definição Técnica (Architecture Agent)**
+
+```bash
+# Architecture Agent carrega:
+# - story.md (1.5KB)
+# - ddd-summary.md (5KB)
+# Total: 6.5KB
+
+# 1. Analisa complexidade
+#    Critérios:
+#    - Trade-offs? (Sim/Não) → ADR
+#    - 3+ contextos? (Sim/Não) → Sequence Diagram
+#    - Algoritmo complexo? (Sim/Não) → ADR
+
+# US-025 análise:
+# - Trade-offs? NÃO (solução direta: CRUD + recorrência)
+# - 3+ contextos? NÃO (apenas Team Context)
+# - Algoritmo? NÃO (lógica simples: override > recurring)
+# Conclusão: Apenas 4 arquivos base (sem ADR/diagrama)
+
+# 2. Define contract.yaml
+#    Endpoints:
+#    - GET /members/:id/availability
+#    - POST /members/:id/availability/recurring
+#    - POST /members/:id/availability/override
+#    - DELETE /members/:id/availability/override/:date
+
+# 3. Gera scenarios.feature (BDD)
+#    - Happy Path: marcar disponível/indisponível
+#    - Validation: data passada rejeitada
+#    - Business Rules: override prevalece sobre recurring
+
+# 4. Gera acceptance-tests.md
+#    - Functional: CRUD availability
+#    - Security: RLS (apenas próprio membro ou admin)
+#    - UI/UX: calendar picker, mobile-friendly
+```
+
+**Notification:**
+```
+@Frontend Agent: US-025 ready for implementation
+Input: docs/user-stories/US-025-*/contract.yaml (2.5KB)
+Total: 2.5KB (vs 70.5KB traditional)
+
+@Backend Agent: US-025 ready for implementation
+Input: docs/user-stories/US-025-*/contract.yaml (2.5KB)
+Total: 2.5KB (vs 60.5KB traditional)
+```
+
+#### **Fase 3: Implementação Paralela**
+
+```
+Frontend Agent                     Backend Agent
+│                                  │
+├─ Load: contract.yaml (2.5KB)    ├─ Load: contract.yaml (2.5KB)
+├─ Load: design-tokens (2KB)      ├─ Load: schema (2KB)
+│  Total: 4.5KB                   │  Total: 4.5KB
+│                                  │
+├─ Implementa UI:                 ├─ Implementa API:
+│  - AvailabilityCalendar.jsx     │  - POST /availability/recurring
+│  - Recurring pattern picker     │  - POST /availability/override
+│  - Override date picker          │  - RLS policies
+│  - Mobile calendar (44x44px)    │  - Validation: data >= hoje
+│                                  │
+└─ Aguarda backend deploy         └─ Deploy staging
+   (polling /health)                 (smoke tests)
+                                  │
+                                  └─ ✅ Backend ready
+                                  │
+                                  ▼
+Frontend completa integração      
+└─ ✅ US-025 concluída
+```
+
+### 3.4 Quando Criar ADR ou Diagrama (Selectivity)
+
+**ADR (Architecture Decision Record):**
+
+Criar quando:
+- ✅ Trade-offs significativos (múltiplas opções viáveis)
+- ✅ Decisão afeta múltiplos Bounded Contexts
+- ✅ Algoritmo complexo (ex: escalação inteligente)
+- ✅ Mudança de stack técnico (ex: adicionar Redis)
+
+Exemplos:
+- US-050: Upload VS (Single vs Chunked vs Resumable) → ADR-050
+- US-024: Escalação Inteligente (Greedy vs GA vs Manual) → ADR-024
+
+**Sequence Diagram (Mermaid):**
+
+Criar quando:
+- ✅ 3+ atores/contextos interagindo
+- ✅ Orquestração complexa (upload → transcode → notify)
+- ✅ Sagas ou compensações
+- ✅ Integração com APIs externas
+
+Exemplos:
+- US-050: Upload VS (7 atores: User, Frontend, API, S3, Lambda, CDN, Notification) → sequence-diagram.mmd
+
+**Base (Sempre criar):**
+- ✅ story.md (1.5KB)
+- ✅ contract.yaml (2.5KB)
+- ✅ scenarios.feature (1KB)
+- ✅ acceptance-tests.md (1KB)
+
+---
+
+## 4. Como Cada Agent Deve Usar o DDD-GUIDE (Otimizado)
+
+### 4.1 Product Manager Agent
 
 #### **Quando Consultar:**
 - ✅ Antes de escrever qualquer user story
@@ -113,7 +349,7 @@ Este documento define **como os agents (PM, Arquiteto, Desenvolvedores)** devem 
 
 ---
 
-### 3.2 Software Architecture Agent
+### 4.2 Software Architecture Agent
 
 #### **Quando Consultar:**
 - ✅ Antes de definir schemas de banco de dados
@@ -176,7 +412,7 @@ CREATE TABLE assignments (
 
 ---
 
-### 3.3 Frontend Developer Agent
+### 4.3 Frontend Developer Agent
 
 #### **Quando Consultar:**
 - ✅ Antes de criar componentes relacionados a entidades de domínio
@@ -225,7 +461,7 @@ function EventSetlistForm({ eventId }) {
 
 ---
 
-### 3.4 Backend Developer Agent
+### 4.4 Backend Developer Agent
 
 #### **Quando Consultar:**
 - ✅ Antes de criar controllers, services ou repositories
@@ -289,9 +525,11 @@ export class EventService {
 
 ---
 
-## 4. Fluxo de Trabalho por Agent
+## 5. Fluxo de Trabalho por Agent (Legado)
 
-### 4.1 Product Manager: Criando Backlog
+> **Nota:** Esta seção documenta o workflow legado. Ver seção 3 para workflow multi-agent otimizado.
+
+### 5.1 Product Manager: Criando Backlog
 
 ```
 1. Ler DDD-GUIDE seção 2 (Subdomínios)
@@ -320,7 +558,7 @@ export class EventService {
 
 ---
 
-### 4.2 Architecture: Projetando API
+### 5.2 Architecture: Projetando API
 
 ```
 1. Ler DDD-GUIDE seção 3 (Bounded Contexts)
@@ -348,7 +586,7 @@ export class EventService {
 
 ---
 
-### 4.3 Developer: Implementando Feature
+### 5.3 Developer: Implementando Feature
 
 ```
 1. Ler user story (criada pelo PM)
@@ -376,9 +614,9 @@ export class EventService {
 
 ---
 
-## 5. Checklist de Validação
+## 6. Checklist de Validação
 
-### 5.1 Antes de Criar Pull Request
+### 6.1 Antes de Criar Pull Request
 
 **Para TODOS os agents:**
 
@@ -390,7 +628,7 @@ export class EventService {
 
 ---
 
-### 5.2 Code Review Checklist (para Reviewers)
+### 6.2 Code Review Checklist (para Reviewers)
 
 - [ ] Código usa linguagem úbiqua (não termos inventados)?
 - [ ] Invariantes do agregado estão validadas?
@@ -400,9 +638,9 @@ export class EventService {
 
 ---
 
-## 6. Exemplos Práticos
+## 7. Exemplos Práticos
 
-### 6.1 ❌ ERRADO: Não Seguiu DDD-GUIDE
+### 7.1 ❌ ERRADO: Não Seguiu DDD-GUIDE
 
 **User Story (PM):**
 ```markdown
@@ -417,7 +655,7 @@ Para que os músicos saibam o que tocar
 
 ---
 
-### 6.2 ✅ CORRETO: Seguiu DDD-GUIDE
+### 7.2 ✅ CORRETO: Seguiu DDD-GUIDE
 
 **User Story (PM):**
 ```markdown
@@ -439,7 +677,7 @@ Para que os músicos saibam o que tocar
 
 ---
 
-### 6.3 ❌ ERRADO: Schema de DB Não Seguiu Agregados
+### 7.3 ❌ ERRADO: Schema de DB Não Seguiu Agregados
 
 ```sql
 -- Problema: Tabelas não refletem Aggregate Roots do DDD-GUIDE
@@ -456,7 +694,7 @@ CREATE TABLE eventos_musicas (  -- ❌ "eventos_musicas" não reflete "Event Set
 
 ---
 
-### 6.4 ✅ CORRETO: Schema Seguiu DDD-GUIDE
+### 7.4 ✅ CORRETO: Schema Seguiu DDD-GUIDE
 
 ```sql
 -- Worship Context: Event Aggregate
@@ -487,7 +725,7 @@ CREATE TABLE songs (
 
 ---
 
-## 7. Resumo Executivo
+## 8. Resumo Executivo
 
 ### Para Product Manager:
 - 📖 Consulte DDD-GUIDE seção 2 e 4 (Subdomínios + Glossário)
@@ -511,13 +749,13 @@ CREATE TABLE songs (
 
 ---
 
-## 7. Atualização de Documentação (Living Documents)
+## 9. Atualização de Documentação (Living Documents)
 
-### 7.1 Princípio: Documentação Viva
+### 9.1 Princípio: Documentação Viva
 
 O **DDD-GUIDE.md** e demais documentos de domínio são **Living Documents** que devem evoluir com o projeto. **Agents são responsáveis por mantê-los atualizados.**
 
-### 7.2 Quando Atualizar DDD-GUIDE.md
+### 9.2 Quando Atualizar DDD-GUIDE.md
 
 #### ⚠️ **Obrigatório Atualizar:**
 
@@ -559,7 +797,7 @@ O **DDD-GUIDE.md** e demais documentos de domínio são **Living Documents** que
 
 ---
 
-### 7.3 Processo de Atualização
+### 9.3 Processo de Atualização
 
 ```
 1. Agent identifica necessidade de atualização
@@ -577,7 +815,7 @@ O **DDD-GUIDE.md** e demais documentos de domínio são **Living Documents** que
 
 ---
 
-### 7.4 Template de Atualização
+### 9.4 Template de Atualização
 
 #### Exemplo: Adicionar Novo Termo ao Glossário
 
@@ -622,7 +860,7 @@ Availability.checkAvailability(date) → boolean
 
 ---
 
-### 7.5 Quem Atualiza O Quê
+### 9.5 Quem Atualiza O Quê
 
 | Documento | Responsável Primário | Quando Atualizar |
 |-----------|------------------------|------------------|
@@ -635,7 +873,7 @@ Availability.checkAvailability(date) → boolean
 
 ---
 
-### 7.6 Checklist de Atualização de Documentação
+### 9.6 Checklist de Atualização de Documentação
 
 **Antes de fazer PR, verificar:**
 
@@ -648,7 +886,7 @@ Availability.checkAvailability(date) → boolean
 
 ---
 
-### 7.7 Exemplo Prático: Adicionar Feature de Disponibilidade
+### 9.7 Exemplo Prático: Adicionar Feature de Disponibilidade
 
 **Contexto:** Product Manager solicita feature de disponibilidade de membros.
 
