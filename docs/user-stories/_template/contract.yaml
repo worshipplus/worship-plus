@@ -1,0 +1,260 @@
+# US-XXX: [Feature Name] API Contract
+# Gerado por: Architecture Agent
+# Data: [data]
+# Consumidores: Frontend Agent, Backend Agent (P2)
+
+openapi: 3.1.0
+info:
+  title: Worship+ [Feature] API
+  version: 1.0.0
+  description: |
+    API contract para [feature name].
+    
+    **Bounded Context:** [Context]  
+    **Aggregate:** [Aggregate Root]
+
+servers:
+  - url: https://xxx.supabase.co/rest/v1
+    description: Supabase REST API (MVP)
+  - url: https://api.worshipplus.com/v1
+    description: BFF NestJS (P2 - futuro)
+
+tags:
+  - name: [Feature]
+    description: Operações de [feature]
+
+paths:
+  /resource:
+    get:
+      operationId: listResources
+      summary: Lista todos os recursos
+      tags: [Feature]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista de recursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    
+    post:
+      operationId: createResource
+      summary: Cria novo recurso
+      tags: [Feature]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResourceDto'
+      responses:
+        '201':
+          description: Recurso criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /resource/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      operationId: getResource
+      summary: Busca recurso por ID
+      tags: [Feature]
+      responses:
+        '200':
+          description: Recurso encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    patch:
+      operationId: updateResource
+      summary: Atualiza recurso parcialmente
+      tags: [Feature]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateResourceDto'
+      responses:
+        '200':
+          description: Recurso atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      operationId: deleteResource
+      summary: Deleta recurso
+      tags: [Feature]
+      responses:
+        '204':
+          description: Recurso deletado
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    Resource:
+      type: object
+      required: [id, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador único
+        created_at:
+          type: string
+          format: date-time
+          description: Data de criação
+        updated_at:
+          type: string
+          format: date-time
+          description: Data da última atualização
+      example:
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        created_at: "2026-03-03T10:00:00Z"
+        updated_at: "2026-03-03T12:00:00Z"
+    
+    CreateResourceDto:
+      type: object
+      required: []
+      properties:
+        field:
+          type: string
+          description: Campo de exemplo
+      example:
+        field: "valor"
+    
+    UpdateResourceDto:
+      type: object
+      properties:
+        field:
+          type: string
+      example:
+        field: "novo valor"
+    
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Código de erro único
+        message:
+          type: string
+          description: Mensagem legível
+        details:
+          type: object
+          description: Detalhes adicionais (opcional)
+      example:
+        code: "VALIDATION_ERROR"
+        message: "Campo 'email' é obrigatório"
+        details:
+          field: "email"
+          constraint: "required"
+
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "BAD_REQUEST"
+            message: "Formato de requisição inválido"
+    
+    Unauthorized:
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Token de autenticação ausente ou inválido"
+    
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Recurso com ID especificado não foi encontrado"
+    
+    ValidationError:
+      description: Erro de validação
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Dados inválidos"
+            details:
+              email: "Formato de email inválido"
+              password: "Senha deve ter no mínimo 8 caracteres"
+    
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "Erro inesperado. Tente novamente mais tarde."
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token do Supabase Auth
+
+security:
+  - BearerAuth: []
