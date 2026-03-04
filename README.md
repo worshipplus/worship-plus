@@ -21,12 +21,14 @@
 ## 🎯 Problema e Solução
 
 ### Problema
+
 - Dificuldade de organização de eventos e escalas
 - Comunicação dispersa (WhatsApp, email, papel)
 - Falta de controle sobre setlists e versões de músicas
 - Disponibilidade dos membros não é visível
 
 ### Solução
+
 - **Eventos:** Criação e gerenciamento centralizado
 - **Setlists:** Montagem de repertório com referências (YouTube)
 - **Escalação:** Atribuição de membros baseada em disponibilidade
@@ -95,6 +97,7 @@ worship-plus/
 ### 1. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md) — Domain-Driven Design
 
 **O que contém:**
+
 - 4 Bounded Contexts: Events, Music, Team, Media
 - Agregados principais (Event, Song, TeamMember, Availability)
 - Glossário de termos (Linguagem Úbiqua)
@@ -103,6 +106,7 @@ worship-plus/
 - Decisões de persistência
 
 **Quem usa:**
+
 - Software Architecture Agent
 - Frontend/Backend Developers
 - Product Manager
@@ -114,6 +118,7 @@ worship-plus/
 ### 2. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md) — Decisões Arquiteturais
 
 **O que contém:**
+
 - **BFF (Backend For Frontend):** Análise técnica e quando usar
 - **Filosofia de Desenvolvimento:** SOLID, DRY, KISS
 - **Design Patterns:** Decorators, Repository, Strategy, Observer
@@ -123,6 +128,7 @@ worship-plus/
 - Clean Architecture (camadas e dependências)
 
 **Quem usa:**
+
 - Frontend Developer Agent
 - Software Architecture Agent
 - Desenvolvedores em code review
@@ -134,6 +140,7 @@ worship-plus/
 ### 3. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) — Roadmap do MVP
 
 **O que contém:**
+
 - **P0 (Crítico):** 12 User Stories, 62 pontos, 7 semanas
   - Sprint 1: Auth + Membros (US-001 a US-003)
   - Sprint 2: Músicas (YouTube) + Disponibilidade (US-004 a US-006)
@@ -145,16 +152,19 @@ worship-plus/
 - Riscos e mitigações
 
 **Quem usa:**
+
 - Product Manager Agent
 - Desenvolvedores (referência de US-XXX em commits)
 - Stakeholders
 
 **O que NÃO está no MVP:**
+
 - Upload de VS (movido para P1)
 - OAuth Google/Apple (movido para P1)
 - Notificações push (P2)
 
 **O que ESTÁ no MVP:**
+
 - YouTube Link **obrigatório** para músicas (substitui VS)
 
 ---
@@ -162,6 +172,7 @@ worship-plus/
 ### 4. [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) — Guia para Agents
 
 **O que contém:**
+
 - Como usar DDD-GUIDE.md
 - Processo de atualização de Living Documents
 - Quando atualizar glossário, aggregates, domain events
@@ -169,6 +180,7 @@ worship-plus/
 - Exemplos práticos
 
 **Quem usa:**
+
 - Todos os agents (Frontend, PM, Architecture)
 - Desenvolvedores criando novos features
 
@@ -177,8 +189,10 @@ worship-plus/
 ### 5. RFCs (Request for Comments)
 
 #### [docs/architecture/rfcs/RFC-0001-media-storage.md](docs/architecture/rfcs/RFC-0001-media-storage.md)
+
 **Status:** Aprovado para P1  
 **Conteúdo:**
+
 - Estratégia S3 + Glacier
 - Lifecycle de mídia (ativo → arquivado → restaurado)
 - Processamento e transcodificação (ffmpeg)
@@ -186,8 +200,10 @@ worship-plus/
 - Otimizações mobile-first
 
 #### [docs/architecture/rfcs/RFC-0002-project-overview.md](docs/architecture/rfcs/RFC-0002-project-overview.md)
+
 **Status:** Aprovado  
 **Conteúdo:**
+
 - Visão geral do Worship+
 - Bounded Contexts
 - Stack técnico
@@ -213,6 +229,16 @@ open docs/planning/MVP-ROADMAP.md
 # Consulte durante desenvolvimento
 grep -r "Availability" docs/architecture/DDD-GUIDE.md  # Buscar termo
 grep "US-005" docs/planning/MVP-ROADMAP.md         # Ver User Story
+
+# Frontend (React + Vite)
+cd frontend
+npm ci
+npm run dev
+
+# Hooks de Git (Husky) + Conventional Commits
+# (instalados automaticamente via `npm ci` por causa do script `prepare`)
+# Se precisar reinstalar manualmente:
+npm run prepare
 ```
 
 ---
@@ -275,9 +301,9 @@ Documentos que **evoluem com o projeto:**
 
 ### P0 (Crítico) — 7 semanas
 
-| Sprint | User Stories | Pontos | Status |
-|--------|--------------|--------|--------|
-| Sprint 1 | US-001 a US-003 | 11 pts | 🔄 Planejado |
+| Sprint   | User Stories    | Pontos | Status        |
+| -------- | --------------- | ------ | ------------- |
+| Sprint 1 | US-001 a US-003 | 11 pts | 🔄 Planejado  |
 | Sprint 2 | US-004 a US-006 | 15 pts | ⏳ Aguardando |
 | Sprint 3 | US-007 a US-009 | 21 pts | ⏳ Aguardando |
 | Sprint 4 | US-010 a US-012 | 15 pts | ⏳ Aguardando |
@@ -290,17 +316,20 @@ Documentos que **evoluem com o projeto:**
 ## 🏗️ Stack Técnico
 
 ### Frontend
+
 - **React 19** (Suspense, Transitions)
 - **Vite 6.0** (Build rápido 200ms)
 - **Supabase Client** (Auth + Realtime)
 - **CSS Modules** ou Tailwind (a definir)
 
 ### Backend
+
 - **Supabase** (Postgres + Auth + Realtime)
 - **Row-Level Security** (RLS policies)
 - **Edge Functions** (Deno) para lógica serverless
 
 ### Infraestrutura (P1)
+
 - **S3** (media storage)
 - **CloudFront** (CDN)
 - **Glacier IR** (archival)
@@ -311,14 +340,14 @@ Documentos que **evoluem com o projeto:**
 
 ## 🔗 Repositórios Relacionados
 
-| Repositório | Propósito | Link |
-|-------------|-----------|------|
-| **worship-plus** | Documentação (este repo) | https://github.com/worshipplus/worship-plus |
-| **worship-plus-agents** | Agents de IA (Copilot) | https://github.com/worshipplus/worship-plus-agents |
-| **worship-plus-poc** | POCs e experimentos | https://github.com/worshipplus/worship-plus-poc |
-| **worship-plus-frontend** | Aplicação React + Vite | https://github.com/worshipplus/worship-plus-frontend |
-| **worship-plus-backend** | API/BFF (P2) | https://github.com/worshipplus/worship-plus-backend |
-| **worship-plus-infra** | IaC (Terraform + K8s) | https://github.com/worshipplus/worship-plus-infra |
+| Repositório               | Propósito                | Link                                                 |
+| ------------------------- | ------------------------ | ---------------------------------------------------- |
+| **worship-plus**          | Documentação (este repo) | https://github.com/worshipplus/worship-plus          |
+| **worship-plus-agents**   | Agents de IA (Copilot)   | https://github.com/worshipplus/worship-plus-agents   |
+| **worship-plus-poc**      | POCs e experimentos      | https://github.com/worshipplus/worship-plus-poc      |
+| **worship-plus-frontend** | Aplicação React + Vite   | https://github.com/worshipplus/worship-plus-frontend |
+| **worship-plus-backend**  | API/BFF (P2)             | https://github.com/worshipplus/worship-plus-backend  |
+| **worship-plus-infra**    | IaC (Terraform + K8s)    | https://github.com/worshipplus/worship-plus-infra    |
 
 **Estrutura completa:** [REPOSITORY-STRUCTURE.md](REPOSITORY-STRUCTURE.md)
 
@@ -329,6 +358,7 @@ Documentos que **evoluem com o projeto:**
 ### Pull Requests
 
 **Use Conventional Commits:**
+
 ```bash
 git commit -m "docs(architecture): adiciona análise de cache [US-015]"
 git commit -m "docs(ddd): atualiza Availability aggregate [US-006]"
@@ -356,12 +386,14 @@ git commit -m "docs(roadmap): move OAuth para P1"
 ## 📖 Leitura Recomendada
 
 **Para novos desenvolvedores:**
+
 1. [README.md](README.md) ← Você está aqui
 2. [DDD-GUIDE.md](DDD-GUIDE.md) - Entender bounded contexts
 3. [MVP-ROADMAP.md](MVP-ROADMAP.md) - Ver User Stories
 4. [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md) - Padrões de código
 
 **Para agents:**
+
 1. [AGENTS-GUIDE.md](AGENTS-GUIDE.md) - Como usar a documentação
 2. Agent-specific docs em [worship-plus-agents](https://github.com/worshipplus/worship-plus-agents)
 
@@ -370,10 +402,12 @@ git commit -m "docs(roadmap): move OAuth para P1"
 ## 📞 Contato
 
 **Dúvidas sobre documentação:**
+
 - Abrir issue: https://github.com/worshipplus/worship-plus/issues
 - Discussão: https://github.com/worshipplus/worship-plus/discussions
 
 **Organização Worship+:**
+
 - GitHub: https://github.com/worshipplus
 - Todos os repositórios: https://github.com/orgs/worshipplus/repositories
 

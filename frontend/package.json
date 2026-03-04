@@ -12,6 +12,7 @@
     "url": "https://github.com/worshipplus/worship-plus.git"
   },
   "scripts": {
+    "prepare": "cd .. && node frontend/node_modules/husky/lib/bin.js install",
     "dev": "vite --host",
     "dev:https": "vite --https --host",
     "build": "tsc -b && vite build",
@@ -42,6 +43,8 @@
     "react-router-dom": "^6.20.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@playwright/test": "^1.40.1",
     "@storybook/addon-essentials": "^7.6.3",
     "@storybook/addon-interactions": "^7.6.3",

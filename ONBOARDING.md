@@ -26,6 +26,7 @@ Este guia te ajudará a entender o projeto, sua estrutura e como começar a cont
 ### O Problema
 
 Ministérios de louvor de igrejas evangélicas enfrentam problemas de **gestão descentralizada**:
+
 - ❌ Comunicação espalhada (WhatsApp, planilhas, memória)
 - ❌ Sem visibilidade de disponibilidade dos membros
 - ❌ Escalação manual propensa a erros
@@ -35,6 +36,7 @@ Ministérios de louvor de igrejas evangélicas enfrentam problemas de **gestão 
 ### A Solução
 
 **Worship+** é uma **plataforma centralizada** para:
+
 - ✅ **Gestão de Eventos** (cultos, ensaios, conferências)
 - ✅ **Escalação Inteligente** com disponibilidade dos membros
 - ✅ **Repertório Musical** organizado (músicas + YouTube links)
@@ -43,13 +45,13 @@ Ministérios de louvor de igrejas evangélicas enfrentam problemas de **gestão 
 
 ### Tecnologias Principais
 
-| Camada | Stack | Status |
-|--------|-------|--------|
-| **Frontend** | React 19 + Vite 6.0 | Sprint 1 (P0) |
-| **Backend** | Supabase (Postgres + Auth + RLS) | MVP (P0) |
-| **BFF** | NestJS | P2 (opcional, se necessário) |
-| **Infra** | AWS S3 + Glacier + CloudFront | P1 (media upload) |
-| **IaC** | Terraform + Kubernetes | P1-P2 |
+| Camada       | Stack                            | Status                       |
+| ------------ | -------------------------------- | ---------------------------- |
+| **Frontend** | React 19 + Vite 6.0              | Sprint 1 (P0)                |
+| **Backend**  | Supabase (Postgres + Auth + RLS) | MVP (P0)                     |
+| **BFF**      | NestJS                           | P2 (opcional, se necessário) |
+| **Infra**    | AWS S3 + Glacier + CloudFront    | P1 (media upload)            |
+| **IaC**      | Terraform + Kubernetes           | P1-P2                        |
 
 ---
 
@@ -86,21 +88,25 @@ O projeto segue **DDD** com 4 **Bounded Contexts**:
 ### 2.2 Bounded Contexts
 
 #### 1. **Events Context** 🎤
+
 - **Agregados:** Event, EventSetlist
 - **Casos de Uso:** Criar evento, escalar membros, publicar evento
 - **Entidades:** Event, EventSetlist, EventMember
 
 #### 2. **Team Context** 👥
+
 - **Agregados:** Member, Availability
 - **Casos de Uso:** Cadastrar membro, definir disponibilidade
 - **Value Objects:** WeeklyPattern, DateOverride
 
 #### 3. **Repertoire Context** 🎵
+
 - **Agregados:** Song
 - **Casos de Uso:** Cadastrar música, adicionar YouTube link
 - **Entidades:** Song, Tag
 
 #### 4. **Setlist Context** 📋
+
 - **Agregados:** Setlist
 - **Casos de Uso:** Criar setlist, adicionar músicas, reordenar
 - **Entidades:** Setlist, SetlistSong
@@ -157,15 +163,15 @@ O projeto segue **DDD** com 4 **Bounded Contexts**:
 
 O projeto está dividido em **7 repositórios** na organização [worshipplus](https://github.com/worshipplus):
 
-| Repositório | Descrição | Visibilidade | Status |
-|-------------|-----------|--------------|--------|
-| **[worship-plus](https://github.com/worshipplus/worship-plus)** | 📚 Documentação (você está aqui!) | Public | ✅ Ativo |
-| **[worship-plus-agents](https://github.com/worshipplus/worship-plus-agents)** | 🤖 AI agents (Copilot, Cursor) | Public | ✅ Ativo |
-| **[worship-plus-poc](https://github.com/worshipplus/worship-plus-poc)** | 🧪 POCs técnicos | Public | ✅ Ativo |
-| **[worship-plus-frontend](https://github.com/worshipplus/worship-plus-frontend)** | 💻 React 19 + Vite app | Private | 🔄 Sprint 1 (P1) |
-| **[worship-plus-backend](https://github.com/worshipplus/worship-plus-backend)** | 🔧 NestJS BFF | Private | 📦 P2 (quando necessário) |
-| **[worship-plus-infra](https://github.com/worshipplus/worship-plus-infra)** | ☁️ Terraform + K8s | Private | 📦 P1-P2 (S3/CloudFront) |
-| **[worship-plus-scripts](https://github.com/worshipplus/worship-plus-scripts)** | 🛠️ Utilitários | Public | 📦 Opcional |
+| Repositório                                                                       | Descrição                         | Visibilidade | Status                    |
+| --------------------------------------------------------------------------------- | --------------------------------- | ------------ | ------------------------- |
+| **[worship-plus](https://github.com/worshipplus/worship-plus)**                   | 📚 Documentação (você está aqui!) | Public       | ✅ Ativo                  |
+| **[worship-plus-agents](https://github.com/worshipplus/worship-plus-agents)**     | 🤖 AI agents (Copilot, Cursor)    | Public       | ✅ Ativo                  |
+| **[worship-plus-poc](https://github.com/worshipplus/worship-plus-poc)**           | 🧪 POCs técnicos                  | Public       | ✅ Ativo                  |
+| **[worship-plus-frontend](https://github.com/worshipplus/worship-plus-frontend)** | 💻 React 19 + Vite app            | Private      | 🔄 Sprint 1 (P1)          |
+| **[worship-plus-backend](https://github.com/worshipplus/worship-plus-backend)**   | 🔧 NestJS BFF                     | Private      | 📦 P2 (quando necessário) |
+| **[worship-plus-infra](https://github.com/worshipplus/worship-plus-infra)**       | ☁️ Terraform + K8s                | Private      | 📦 P1-P2 (S3/CloudFront)  |
+| **[worship-plus-scripts](https://github.com/worshipplus/worship-plus-scripts)**   | 🛠️ Utilitários                    | Public       | 📦 Opcional               |
 
 **Guia completo:** [docs/guides/REPOSITORY-STRUCTURE.md](docs/guides/REPOSITORY-STRUCTURE.md)
 
@@ -229,20 +235,23 @@ worship-plus/
 ### 🗺️ Roteiro de Leitura Recomendado
 
 **Para Product Owners / Gerentes:**
+
 1. [README.md](README.md) - Visão geral
 2. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) - User Stories e timeline
 3. [docs/planning/PROJECT_ANALYSIS.md](docs/planning/PROJECT_ANALYSIS.md) - Análise de negócio
 
 **Para Desenvolvedores:**
+
 1. **ONBOARDING.md** (você está aqui!)
 2. [docs/summaries/ddd-summary.md](docs/summaries/ddd-summary.md) - Resumo DDD (5KB, leitura rápida)
 3. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md) - DDD completo (quando precisar de detalhes)
 4. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md) - Padrões e convenções
 5. [docs/planning/MVP-ROADMAP.md](docs/planning/MVP-ROADMAP.md) - Ver User Stories
 6. [docs/guides/AGENTS-GUIDE.md](docs/guides/AGENTS-GUIDE.md) - Workflow Multi-Agent (v2.0)
-7. [docs/user-stories/_template/README.md](docs/user-stories/_template/README.md) - Template de User Story
+7. [docs/user-stories/\_template/README.md](docs/user-stories/_template/README.md) - Template de User Story
 
 **Para Arquitetos:**
+
 1. [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md)
 2. [docs/architecture/DDD-GUIDE.md](docs/architecture/DDD-GUIDE.md)
 3. [docs/architecture/rfcs/](docs/architecture/rfcs/) - RFCs técnicos
@@ -255,6 +264,7 @@ worship-plus/
 ### 5.1 Setup Inicial
 
 #### Pré-requisitos
+
 - Node.js 20+
 - Git configurado com SSH
 - Conta GitHub com acesso à org `worshipplus`
@@ -308,6 +318,7 @@ Cmd+Shift+P → "Developer: Reload Window"
 #### 4. Valide que Copilot Leu os Agents
 
 Digite no chat do Copilot:
+
 ```
 Quais são as regras do Frontend Developer Agent?
 ```
@@ -350,13 +361,14 @@ Abra e leia com atenção:
 
 **Status:** ✅ P0 (MVP)  
 **Sprint:** Sprint 1  
-**Pontos:** 5  
+**Pontos:** 5
 
 **Como** membro do ministério  
 **Quero** fazer login com email e senha  
 **Para que** eu possa acessar o sistema de forma segura
 
 **Acceptance Criteria:**
+
 - [ ] Tela de login com email e senha
 - [ ] Validação de campos obrigatórios
 - [ ] Integração com Supabase Auth
@@ -401,18 +413,18 @@ git checkout -b feature/US-001-authentication
 
 ```typescript
 // src/features/auth/hooks/useAuth.ts
-import { authService } from '@/config/container'
+import { authService } from "@/config/container";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  
+  const [user, setUser] = useState<User | null>(null);
+
   const signIn = async (email: string, password: string) => {
-    const result = await authService.signIn(email, password)
-    if (result.success) setUser(result.user)
-    return result
-  }
-  
-  return { user, signIn }
+    const result = await authService.signIn(email, password);
+    if (result.success) setUser(result.user);
+    return result;
+  };
+
+  return { user, signIn };
 }
 ```
 
@@ -444,12 +456,12 @@ Frontend + Backend (PARALELO)
 
 #### Economia de Custo:
 
-| Métrica | Tradicional | Otimizado | Economia |
-|---------|-------------|-----------|----------|
-| Context/US | 80-125KB | 6.5-12KB | **85-93%** |
-| Custo/US | $0.015 | $0.0004 | **97%** |
-| MVP 50 US | $0.75 | $0.025 | **$0.72** |
-| Tempo | 100h | 12.5h | **87.5h** |
+| Métrica    | Tradicional | Otimizado | Economia   |
+| ---------- | ----------- | --------- | ---------- |
+| Context/US | 80-125KB    | 6.5-12KB  | **85-93%** |
+| Custo/US   | $0.015      | $0.0004   | **97%**    |
+| MVP 50 US  | $0.75       | $0.025    | **$0.72**  |
+| Tempo      | 100h        | 12.5h     | **87.5h**  |
 
 #### Scripts de Automação:
 
@@ -470,16 +482,19 @@ Frontend + Backend (PARALELO)
 #### Estrutura de User Story:
 
 **Base (toda US - 4 arquivos):**
+
 - `story.md` (1.5KB) - Source of truth
 - `contract.yaml` (2.5KB) - OpenAPI 3.1.0 spec
 - `scenarios.feature` (1KB) - Gherkin BDD
 - `acceptance-tests.md` (1KB) - QA checklist
 
 **Seletivo (US complexa - +2 arquivos):**
+
 - `adr-XXX.md` (3KB) - Architecture Decision Record com Mermaid
 - `sequence-diagram.mmd` (2KB) - Diagrama Mermaid (5+ flows)
 
 **Exemplos:**
+
 - [US-001](docs/user-stories/US-001-autenticacao/) (simples - 4 arquivos)
 - [US-050](docs/user-stories/US-050-upload-vs/) (complexo - 6 arquivos com ADR + diagrama)
 
@@ -512,6 +527,7 @@ git commit -m "feat(auth): adiciona LoginForm component [US-001]"
 ```
 
 **Formato obrigatório:**
+
 ```
 <type>(<scope>): <description> [US-XXX]
 
@@ -531,6 +547,24 @@ test(team): adiciona testes para MemberCard component [US-004]
 ```
 
 **Guia completo:** [docs/architecture/ARCHITECTURE-DECISIONS.md](docs/architecture/ARCHITECTURE-DECISIONS.md#conventional-commits)
+
+---
+
+### 6.6.1 Git Hooks (Husky) + Commitlint
+
+Este repositório usa **Husky** para garantir, antes de commitar:
+
+- `pre-commit`: roda `lint-staged` (ESLint `--fix` + Prettier `--write`) nos arquivos staged
+- `commit-msg`: valida **Conventional Commits** e exige `[US-XXX]` para commits `feat`/`fix`
+
+**Instalação automática:** ao rodar `npm ci` em `frontend/`, o script `prepare` instala os hooks no root.
+
+**Reinstalar hooks (se necessário):**
+
+```bash
+cd frontend
+npm run prepare
+```
 
 ---
 
@@ -582,6 +616,7 @@ gh pr create --title "feat(auth): adiciona autenticação [US-001]" \
 - [ ] Sem erros de lint/type-check
 
 **Aprovar:**
+
 ```
 ✅ LGTM! Código segue DDD patterns, testes OK, UI responsiva.
 ```
@@ -593,6 +628,7 @@ gh pr create --title "feat(auth): adiciona autenticação [US-001]" \
 **Após aprovação:**
 
 1. **Merge para `develop`:**
+
    ```bash
    gh pr merge --squash
    ```
@@ -606,6 +642,7 @@ gh pr create --title "feat(auth): adiciona autenticação [US-001]" \
    - Validar com Product Owner
 
 4. **Merge `develop` → `main` (Production):**
+
    ```bash
    git checkout main
    git merge develop
@@ -623,6 +660,7 @@ gh pr create --title "feat(auth): adiciona autenticação [US-001]" \
 ### 7.1 Princípios SOLID
 
 **S - Single Responsibility Principle:**
+
 ```typescript
 // ❌ Errado: Component faz query + UI
 function EventsList() {
@@ -688,25 +726,25 @@ function EventDetails({ event }) {
 ```typescript
 // ❌ Errado: Over-engineering
 class EventFactory {
-  private static instance: EventFactory
+  private static instance: EventFactory;
   private constructor() {}
-  
+
   static getInstance(): EventFactory {
-    if (!this.instance) this.instance = new EventFactory()
-    return this.instance
+    if (!this.instance) this.instance = new EventFactory();
+    return this.instance;
   }
-  
+
   createEvent(data: EventData): Event {
-    const validator = new EventValidator()
-    if (!validator.validate(data)) throw new Error()
-    return new Event(data)
+    const validator = new EventValidator();
+    if (!validator.validate(data)) throw new Error();
+    return new Event(data);
   }
 }
 
 // ✅ Correto: Simples e direto
 export function createEvent(data: EventData): Event {
-  if (!data.title || !data.date) throw new Error('Invalid data')
-  return { id: uuid(), ...data }
+  if (!data.title || !data.date) throw new Error("Invalid data");
+  return { id: uuid(), ...data };
 }
 ```
 
@@ -715,31 +753,34 @@ export function createEvent(data: EventData): Event {
 ### 7.4 Naming Conventions
 
 **Variáveis e Funções:**
+
 ```typescript
 // ✅ Usar Ubiquitous Language (DDD-GUIDE)
-const event = Event.create(title, date)  // ✅ Event (domain term)
-const member = Member.create(name, role) // ✅ Member (domain term)
-const setlist = Setlist.create(eventId)  // ✅ Setlist (domain term)
+const event = Event.create(title, date); // ✅ Event (domain term)
+const member = Member.create(name, role); // ✅ Member (domain term)
+const setlist = Setlist.create(eventId); // ✅ Setlist (domain term)
 
 // ❌ Evitar termos genéricos
-const item = { title, date }             // ❌ Vago
-const person = { name, role }            // ❌ Não é domain term
+const item = { title, date }; // ❌ Vago
+const person = { name, role }; // ❌ Não é domain term
 ```
 
 **Components:**
+
 ```typescript
 // Pascal Case para componentes
-EventForm.tsx
-MemberCard.tsx
-SetlistModal.tsx
+EventForm.tsx;
+MemberCard.tsx;
+SetlistModal.tsx;
 
 // camelCase para hooks
-useEvents.ts
-useAvailability.ts
-useSetlist.ts
+useEvents.ts;
+useAvailability.ts;
+useSetlist.ts;
 ```
 
 **Arquivos:**
+
 ```
 kebab-case.ts     // Utilitários
 PascalCase.tsx    // Componentes React
@@ -774,18 +815,19 @@ camelCase.test.ts // Testes
 [alias]
   # Ver commits com US-XXX
   us = "!f() { git log --grep=\"US-$1\" --oneline; }; f"
-  
+
   # Último commit
   last = log -1 HEAD --stat
-  
+
   # Status curto
   st = status --short
-  
+
   # Log graph
   lg = log --graph --oneline --all --decorate
 ```
 
 **Uso:**
+
 ```bash
 git us 007  # Ver commits da US-007
 git last    # Ver último commit
@@ -821,10 +863,12 @@ gh issue list
 ### 9.1 Quando usar BFF (Backend For Frontend)?
 
 **MVP (P0-P1): NÃO usar BFF**
+
 - Frontend conecta diretamente ao Supabase
 - RLS (Row-Level Security) garante segurança
 
 **P2: Considerar BFF se:**
+
 - Múltiplos clientes (web + mobile iOS + mobile Android)
 - Orquestração complexa (1 chamada frontend = 5+ queries Supabase)
 - Business logic com 10+ condições (não cabe em RLS)
@@ -837,6 +881,7 @@ gh issue list
 ### 9.2 Como funciona Availability (disponibilidade)?
 
 **Modelo:**
+
 ```typescript
 Availability {
   memberId: string
@@ -848,10 +893,12 @@ Availability {
 ```
 
 **Lógica:**
+
 1. **Padrão semanal:** Membro disponível em certos dias da semana
 2. **Override:** Exceção para data específica tem prioridade
 
 **Exemplo:**
+
 - Padrão: Disponível aos domingos (0) e quartas (3)
 - Override: Indisponível em 2026-03-25 (quarta)
 - Resultado: Disponível domingos, EXCETO 2026-03-25
@@ -862,15 +909,16 @@ Availability {
 
 ### 9.3 Por que Vite em vez de Next.js?
 
-| Critério | Vite | Next.js | Vencedor |
-|----------|------|---------|----------|
-| **Build Time** | 200ms | 3s | ✅ Vite (15x mais rápido) |
-| **Bundle Size** | 197KB | 350KB | ✅ Vite |
-| **HMR** | Instantâneo | <500ms | ✅ Vite |
-| **SSR** | Manual | Built-in | ✅ Next.js |
-| **SEO** | Manual | Built-in | ✅ Next.js |
+| Critério        | Vite        | Next.js  | Vencedor                  |
+| --------------- | ----------- | -------- | ------------------------- |
+| **Build Time**  | 200ms       | 3s       | ✅ Vite (15x mais rápido) |
+| **Bundle Size** | 197KB       | 350KB    | ✅ Vite                   |
+| **HMR**         | Instantâneo | <500ms   | ✅ Vite                   |
+| **SSR**         | Manual      | Built-in | ✅ Next.js                |
+| **SEO**         | Manual      | Built-in | ✅ Next.js                |
 
 **Decisão:** Vite, porque:
+
 - Worship+ é **SPA privada** (sem necessidade de SEO)
 - Build rápido = feedback instantâneo = produtividade++
 - Time pequeno (1-2 devs MVP), simplicidade importa
@@ -906,6 +954,7 @@ npm test
 ```
 
 **Stop:**
+
 ```bash
 supabase stop
 ```
@@ -915,26 +964,30 @@ supabase stop
 ### 9.5 O que fazer se AI Agent não está funcionando?
 
 **Sintomas:**
+
 - Copilot sugere código genérico (sem seguir padrões DDD)
 - Não menciona Ubiquitous Language (Event, Setlist, Member)
 
 **Solução:**
 
 1. **Recarregar VS Code:**
+
    ```
    Cmd+Shift+P → "Developer: Reload Window"
    ```
 
 2. **Verificar se `.agents/` existe:**
+
    ```bash
    ls -la .agents
    ```
 
 3. **Validar com Copilot Chat:**
+
    ```
    Quais são as regras do Frontend Developer Agent?
    ```
-   
+
    Resposta esperada: Deve mencionar React 19, Vite, DDD, mobile-first
 
 4. **Re-copiar agents:**
@@ -961,7 +1014,6 @@ supabase stop
 - **Issues:** Criar em cada repositório específico
   - Bug: `gh issue create --label bug --title "Bug: Descrição"`
   - Feature: `gh issue create --label enhancement --title "Feature: Descrição"`
-  
 - **Discussões:** https://github.com/orgs/worshipplus/discussions
 
 ---

@@ -8,14 +8,14 @@
 
 ## 📊 Comparativo de Plataformas
 
-| Plataforma | Custo Mensal | Performance | Limites Free Tier | Build Time | Recomendação |
-|------------|-------------|-------------|-------------------|------------|--------------|
-| **Vercel** | $0 (Hobby) | ⭐⭐⭐⭐⭐ | 100GB bandwidth, ilimitado projects | ~30s | ✅ **RECOMENDADO** |
-| **Netlify** | $0 (Starter) | ⭐⭐⭐⭐⭐ | 100GB bandwidth, 300 build min/mês | ~40s | ✅ Alternativa forte |
-| **GitHub Pages** | $0 | ⭐⭐⭐ | 1GB storage, 100GB bandwidth/mês | ~2min | ⚠️ Sem SSR/API |
-| **Railway** | $5/mês | ⭐⭐⭐⭐ | $5 crédito grátis/mês | ~1min | 💰 Pago após trial |
-| **Render** | $0 (Free) | ⭐⭐⭐ | 750h/mês, sleep após 15min inatividade | ~2min | ⚠️ Cold start |
-| **Cloudflare Pages** | $0 | ⭐⭐⭐⭐⭐ | Ilimitado bandwidth, 500 builds/mês | ~45s | ✅ Ótima opção |
+| Plataforma           | Custo Mensal | Performance | Limites Free Tier                      | Build Time | Recomendação         |
+| -------------------- | ------------ | ----------- | -------------------------------------- | ---------- | -------------------- |
+| **Vercel**           | $0 (Hobby)   | ⭐⭐⭐⭐⭐  | 100GB bandwidth, ilimitado projects    | ~30s       | ✅ **RECOMENDADO**   |
+| **Netlify**          | $0 (Starter) | ⭐⭐⭐⭐⭐  | 100GB bandwidth, 300 build min/mês     | ~40s       | ✅ Alternativa forte |
+| **GitHub Pages**     | $0           | ⭐⭐⭐      | 1GB storage, 100GB bandwidth/mês       | ~2min      | ⚠️ Sem SSR/API       |
+| **Railway**          | $5/mês       | ⭐⭐⭐⭐    | $5 crédito grátis/mês                  | ~1min      | 💰 Pago após trial   |
+| **Render**           | $0 (Free)    | ⭐⭐⭐      | 750h/mês, sleep após 15min inatividade | ~2min      | ⚠️ Cold start        |
+| **Cloudflare Pages** | $0           | ⭐⭐⭐⭐⭐  | Ilimitado bandwidth, 500 builds/mês    | ~45s       | ✅ Ótima opção       |
 
 ---
 
@@ -24,6 +24,7 @@
 ### Por que Vercel?
 
 #### ✅ Vantagens
+
 1. **Zero Configuração:** Deploy automático do GitHub
 2. **Edge Network Global:** CDN em 40+ regiões (sub-100ms latency)
 3. **Preview Deploys:** URL única para cada PR
@@ -34,6 +35,7 @@
 8. **Build Cache:** Builds incrementais (~10-30s)
 
 #### 💰 Limites Free Tier (Hobby Plan)
+
 - ✅ **Bandwidth:** 100GB/mês (suficiente para ~200k pageviews)
 - ✅ **Builds:** Ilimitados
 - ✅ **Projects:** Ilimitados
@@ -43,7 +45,9 @@
 - ⚠️ **Build Time:** 6h/dia (mais que suficiente)
 
 #### 📈 Estimativa de Uso (MVP)
+
 Assumindo 1000 usuários ativos/mês:
+
 - **Bandwidth:** ~15GB/mês (15% do limite)
 - **Builds:** ~50 builds/mês
 - **Functions:** ~5k invocações/dia
@@ -56,6 +60,7 @@ Assumindo 1000 usuários ativos/mês:
 ### Ambientes
 
 #### 1️⃣ **Development (Local)**
+
 - **URL:** `http://localhost:5173`
 - **Branch:** `feature/*`
 - **Deploy:** Manual (npm run dev)
@@ -63,6 +68,7 @@ Assumindo 1000 usuários ativos/mês:
 - **Hot reload:** Sim
 
 #### 2️⃣ **Staging (Preview)**
+
 - **URL:** `https://worship-plus-{pr-id}.vercel.app`
 - **Branch:** `develop` ou PR para `main`
 - **Deploy:** Automático via GitHub Actions
@@ -70,6 +76,7 @@ Assumindo 1000 usuários ativos/mês:
 - **Testes:** E2E automatizados
 
 #### 3️⃣ **Production**
+
 - **URL:** `https://worshipplus.app`
 - **Branch:** `main`
 - **Deploy:** Automático após merge + aprovação
@@ -81,6 +88,8 @@ Assumindo 1000 usuários ativos/mês:
 ## 🔧 Configuração Vercel
 
 ### 1. Arquivo `vercel.json`
+
+**Importante:** o app web fica em `frontend/`. O arquivo está em `frontend/vercel.json` e o _Root Directory_ do projeto na Vercel deve ser `frontend`.
 
 ```json
 {
@@ -150,6 +159,7 @@ Assumindo 1000 usuários ativos/mês:
 ### 2. Environment Variables (Vercel Dashboard)
 
 **Production:**
+
 ```env
 VITE_SUPABASE_URL=https://xyz.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -158,6 +168,7 @@ VITE_API_BASE_URL=https://api.worshipplus.app
 ```
 
 **Staging:**
+
 ```env
 VITE_SUPABASE_URL=https://xyz-staging.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -231,6 +242,7 @@ gh pr create --base main --title "release: Sprint 1" --body "Deploy US-013, 014,
 ### Opção 2: **Cloudflare Pages** (Backup)
 
 **Vantagens:**
+
 - Bandwidth ilimitado (mesmo no free tier)
 - 500 builds/mês
 - CDN global da Cloudflare
@@ -238,11 +250,13 @@ gh pr create --base main --title "release: Sprint 1" --body "Deploy US-013, 014,
 - Custom domains ilimitados
 
 **Desvantagens:**
+
 - Configuração manual de redirects
 - Analytics separado (Cloudflare Analytics)
 - Menos integrado com GitHub
 
 **Config:** `wrangler.toml`
+
 ```toml
 name = "worship-plus"
 compatibility_date = "2024-01-01"
@@ -259,16 +273,19 @@ status = 200
 ### Opção 3: **Netlify** (Alternativa)
 
 **Vantagens:**
+
 - Split testing (A/B tests) no free tier
 - Form handling nativo
 - Identity (auth) integrado
 - Edge functions
 
 **Desvantagens:**
+
 - 300 build minutes/mês (pode acabar em projetos grandes)
 - Build cache menos eficiente que Vercel
 
 **Config:** `netlify.toml`
+
 ```toml
 [build]
   command = "npm run build"
@@ -288,6 +305,7 @@ status = 200
 ### Opção 4: **GitHub Pages** (Fallback)
 
 **⚠️ Limitações:**
+
 - Apenas sites estáticos (sem API routes)
 - Build manual (ou GitHub Actions)
 - HTTPS apenas em domínios github.io
@@ -295,6 +313,7 @@ status = 200
 **Quando usar:** Apenas para demos/protótipos sem backend.
 
 **Config:** GitHub Actions workflow
+
 ```yaml
 name: Deploy to GitHub Pages
 
@@ -309,7 +328,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
       - run: npm ci
       - run: npm run build
       - uses: peaceiris/actions-gh-pages@v3
@@ -328,11 +347,13 @@ jobs:
    - Domínio: `worshipplus.app`
 
 2. **Adicionar domínio no Vercel:**
+
    ```bash
    vercel domains add worshipplus.app
    ```
 
 3. **Configurar DNS:**
+
    ```
    Type: A
    Name: @
@@ -351,32 +372,35 @@ jobs:
 ## 📊 Monitoramento e Analytics
 
 ### 1. Vercel Analytics (Grátis)
+
 - Core Web Vitals (LCP, FID, CLS)
 - Real User Monitoring
 - Top pages, devices, locations
 
 ### 2. Google Analytics 4 (Grátis)
+
 ```tsx
 // src/lib/analytics.ts
-import ReactGA from 'react-ga4';
+import ReactGA from "react-ga4";
 
 export const initGA = () => {
-  ReactGA.initialize('G-XXXXXXXXXX');
+  ReactGA.initialize("G-XXXXXXXXXX");
 };
 
 export const logPageView = (path: string) => {
-  ReactGA.send({ hitType: 'pageview', page: path });
+  ReactGA.send({ hitType: "pageview", page: path });
 };
 ```
 
 ### 3. Sentry (Error Tracking - Free Tier)
+
 - 5k events/mês
 - Source maps
 - Release tracking
 
 ```tsx
 // src/main.tsx
-import * as Sentry from '@sentry/react';
+import * as Sentry from "@sentry/react";
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -408,6 +432,7 @@ vercel promote <deployment-url> --scope=worship-plus
 ```
 
 ### Rollback via Dashboard
+
 1. Acessar vercel.com/worship-plus/deployments
 2. Clicar em deploy anterior
 3. Botão "Promote to Production"
@@ -417,15 +442,16 @@ vercel promote <deployment-url> --scope=worship-plus
 
 ## 💰 Estimativa de Custos (Crescimento)
 
-| Usuários/Mês | Pageviews | Bandwidth | Custo Vercel | Custo Supabase | Total/Mês |
-|--------------|-----------|-----------|--------------|----------------|-----------|
-| 100 | 10k | 5GB | $0 | $0 | **$0** |
-| 1.000 | 100k | 50GB | $0 | $0 | **$0** |
-| 5.000 | 500k | 250GB | $20 (Pro) | $25 (Pro) | **$45** |
-| 10.000 | 1M | 500GB | $20 | $25 | **$45** |
-| 50.000 | 5M | 2.5TB | $150 (Enterprise) | $599 (Team) | **$749** |
+| Usuários/Mês | Pageviews | Bandwidth | Custo Vercel      | Custo Supabase | Total/Mês |
+| ------------ | --------- | --------- | ----------------- | -------------- | --------- |
+| 100          | 10k       | 5GB       | $0                | $0             | **$0**    |
+| 1.000        | 100k      | 50GB      | $0                | $0             | **$0**    |
+| 5.000        | 500k      | 250GB     | $20 (Pro)         | $25 (Pro)      | **$45**   |
+| 10.000       | 1M        | 500GB     | $20               | $25            | **$45**   |
+| 50.000       | 5M        | 2.5TB     | $150 (Enterprise) | $599 (Team)    | **$749**  |
 
 **Resumo:**
+
 - **0-1000 usuários:** 100% grátis ✅
 - **1k-5k usuários:** $0-45/mês
 - **5k+ usuários:** Considerar otimizações (CDN própria, cache)
@@ -435,6 +461,7 @@ vercel promote <deployment-url> --scope=worship-plus
 ## 🎯 Checklist de Deploy
 
 ### Pré-Deploy
+
 - [ ] Testes passando (unit, integration, e2e)
 - [ ] Lighthouse score > 90
 - [ ] Bundle size < 500KB
@@ -444,6 +471,7 @@ vercel promote <deployment-url> --scope=worship-plus
 - [ ] CHANGELOG.md atualizado
 
 ### Post-Deploy
+
 - [ ] Smoke tests em produção
 - [ ] Verificar Core Web Vitals
 - [ ] Testar auth flow completo

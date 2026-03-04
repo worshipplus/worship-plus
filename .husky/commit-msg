@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Valida Conventional Commits + regra de US para feat/fix
+msg_file="$1"
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"
+
+resolve_msg_file() {
+	# 1) absolute/relative as received
+	if [ -f "$msg_file" ]; then
+		echo "$msg_file"
+		return 0
+	fi
+
+	# 2) relative to repo root
+	if [ -n "$repo_root" ] && [ -f "$repo_root/$msg_file" ]; then
+		echo "$repo_root/$msg_file"
+		return 0
+	fi
+
+	# 3) fallback to Git's known path for COMMIT_EDITMSG
+	if [ -n "$repo_root" ]; then
+		git_path="$(git rev-parse --git-path COMMIT_EDITMSG 2>/dev/null || true)"
+		if [ -n "$git_path" ] && [ -f "$repo_root/$git_path" ]; then
+			echo "$repo_root/$git_path"
+			return 0
+		fi
+	fi
+
+	# last resort
+	echo "$msg_file"
+}
+
+msg_file_resolved="$(resolve_msg_file)"
+
+cd "$repo_root/frontend" 2>/dev/null || cd frontend || exit 1
+npx commitlint --config ./commitlint.config.cjs --edit "$msg_file_resolved"
