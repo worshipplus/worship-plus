@@ -426,7 +426,7 @@ git commit -m "feat(components): Button premium glassmorphism"
 git push origin feature/US-014-button-component
 
 # 15. Criar PR no GitHub
-gh pr create --base develop --title "feat: Button component"
+gh pr create --base main --title "feat: Button component"
 ```
 
 ---

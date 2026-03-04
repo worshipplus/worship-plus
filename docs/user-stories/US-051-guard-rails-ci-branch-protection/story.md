@@ -16,7 +16,7 @@
 1. ✅ O CI utiliza scripts canônicos e reaproveitáveis (`tsc:build` e `build`) para reduzir drift
 2. ✅ O `tsc -b` roda com `tsconfig.*` válidos (sem opções desconhecidas / build info consistente)
 3. ✅ Existe validação local antes do push para barrar quebras de TypeScript config/version (`.husky/pre-push` → `ci:prepush`)
-4. ✅ A branch `main` (e `develop`, se aplicável) aceita apenas merge via Pull Request e bloqueia force-push
+4. ✅ A branch `main` aceita apenas merge via Pull Request e bloqueia force-push
 5. ✅ Branch protection exige checks do workflow de CI e impede merge com pipeline vermelho
 
 ---
@@ -24,7 +24,7 @@
 ## Regras de Negócio
 
 - Alterações em `main` devem ocorrer via Pull Request (sem push direto)
-- Force-push é proibido em `main` (e recomendado também para `develop`)
+- Force-push é proibido em `main`
 - O pipeline é a fonte de verdade para qualidade (checks obrigatórios para merge)
 - O hook de `pre-push` pode ser contornado apenas em modo break-glass (`--no-verify`), com justificativa registrada no PR
 

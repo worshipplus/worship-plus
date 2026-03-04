@@ -956,14 +956,14 @@ Build:
 Testado no navegador antes do commit ✅
 Pronto para deploy em staging."
 
-git push origin develop
+git push origin feature/US-XXX-nome-feature
 ```
 
 ---
 
 ## 🚀 Pipeline de Deploy
 
-### Após push para `develop`:
+### Após push da branch de feature:
 
 1. **GitHub Actions executa CI/CD:**
    - ✅ Lint
@@ -972,17 +972,14 @@ git push origin develop
    - ✅ Build
    - ✅ E2E Tests
 
-2. **Vercel faz deploy automático:**
-   - URL Staging: `https://worship-plus-staging.vercel.app`
+2. **Criar Pull Request para `main`:**
+  ```bash
+  gh pr create --base main --title "release: Sprint 1"
+  # Após aprovação, merge
+  ```
 
-3. **QA Manual:**
-   - Testar em staging
-   - Validar com stakeholders
-
-4. **Deploy para Production:**
+3. **Deploy para Production:**
    ```bash
-   gh pr create --base main --title "release: Sprint 1"
-   # Após aprovação, merge
    # Vercel deploy automático para https://worshipplus.app
    ```
 

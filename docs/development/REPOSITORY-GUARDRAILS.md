@@ -6,7 +6,7 @@ Este documento descreve os guard rails que evitam quebras de pipeline e reduzem 
 
 - Evitar drift entre comandos locais e CI
 - Barrar quebras antes do push (ex.: incompatibilidades de TypeScript/tsconfig)
-- Proteger `main` (e opcionalmente `develop`) contra force-push e merge sem PR
+- Proteger `main` (trunk) contra force-push e merge sem PR
 
 ## 2) Paridade CI ↔ Local
 
@@ -49,9 +49,7 @@ Checks recomendados (workflow CI/CD):
 - Run Tests
 - Build Application
 
-### Regra para `develop` (opcional, recomendado)
-
-- Mesmas opções do `main`, com flexibilidade para aprovações conforme o time
+Observação: este repositório adota **trunk-based development**, então a governança se concentra em `main`.
 
 ## 5) Observabilidade e manutenção
 
