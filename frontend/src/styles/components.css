@@ -1,0 +1,14 @@
+.glass-card {
+  -webkit-backdrop-filter: var(--blur-xl);
+  backdrop-filter: var(--blur-xl);
+  background: var(--color-surface-glass);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass-md);
+  transition: var(--transition-glass);
+}
+
+html[data-theme="dark"] .glass-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

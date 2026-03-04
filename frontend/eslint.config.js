@@ -24,6 +24,21 @@ export default [
     rules: {
       ...(reactHooks.configs.recommended?.rules ?? {}),
       ...(reactRefresh.configs.vite?.rules ?? {}),
+		'no-unused-vars': [
+			'error',
+			{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+		],
+    },
+  },
+  {
+    files: [
+      'src/context/**/*.{ts,tsx}',
+      'src/hooks/**/*.{ts,tsx}',
+      'src/services/**/*.{ts,tsx}',
+      '**/*.stories.{ts,tsx}',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
     },
   },
   {
