@@ -84,6 +84,22 @@ Este comando executa:
 4. **Integration Tests:** React Testing Library
 5. **Build:** Verificar se compila sem erros
 
+#### ✅ Validação automática no push
+
+Este repositório também possui um hook de **pre-push** (Husky) para barrar pushes que quebrariam o CI.
+
+Ele executa um check rápido alinhado ao GitHub Actions:
+
+```bash
+# (executado automaticamente no push)
+npm run ci:prepush
+```
+
+Se você precisar contornar o hook em situações excepcionais:
+
+- `git push --no-verify` (pula hooks)
+- ou `HUSKY=0 git push` (desativa Husky)
+
 ---
 
 ### 4️⃣ Build e Preview de Produção

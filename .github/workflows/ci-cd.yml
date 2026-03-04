@@ -70,7 +70,7 @@ jobs:
         run: npm ci
       
       - name: 🔷 Run TypeScript compiler
-        run: npm run type-check
+        run: npm run -s tsc:build
 
   # ===========================
   # JOB 3: Unit & Integration Tests
@@ -131,7 +131,7 @@ jobs:
         run: npm ci
       
       - name: 🏗️ Build for production
-        run: npm run build
+        run: npm run -s build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
