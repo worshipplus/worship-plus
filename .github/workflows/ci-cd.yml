@@ -8,6 +8,7 @@ on:
 
 env:
   NODE_VERSION: '20.x'
+  WORKING_DIR: './frontend'
 
 jobs:
   # ===========================
@@ -16,6 +17,9 @@ jobs:
   lint:
     name: 🔍 Lint & Code Quality
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -28,6 +32,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
       
       - name: 📚 Install dependencies
         run: npm ci
@@ -46,6 +51,9 @@ jobs:
   typecheck:
     name: 🔷 TypeScript Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -56,6 +64,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
       
       - name: 📚 Install dependencies
         run: npm ci
@@ -69,6 +78,9 @@ jobs:
   test:
     name: 🧪 Run Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -79,6 +91,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
       
       - name: 📚 Install dependencies
         run: npm ci
@@ -91,15 +104,6 @@ jobs:
       
       - name: 📊 Generate coverage report
         run: npm run test:coverage
-      
-      - name: 📈 Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: worship-plus-coverage
-          fail_ci_if_error: false
 
   # ===========================
   # JOB 4: Build Application
@@ -108,6 +112,9 @@ jobs:
     name: 🏗️ Build Application
     runs-on: ubuntu-latest
     needs: [lint, typecheck, test]
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -118,6 +125,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
       
       - name: 📚 Install dependencies
         run: npm ci
@@ -132,12 +140,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
           retention-days: 7
       
       - name: 📊 Check bundle size
         run: |
-          npm run build:analyze
           echo "### 📦 Bundle Size Report" >> $GITHUB_STEP_SUMMARY
           du -sh dist/* >> $GITHUB_STEP_SUMMARY
 
@@ -148,6 +155,9 @@ jobs:
     name: 🎭 E2E Tests
     runs-on: ubuntu-latest
     needs: build
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -158,6 +168,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
       
       - name: 📚 Install dependencies
         run: npm ci
@@ -166,7 +177,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
       
       - name: 🎭 Install Playwright browsers
         run: npx playwright install --with-deps
@@ -181,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
-          path: test-results/
+          path: ${{ env.WORKING_DIR }}/test-results/
           retention-days: 7
 
   # ===========================
@@ -196,19 +207,30 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: 📚 Install dependencies
+        run: npm ci
+        working-directory: ${{ env.WORKING_DIR }}
       
       - name: 📥 Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
       
       - name: 🚨 Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
           uploadArtifacts: true
           temporaryPublicStorage: true
-          configPath: './lighthouse.config.js'
+          configPath: './frontend/lighthouse.config.js'
 
   # ===========================
   # JOB 7: Deploy Staging (Vercel)
@@ -230,7 +252,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
       
       - name: 🚀 Deploy to Vercel
         id: deploy
@@ -239,7 +261,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./
+          working-directory: ${{ env.WORKING_DIR }}
           alias-domains: staging.worshipplus.app
 
   # ===========================
@@ -262,7 +284,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
       
       - name: 🚀 Deploy to Vercel (Production)
         uses: amondnet/vercel-action@v25
@@ -271,26 +293,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-          working-directory: ./
-      
-      - name: 📢 Notify Slack
-        if: success()
-        uses: slackapi/slack-github-action@v1
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          payload: |
-            {
-              "text": "🎉 Worship+ deployed to production!",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Worship+ Production Deploy* ✅\n\n*Branch:* `main`\n*Commit:* ${{ github.sha }}\n*URL:* https://worshipplus.app"
-                  }
-                }
-              ]
-            }
+          working-directory: ${{ env.WORKING_DIR }}
 
   # ===========================
   # JOB 9: Dependency Security Audit
@@ -298,6 +301,9 @@ jobs:
   security:
     name: 🔒 Security Audit
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
     
     steps:
       - name: 📥 Checkout code
@@ -307,13 +313,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+      
+      - name: 📚 Install dependencies
+        run: npm ci
       
       - name: 🔒 Run npm audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
-      
-      - name: 🔍 Run Snyk security scan
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
