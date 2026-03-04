@@ -1,7 +1,7 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'npm run preview',
+      startServerCommand: 'npm --prefix frontend run preview -- --host 0.0.0.0 --strictPort',
       startServerReadyPattern: 'Local:',
       url: ['http://localhost:4173'],
       numberOfRuns: 3,
