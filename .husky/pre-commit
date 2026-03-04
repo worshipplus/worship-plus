@@ -2,5 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Lint + Prettier (fix) apenas nos arquivos staged
-npx --prefix frontend lint-staged --config .lintstagedrc.cjs
+npx --prefix frontend lint-staged --relative --config .lintstagedrc.cjs
 
