@@ -240,7 +240,7 @@ jobs:
         with:
           uploadArtifacts: true
           temporaryPublicStorage: true
-          configPath: './frontend/lighthouse.config.js'
+          configPath: './frontend/lighthouse.config.cjs'
 
   # ===========================
   # JOB 7: Deploy Staging (Vercel)
