@@ -27,7 +27,7 @@ export default [
     },
   },
   {
-    files: ['lighthouse.config.js'],
+    files: ['lighthouse.config.cjs'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: globals.node,
