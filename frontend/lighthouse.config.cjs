@@ -2,7 +2,7 @@ module.exports = {
   ci: {
     collect: {
       startServerCommand:
-      'npm --prefix frontend run preview -- --strictPort --port 4173',
+        'npm --prefix frontend run preview -- --strictPort --port 4173',
       startServerReadyPattern: 'Local:',
       startServerReadyTimeout: 120000,
       url: ['http://127.0.0.1:4173/'],
