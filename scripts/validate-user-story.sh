@@ -62,7 +62,9 @@ fi
 
 # Format US ID
 if [[ ! "$US_ID" =~ ^US- ]]; then
-  US_ID=$(printf "US-%03d" "$US_ID")
+  # NOTE: IDs com zero à esquerda (ex: 051) não podem ser interpretados como octal.
+  # Força base 10 para evitar "051" => 41.
+  US_ID=$(printf "US-%03d" "$((10#$US_ID))")
 fi
 
 # Find US directory
@@ -119,7 +121,7 @@ fi
 # ==========================================
 echo -n "3️⃣  Bounded Context... "
 if echo "$CONTENT" | grep -q "^\*\*Bounded Context:\*\*" && \
-   echo "$CONTENT" | grep -E "Worship|Team|Media|User Management"; then
+   echo "$CONTENT" | grep -qE "Worship|Team|Media|User Management"; then
   CONTEXT=$(echo "$CONTENT" | grep "^\*\*Bounded Context:\*\*" | sed 's/^.*: //')
   echo -e "${GREEN}✅ OK${NC} (${CONTEXT})"
 else
