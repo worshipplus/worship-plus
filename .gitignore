@@ -15,6 +15,9 @@
 # Agents temporary files
 .agents/
 
+# Local git worktrees (should never be committed)
+.worktrees/
+
 # Node modules (will be in specific projects)
 node_modules/
 dist/
