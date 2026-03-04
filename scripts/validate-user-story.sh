@@ -62,6 +62,11 @@ fi
 
 # Format US ID
 if [[ ! "$US_ID" =~ ^US- ]]; then
+  # Validate that the ID is purely numeric before arithmetic expansion
+  if [[ ! "$US_ID" =~ ^[0-9]+$ ]]; then
+    echo -e "${RED}Erro: --id deve ser numérico (ex: 025)${NC}"
+    exit 1
+  fi
   # NOTE: IDs com zero à esquerda (ex: 051) não podem ser interpretados como octal.
   # Força base 10 para evitar "051" => 41.
   US_ID=$(printf "US-%03d" "$((10#$US_ID))")
