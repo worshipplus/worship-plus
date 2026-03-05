@@ -2,7 +2,7 @@ name: CI/CD - Worship+ Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/**']
   pull_request:
     branches: [main, chore/trunkbased-main-only]
 
