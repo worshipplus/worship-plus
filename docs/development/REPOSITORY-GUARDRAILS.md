@@ -37,17 +37,19 @@ GitHub → **Settings → Branches → Branch protection rules**
 Habilitar:
 
 - **Require a pull request before merging**
-- **Require approvals** (mínimo 1, recomendado)
+- **Require approvals** (0 para contexto solo/MVP; 1+ recomendado quando houver time)
 - **Require status checks to pass before merging**
 - **Require branches to be up to date before merging**
 - **Disable force pushes**
 
 Checks recomendados (workflow CI/CD):
 
-- Lint & Code Quality
-- TypeScript Type Check
-- Run Tests
-- Build Application
+- 🔍 Lint & Code Quality
+- 🔷 TypeScript Type Check
+- 🧪 Run Tests
+- 🔒 Security Audit
+- 🏗️ Build Application
+- 🎭 E2E Tests
 
 Observação: este repositório adota **trunk-based development**, então a governança se concentra em `main`.
 

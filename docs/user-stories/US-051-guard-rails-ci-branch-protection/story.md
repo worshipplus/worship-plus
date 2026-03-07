@@ -25,6 +25,7 @@
 
 - Alterações em `main` devem ocorrer via Pull Request (sem push direto)
 - Force-push é proibido em `main`
+- Aprovações de PR podem ser exigidas (1+ recomendado quando houver time; 0 em contexto solo/MVP para não bloquear merges)
 - O pipeline é a fonte de verdade para qualidade (checks obrigatórios para merge)
 - O hook de `pre-push` pode ser contornado apenas em modo break-glass (`--no-verify`), com justificativa registrada no PR
 
