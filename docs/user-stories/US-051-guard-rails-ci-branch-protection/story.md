@@ -1,4 +1,4 @@
-# US-051: Guard Rails de CI e Branch
+# US-051: Guard Rails de CI e Branch Protection
 
 **Como** Tech Lead do contexto Team  
 **Quero** estabelecer guard rails de CI e governança de branches  
@@ -65,7 +65,6 @@
 
 ## Referências
 
-- **Contract API:** [`contract.yaml`](./contract.yaml)
 - **BDD Scenarios:** [`scenarios.feature`](./scenarios.feature)
 - **Testes de Aceitação:** [`acceptance-tests.md`](./acceptance-tests.md)
 - **DDD-GUIDE:** [`docs/summaries/ddd-summary.md`](../../summaries/ddd-summary.md)
@@ -75,10 +74,10 @@
 
 ## Notas Adicionais (Opcional)
 
-[Qualquer contexto adicional, links para mockups, decisões de design, etc.]
+N/A.
 
 ---
 
-**Criado em:** [data]  
+**Criado em:** 2026-03-04  
 **Atualizado em:** 2026-03-04  
 **Responsável:** Product Manager Agent
