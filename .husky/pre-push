@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Validação rápida antes de push (pega quebras como TS config/version)
+npm --prefix frontend run -s ci:prepush

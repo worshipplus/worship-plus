@@ -15,7 +15,8 @@
     "prepare": "cd .. && node frontend/node_modules/husky/lib/bin.js install",
     "dev": "vite --host",
     "dev:https": "vite --https --host",
-    "build": "tsc -b && vite build",
+    "vite:build": "vite build",
+    "build": "npm run -s tsc:build && npm run -s vite:build",
     "preview": "vite preview --host",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --fix",
@@ -24,6 +25,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "format:staged": "prettier --write",
     "type-check": "tsc --noEmit",
+    "tsc:build": "tsc -b --pretty false",
+    "ci:prepush": "npm run -s tsc:build",
     "test": "vitest",
     "test:unit": "vitest run --coverage --passWithNoTests",
     "test:integration": "vitest run --passWithNoTests",
@@ -61,8 +64,8 @@
     "@types/node": "^20.10.4",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
-    "@typescript-eslint/eslint-plugin": "^6.13.2",
-    "@typescript-eslint/parser": "^6.13.2",
+    "@typescript-eslint/eslint-plugin": "8.56.1",
+    "@typescript-eslint/parser": "8.56.1",
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.0.4",
     "autoprefixer": "^10.4.16",
@@ -78,7 +81,7 @@
     "prettier": "^3.1.0",
     "storybook": "^7.6.3",
     "tailwindcss": "^3.3.6",
-    "typescript": "5.3.3",
+    "typescript": "5.9.3",
     "vite": "^5.4.11",
     "vite-bundle-visualizer": "^0.11.0",
     "vitest": "^1.0.4"
@@ -93,7 +96,7 @@
     ]
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=20.19.0",
     "npm": ">=9.0.0"
   }
 }

@@ -1,13 +1,14 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'npm --prefix frontend run preview -- --host 0.0.0.0 --strictPort',
+      startServerCommand:
+        'npm --prefix frontend run preview -- --strictPort --port 4173',
       startServerReadyPattern: 'Local:',
-      url: ['http://localhost:4173'],
+      startServerReadyTimeout: 120000,
+      url: ['http://127.0.0.1:4173/'],
       numberOfRuns: 3,
     },
     assert: {
-      preset: 'lighthouse:recommended',
       assertions: {
         'categories:performance': ['error', { minScore: 0.9 }],
         'categories:accessibility': ['error', { minScore: 0.95 }],

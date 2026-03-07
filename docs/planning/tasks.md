@@ -2,6 +2,12 @@
 # TASKS: Reorganizar e documentar o repositório Worship+
 ---
 
+## Guard Rails (CI/Repo) — Tracking
+
+- [ ] Implementar e validar US-051 (CI paridade + pre-push + branch protection)
+- [ ] Habilitar branch protection no GitHub (manual): PR-only, required checks, bloquear force-push
+- [ ] Revisar periodicamente compatibilidade de toolchain (TypeScript + @typescript-eslint)
+
 Objetivo: Reorganizar o trabalho já feito no repositório Worship+ em áreas claras, com critérios de aceitação e passos executáveis, facilitando manutenção e reuso.
 
 Prompt reorganizado (use como `prompt-reorganize-worshipplus.md`):

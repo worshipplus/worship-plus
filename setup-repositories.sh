@@ -107,6 +107,10 @@ echo ""
 echo "🔒 PASSO 3: Configurar Branch Protections"
 echo "------------------------------------------"
 
+# Para times, configure para 1+ (ex.: REQUIRED_APPROVALS=1).
+# Para contexto solo/MVP, use 0 para não bloquear merges por falta de reviewers.
+REQUIRED_APPROVALS="${REQUIRED_APPROVALS:-0}"
+
 declare -a CODE_REPOS=(
     "worship-plus-frontend"
     "worship-plus-backend"
@@ -121,9 +125,9 @@ do
         --method PUT \
         -H "Accept: application/vnd.github+json" \
         "/repos/$ORGANIZATION/$repo/branches/main/protection" \
-        -f required_status_checks='{"strict":true,"contexts":["ci"]}' \
+    -f required_status_checks='{"strict":true,"contexts":["🔍 Lint & Code Quality","🔷 TypeScript Type Check","🧪 Run Tests","🔒 Security Audit","🏗️ Build Application","🎭 E2E Tests"]}' \
         -f enforce_admins=false \
-        -f required_pull_request_reviews='{"required_approving_review_count":1}' \
+    -f required_pull_request_reviews="{\"dismiss_stale_reviews\":true,\"require_code_owner_reviews\":false,\"require_last_push_approval\":false,\"required_approving_review_count\":${REQUIRED_APPROVALS}}" \
         -f restrictions=null || echo "⚠️  Branch main ainda não existe ou erro"
 done
 
