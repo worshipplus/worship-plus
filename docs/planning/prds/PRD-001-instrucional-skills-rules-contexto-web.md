@@ -34,22 +34,39 @@ As próximas features podem ser executadas com inconsistências se não houver u
 3. Aplicar rules durante planejamento, implementação e validação.
 4. Executar PRD da feature alvo com o mesmo padrão.
 
-## 8. Critérios de Aceitação
+## 8. Domínios e Linguagem Ubíqua (MVP - Fase Atual)
+### 8.1 Domínios (Bounded Contexts)
+- **Worship Context (Core):** eventos de louvor, event setlist e operação de culto.
+- **Team Context (Supporting):** membros, papéis e disponibilidade da equipe.
+- **User Management Context (Generic):** autenticação, sessão e autorização por privilégio.
+- **Media Context (Supporting, pós-MVP):** gestão de arquivos de mídia (fora do escopo desta fase).
+
+### 8.2 Linguagem Ubíqua mínima
+- **Setlist:** biblioteca global de músicas.
+- **Event Setlist:** lista de músicas de um evento específico.
+- **Event:** culto/evento de louvor.
+- **Owner/Ministro:** líder responsável pelo evento.
+- **Backing Vocal:** segunda voz (não substitui papel de ministro).
+- **Locked Event:** evento finalizado, sem novas edições.
+- **Privilégio:** nível de permissão para ações e visualização.
+
+## 9. Critérios de Aceitação
 - [ ] Instrucional criado com checklist de início/fim de sessão.
 - [ ] Skills criadas e organizadas por tipo de tarefa (planejamento, UI, testes, revisão).
 - [ ] Rules definidas para escopo, qualidade e consistência de domínio.
+- [ ] Domínios MVP e linguagem ubíqua mínima definidos e aprovados para uso imediato.
 - [ ] Conteúdo compatível com a stack/configuração web do repositório.
 - [ ] Sem definição de schema/modelagem de banco.
 
-## 9. Dependências
+## 10. Dependências
 - Documentação de roadmap e guias do projeto.
 - Configuração do frontend (scripts, stack e ferramentas).
 
-## 10. Dados e Persistência
+## 11. Dados e Persistência
 - Usar dados mockados apenas para exemplificação de fluxo.
 - Não definir estrutura de banco, tabelas, migrations ou contratos de persistência.
 
-## 11. Entregáveis
+## 12. Entregáveis
 - Documento de instrucional.
 - Documento de skills.
 - Documento de rules.
