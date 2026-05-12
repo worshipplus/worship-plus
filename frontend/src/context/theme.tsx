@@ -25,8 +25,21 @@ function applyThemeToDom(theme: Theme) {
 }
 
 function getInitialTheme(): Theme {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  // If running in a non-browser environment (e.g., SSR), fall back to light.
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
+
+  // Respect the user's OS-level preference before defaulting to light.
+  if (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return "dark";
+  }
   return "light";
 }
 
