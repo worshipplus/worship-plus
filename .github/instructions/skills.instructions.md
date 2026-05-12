@@ -1,6 +1,9 @@
+---
+applyTo: "**"
+---
 # Skills — Capacidades Operacionais Frontend
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** Maio 2026  
 **Status:** Ativo (PRD-001)
 
@@ -60,5 +63,5 @@
 
 ## 6. Referências
 
-- [INSTRUCIONAL.md](./INSTRUCIONAL.md) — Checklist de abertura/encerramento de sessão
-- [RULES.md](./RULES.md) — Políticas de execução e qualidade
+- [instrucional.instructions.md](.github/instructions/instrucional.instructions.md) — Checklist de abertura/encerramento de sessão
+- [rules.instructions.md](.github/instructions/rules.instructions.md) — Políticas de execução e qualidade

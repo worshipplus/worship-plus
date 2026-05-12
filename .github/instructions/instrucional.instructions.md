@@ -1,6 +1,9 @@
+---
+applyTo: "**"
+---
 # Instrucional — Contexto Web Worship+
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** Maio 2026  
 **Status:** Ativo (PRD-001)
 
@@ -11,7 +14,7 @@
 Antes de iniciar qualquer tarefa de desenvolvimento, execute este checklist:
 
 - [ ] Ler o PRD da feature alvo (localizado em `docs/planning/prds/`)
-- [ ] Verificar linguagem ubíqua em [SKILLS.md](./SKILLS.md) e [RULES.md](./RULES.md)
+- [ ] Verificar linguagem ubíqua em [skills.instructions.md](./.github/instructions/skills.instructions.md) e [rules.instructions.md](./.github/instructions/rules.instructions.md)
 - [ ] Navegar na estrutura atual do frontend: `frontend/src/`
 - [ ] Confirmar que há dados mockados disponíveis para a feature (sem schema de banco)
 - [ ] Verificar se o usuário mockado tem o privilégio correto para o fluxo testado
@@ -81,7 +84,7 @@ frontend/src/
 
 ## 6. Referências
 
-- [SKILLS.md](./SKILLS.md) — Capacidades operacionais por tipo de tarefa
-- [RULES.md](./RULES.md) — Políticas de qualidade, terminologia e entrega
+- [skills.instructions.md](.github/instructions/skills.instructions.md) — Capacidades operacionais por tipo de tarefa
+- [rules.instructions.md](.github/instructions/rules.instructions.md) — Políticas de qualidade, terminologia e entrega
 - PRDs: `docs/planning/prds/PRD-00[2-4]-*.md`
 - Guia de agentes: `docs/guides/AGENTS-GUIDE.md`
