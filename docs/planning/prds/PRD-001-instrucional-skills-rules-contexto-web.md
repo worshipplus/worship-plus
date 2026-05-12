@@ -39,7 +39,7 @@ As próximas features podem ser executadas com inconsistências se não houver u
 - **Worship Context (Core):** eventos de louvor, event setlist e operação de culto.
 - **Team Context (Supporting):** membros, papéis e disponibilidade da equipe.
 - **User Management Context (Generic):** autenticação, sessão e autorização por privilégio.
-- **Media Context (Supporting, pós-MVP):** gestão de arquivos de mídia (fora do escopo desta fase).
+- **Media Context (Supporting, post-MVP):** gestão de arquivos de mídia (fora do escopo desta fase).
 
 ### 8.2 Linguagem Ubíqua mínima
 - **Setlist:** biblioteca global de músicas.
