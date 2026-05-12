@@ -2,9 +2,9 @@ name: CI/CD - Worship+ Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/**']
   pull_request:
-    branches: [main]
+    branches: [main, chore/trunkbased-main-only]
 
 env:
   NODE_VERSION: '20.x'
