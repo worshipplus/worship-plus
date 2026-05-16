@@ -1,12 +1,22 @@
 /* @vitest-environment jsdom */
 
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import App from "./App";
 
 describe("PRD-005 event flow", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("shows validation messages when required fields are missing", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -32,18 +42,22 @@ describe("PRD-005 event flow", () => {
       screen.getByLabelText("Descrição"),
       "Evento especial com contagem regressiva e celebração da igreja.",
     );
-    await user.selectOptions(screen.getByLabelText("Owner"), "user-minister");
+    await user.selectOptions(screen.getByLabelText(/Owner/), "user-minister");
     await user.click(screen.getByRole("button", { name: "Criar evento" }));
+
+    const detailSection = screen
+      .getByRole("heading", { name: "Culto da Virada" })
+      .closest("section");
 
     expect(
       screen.getByText(
         "Evento criado em rascunho com owner definido automaticamente.",
       ),
     ).toBeInTheDocument();
+    expect(detailSection).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: "Culto da Virada" }),
+      within(detailSection as HTMLElement).getByText("Lucas Pereira"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Lucas Pereira")).toBeInTheDocument();
     expect(screen.getAllByText("Rascunho").length).toBeGreaterThan(0);
   });
 
@@ -57,7 +71,9 @@ describe("PRD-005 event flow", () => {
     );
 
     expect(screen.queryByLabelText("Owner")).not.toBeInTheDocument();
-    expect(screen.getByText("Lucas Pereira")).toBeInTheDocument();
+    expect(
+      screen.getByText("Lucas Pereira", { selector: ".readonly-field" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "Owner definido automaticamente como o usuário criador.",
