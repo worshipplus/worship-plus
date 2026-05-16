@@ -49,6 +49,7 @@ describe("EventDetailPage", () => {
 
   it("exibe mensagem quando o setlist está vazio", () => {
     const draftEvent = mockEvents.find((e) => e.eventSetlist.length === 0);
+    expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
     renderDetail(draftEvent.id);
     expect(screen.getByText(/nenhuma música no setlist/i)).toBeInTheDocument();

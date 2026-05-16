@@ -50,6 +50,7 @@ describe("EventsPage", () => {
     renderEventsPage();
     // Pick an event with a unique owner name in the mock data
     const uniqueOwnerEvent = mockEvents.find((e) => e.owner === "Ana Oliveira");
+    expect(uniqueOwnerEvent).toBeDefined();
     if (!uniqueOwnerEvent) return;
     expect(screen.getByText(uniqueOwnerEvent.title)).toBeInTheDocument();
     expect(screen.getByText(uniqueOwnerEvent.owner)).toBeInTheDocument();

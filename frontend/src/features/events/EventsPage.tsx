@@ -67,7 +67,7 @@ export function EventsPage({
                 fontWeight: "var(--font-weight-extrabold)",
               }}
             >
-              Events
+              Eventos
             </h1>
             <p
               style={{

@@ -1,4 +1,4 @@
-export type { UserRole } from "./setlist";
+export type { UserRole } from "./shared";
 
 export type EventStatus = "draft" | "scheduled" | "locked";
 

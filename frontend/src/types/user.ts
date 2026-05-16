@@ -1,9 +1,11 @@
-export type { UserRole } from "./setlist";
+import type { UserRole } from "./shared";
+
+export type { UserRole };
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: import("./setlist").UserRole;
+  role: UserRole;
   createdAt: string;
 }

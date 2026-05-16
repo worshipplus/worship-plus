@@ -23,7 +23,7 @@ applyTo: "**"
 
 ## R-03 — Linguagem Ubíqua Obrigatória
 
-- Todos os nomes de variáveis, tipos, props e comentários devem usar a linguagem ubíqua definida em [skills.instructions.md](.github/instructions/skills.instructions.md).
+- Todos os nomes de variáveis, tipos, props e comentários devem usar a linguagem ubíqua definida em [skills.instructions.md](./skills.instructions.md).
 - Pull requests que usem termos alternativos (ex.: "song library" em vez de "Setlist") devem ser corrigidos antes de merge.
 
 ## R-04 — Privilégios Aplicados na UI

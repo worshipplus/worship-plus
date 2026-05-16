@@ -63,5 +63,5 @@ applyTo: "**"
 
 ## 6. Referências
 
-- [instrucional.instructions.md](.github/instructions/instrucional.instructions.md) — Checklist de abertura/encerramento de sessão
-- [rules.instructions.md](.github/instructions/rules.instructions.md) — Políticas de execução e qualidade
+- [instrucional.instructions.md](./instrucional.instructions.md) — Checklist de abertura/encerramento de sessão
+- [rules.instructions.md](./rules.instructions.md) — Políticas de execução e qualidade

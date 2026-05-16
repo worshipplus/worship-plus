@@ -110,7 +110,10 @@ export function UsersPage() {
     closeEditPrivilege();
   }
 
-  function handleFormChange(field: keyof UserFormData, value: string) {
+  function handleFormChange<K extends keyof UserFormData>(
+    field: K,
+    value: UserFormData[K],
+  ) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field !== "role" && errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));

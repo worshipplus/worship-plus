@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "ministro" | "team-member";
+export type { UserRole } from "./shared";
 
 export interface SetlistItem {
   id: string;

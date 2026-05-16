@@ -63,7 +63,7 @@ export function EventDetailPage() {
           style={{ color: "var(--color-primary)" }}
         >
           <ArrowLeft size={16} />
-          Voltar para Events
+          Voltar para Eventos
         </button>
       </div>
     );
