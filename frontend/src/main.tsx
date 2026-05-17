@@ -4,12 +4,15 @@ import "./index.css";
 import App from "./App.tsx";
 import { ThemeProvider } from "./context/theme";
 import { AuthProvider } from "./context/auth";
+import { EventsProvider } from "./context/events";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <App />
+        <EventsProvider>
+          <App />
+        </EventsProvider>
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>,

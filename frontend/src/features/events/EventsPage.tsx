@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, User, ChevronRight, CalendarDays } from "lucide-react";
+import {
+  Calendar,
+  User,
+  ChevronRight,
+  CalendarDays,
+  PlusCircle,
+} from "lucide-react";
 import type { UserRole, EventStatus } from "../../types/event";
-import { mockEvents } from "../../mocks/eventMocks";
+import { useEvents } from "../../context/events";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -13,7 +19,7 @@ type FilterType = "all" | "upcoming";
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
   scheduled: "Agendado",
-  locked: "Finalizado",
+  locked: "Locked Event",
 };
 
 const STATUS_COLORS: Record<EventStatus, string> = {
@@ -28,6 +34,10 @@ const STATUS_TEXT_COLORS: Record<EventStatus, string> = {
   locked: "rgb(79,70,229)",
 };
 
+function canCreateEvent(role: UserRole): boolean {
+  return role === "admin" || role === "ministro";
+}
+
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleDateString("pt-BR", {
@@ -39,14 +49,14 @@ function formatDate(isoString: string): string {
   });
 }
 
-/** userRole is reserved for future draft-visibility filtering per PRD-003. */
-export function EventsPage({
-  userRole: _userRole = "team-member",
-}: EventsPageProps) {
+export function EventsPage({ userRole = "team-member" }: EventsPageProps) {
   const navigate = useNavigate();
+  const { events } = useEvents();
   const [filter, setFilter] = useState<FilterType>("all");
   const now = new Date();
-  const filtered = mockEvents.filter((event) => {
+  const canCreate = canCreateEvent(userRole);
+
+  const filtered = events.filter((event) => {
     if (filter === "upcoming") {
       return new Date(event.date) >= now;
     }
@@ -56,31 +66,71 @@ export function EventsPage({
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-3xl mx-auto grid gap-4">
-        {/* Header */}
-        <header className="glass-card p-4 flex items-center gap-3">
-          <CalendarDays size={22} style={{ color: "var(--color-primary)" }} />
-          <div>
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "var(--text-xl)",
-                fontWeight: "var(--font-weight-extrabold)",
-              }}
-            >
-              Eventos
-            </h1>
-            <p
-              style={{
-                color: "var(--color-text-secondary)",
-                fontSize: "var(--text-sm)",
-              }}
-            >
-              Agenda de eventos da igreja
-            </p>
+        <header className="glass-card p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <CalendarDays size={22} style={{ color: "var(--color-primary)" }} />
+            <div>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "var(--text-xl)",
+                  fontWeight: "var(--font-weight-extrabold)",
+                }}
+              >
+                Eventos
+              </h1>
+              <p
+                style={{
+                  color: "var(--color-text-secondary)",
+                  fontSize: "var(--text-sm)",
+                }}
+              >
+                Agenda de eventos da igreja
+              </p>
+            </div>
           </div>
+
+          {canCreate ? (
+            <button
+              type="button"
+              onClick={() => navigate("/events/new")}
+              aria-label="Criar Event"
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-transform active:scale-95"
+              style={{
+                background: "var(--color-primary)",
+                color: "var(--color-neutral-50)",
+                minHeight: "40px",
+              }}
+            >
+              <PlusCircle size={16} />
+              Criar Event
+            </button>
+          ) : (
+            <div className="grid gap-1 justify-items-end">
+              <button
+                type="button"
+                disabled
+                aria-label="Criar Event indisponível"
+                className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm opacity-50 cursor-not-allowed"
+                style={{
+                  background: "var(--color-surface)",
+                  color: "var(--color-text-secondary)",
+                  minHeight: "40px",
+                }}
+              >
+                <PlusCircle size={16} />
+                Criar Event
+              </button>
+              <span
+                className="text-xs"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Apenas Admin e Ministro podem criar Event.
+              </span>
+            </div>
+          )}
         </header>
 
-        {/* Filters */}
         <div
           className="glass-card p-1 flex gap-1"
           role="group"
@@ -107,7 +157,6 @@ export function EventsPage({
           ))}
         </div>
 
-        {/* Event List */}
         {filtered.length === 0 ? (
           <p
             className="text-center py-8 text-sm"

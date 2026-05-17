@@ -3,12 +3,17 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { EventsPage } from "./EventsPage";
 import { mockEvents } from "../../mocks/eventMocks";
+import { EventsProvider } from "../../context/events";
 
-function renderEventsPage() {
+function renderEventsPage(
+  role: "admin" | "ministro" | "team-member" = "admin",
+) {
   return render(
-    <MemoryRouter>
-      <EventsPage userRole="admin" />
-    </MemoryRouter>,
+    <EventsProvider>
+      <MemoryRouter>
+        <EventsPage userRole={role} />
+      </MemoryRouter>
+    </EventsProvider>,
   );
 }
 
@@ -48,7 +53,6 @@ describe("EventsPage", () => {
 
   it("card de evento contém título e nome do owner", () => {
     renderEventsPage();
-    // Pick an event with a unique owner name in the mock data
     const uniqueOwnerEvent = mockEvents.find((e) => e.owner === "Ana Oliveira");
     expect(uniqueOwnerEvent).toBeDefined();
     if (!uniqueOwnerEvent) return;
@@ -59,7 +63,30 @@ describe("EventsPage", () => {
   it("exibe badge de status nos cards", () => {
     renderEventsPage();
     expect(
-      screen.getAllByText(/agendado|rascunho|finalizado/i).length,
+      screen.getAllByText(/agendado|rascunho|locked event/i).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("admin e ministro veem ação de criar event", () => {
+    renderEventsPage("admin");
+    expect(
+      screen.getByRole("button", { name: /criar event/i }),
+    ).toBeInTheDocument();
+
+    renderEventsPage("ministro");
+    expect(
+      screen.getByRole("button", { name: /criar event/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("team-member vê ação desabilitada com explicação", () => {
+    renderEventsPage("team-member");
+    const button = screen.getByRole("button", {
+      name: /criar event indisponível/i,
+    });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByText(/apenas admin e ministro podem criar event/i),
+    ).toBeInTheDocument();
   });
 });

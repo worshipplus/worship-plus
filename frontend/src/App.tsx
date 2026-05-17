@@ -2,7 +2,11 @@ import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import { useTheme } from "./context/theme";
 import { useAuth } from "./context/auth";
 import { SetlistPage } from "./features/setlist";
-import { EventsPage, EventDetailPage } from "./features/events";
+import {
+  EventsPage,
+  EventDetailPage,
+  EventCreatePage,
+} from "./features/events";
 import { UsersPage } from "./features/users";
 
 function Nav() {
@@ -58,6 +62,7 @@ function Nav() {
 function App() {
   const { currentUser } = useAuth();
   const userRole = currentUser?.role ?? "team-member";
+  const currentUserName = currentUser?.name ?? "";
 
   return (
     <BrowserRouter>
@@ -74,7 +79,24 @@ function App() {
               path="/events"
               element={<EventsPage userRole={userRole} />}
             />
-            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route
+              path="/events/new"
+              element={
+                <EventCreatePage
+                  currentUserRole={userRole}
+                  currentUserName={currentUserName}
+                />
+              }
+            />
+            <Route
+              path="/events/:id"
+              element={
+                <EventDetailPage
+                  currentUserRole={userRole}
+                  currentUserName={currentUserName}
+                />
+              }
+            />
             <Route path="/users" element={<UsersPage />} />
           </Routes>
         </main>
