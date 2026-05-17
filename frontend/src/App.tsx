@@ -151,8 +151,8 @@ function App() {
 
     const ownerId =
       currentUser.role === "admin" ? formValues.ownerId : currentUser.id;
-    const ownerUser =
-      mockUsers.find((user) => user.id === ownerId) ?? currentUser;
+    const ownerUser = mockUsers.find((user) => user.id === ownerId);
+    const ownerName = ownerUser?.name ?? "owner não identificado";
     const newEventId = `event-${eventCounterRef.current}`;
     eventCounterRef.current += 1;
 
@@ -173,8 +173,8 @@ function App() {
     setFormErrors({});
     setSubmitFeedback(
       ownerId === currentUser.id
-        ? `Evento criado em rascunho com owner definido automaticamente como ${ownerUser.name}.`
-        : `Evento criado em rascunho com owner definido por Admin como ${ownerUser.name}.`,
+        ? `Evento criado em rascunho com owner definido automaticamente como ${ownerName}.`
+        : `Evento criado em rascunho com owner definido por Admin como ${ownerName}.`,
     );
   };
 
