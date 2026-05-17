@@ -78,7 +78,7 @@ npm run pre-commit
 ```
 
 Este comando executa:
-1. **Lint:** ESLint + Prettier
+1. **Lint:** ESLint + Stylelint + Prettier
 2. **Type Check:** TypeScript compiler
 3. **Unit Tests:** Vitest (coverage ≥ 80%)
 4. **Integration Tests:** React Testing Library
@@ -94,6 +94,8 @@ Ele executa um check rápido alinhado ao GitHub Actions:
 # (executado automaticamente no push)
 npm run ci:prepush
 ```
+
+`ci:prepush` valida **ordem de diretivas CSS** (ex.: `@import` no topo) com `lint:css` antes do type check.
 
 Se você precisar contornar o hook em situações excepcionais:
 
@@ -205,6 +207,9 @@ npm run build:analyze
 ```bash
 # Lint (ESLint)
 npm run lint
+
+# Lint CSS (Stylelint)
+npm run lint:css
 
 # Lint + fix automático
 npm run lint:fix

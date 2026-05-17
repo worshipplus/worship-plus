@@ -40,6 +40,10 @@ jobs:
       - name: 🔎 Run ESLint
         run: npm run lint
         continue-on-error: false
+
+      - name: 🎨 Run CSS lint (Stylelint)
+        run: npm run lint:css
+        continue-on-error: false
       
       - name: 💅 Check code formatting (Prettier)
         run: npm run format:check

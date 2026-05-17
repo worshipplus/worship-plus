@@ -23,7 +23,14 @@ module.exports = {
       `npm --prefix frontend run -s format:staged -- ${relFiles}`,
     ]
   },
-  'frontend/**/*.{css,json,md}': (files) => {
+  'frontend/**/*.css': (files) => {
+    const relFiles = toFrontendRelative(files).map(quote).join(' ')
+    return [
+      `npm --prefix frontend run -s lint:css:staged -- ${relFiles}`,
+      `npm --prefix frontend run -s format:staged -- ${relFiles}`,
+    ]
+  },
+  'frontend/**/*.{json,md}': (files) => {
     const relFiles = toFrontendRelative(files).map(quote).join(' ')
     return [`npm --prefix frontend run -s format:staged -- ${relFiles}`]
   },

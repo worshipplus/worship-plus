@@ -19,6 +19,8 @@
     "build": "npm run -s tsc:build && npm run -s vite:build",
     "preview": "vite preview --host",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:css": "stylelint \"src/**/*.css\"",
+    "lint:css:staged": "stylelint --allow-empty-input",
     "lint:fix": "eslint . --fix",
     "lint:staged": "eslint --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
@@ -26,7 +28,7 @@
     "format:staged": "prettier --write",
     "type-check": "tsc --noEmit",
     "tsc:build": "tsc -b --pretty false",
-    "ci:prepush": "npm run -s tsc:build",
+    "ci:prepush": "npm run -s lint:css && npm run -s tsc:build",
     "test": "vitest",
     "test:unit": "vitest run --coverage --passWithNoTests",
     "test:integration": "vitest run --passWithNoTests",
@@ -80,6 +82,7 @@
     "postcss": "^8.4.32",
     "prettier": "^3.1.0",
     "storybook": "^7.6.3",
+    "stylelint": "^17.11.1",
     "tailwindcss": "^3.3.6",
     "typescript": "5.9.3",
     "vite": "^5.4.11",
@@ -91,7 +94,11 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{css,json,md}": [
+    "*.css": [
+      "stylelint --allow-empty-input",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
       "prettier --write"
     ]
   },

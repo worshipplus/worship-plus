@@ -12,6 +12,7 @@ Este documento descreve os guard rails que evitam quebras de pipeline e reduzem 
 
 Scripts canônicos (rodar no diretório `frontend/`):
 
+- `npm run -s lint:css` (Stylelint para validar ordem de diretivas CSS, incluindo `@import`)
 - `npm run -s tsc:build` (TypeScript build mode com project references)
 - `npm run -s build` (encadeia `tsc:build` + build do Vite)
 
@@ -22,6 +23,7 @@ O GitHub Actions deve chamar esses scripts (não comandos “soltos”) para red
 Hook:
 
 - `.husky/pre-push` → roda `npm --prefix frontend run -s ci:prepush`
+- `ci:prepush` inclui `lint:css` + `tsc:build` para detectar erro de diretivas CSS antes do push
 
 Break-glass (apenas em casos excepcionais):
 
