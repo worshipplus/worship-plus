@@ -58,6 +58,7 @@ function Nav() {
 function App() {
   const { currentUser } = useAuth();
   const userRole = currentUser?.role ?? "team-member";
+  const currentUserName = currentUser?.name ?? "";
 
   return (
     <BrowserRouter>
@@ -65,16 +66,37 @@ function App() {
         <Nav />
         <main>
           <Routes>
-            <Route path="/" element={<EventsPage userRole={userRole} />} />
+            <Route
+              path="/"
+              element={
+                <EventsPage
+                  userRole={userRole}
+                  currentUserName={currentUserName}
+                />
+              }
+            />
             <Route
               path="/setlist"
               element={<SetlistPage userRole={userRole} />}
             />
             <Route
               path="/events"
-              element={<EventsPage userRole={userRole} />}
+              element={
+                <EventsPage
+                  userRole={userRole}
+                  currentUserName={currentUserName}
+                />
+              }
             />
-            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route
+              path="/events/:id"
+              element={
+                <EventDetailPage
+                  currentUserRole={userRole}
+                  currentUserName={currentUserName}
+                />
+              }
+            />
             <Route path="/users" element={<UsersPage />} />
           </Routes>
         </main>
