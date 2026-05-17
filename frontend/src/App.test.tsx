@@ -97,11 +97,20 @@ describe("PRD-005 event flow", () => {
     );
     await user.click(screen.getByRole("button", { name: "Criar evento" }));
 
+    const detailSection = screen
+      .getByRole("heading", { name: "Culto de Oração" })
+      .closest("section");
+    const ownerGroup =
+      detailSection && within(detailSection).getByText("Owner").closest("div");
+
     expect(
       screen.getByText(
         "Evento criado em rascunho com owner definido automaticamente como Lucas Pereira.",
       ),
     ).toBeInTheDocument();
+    expect(detailSection).not.toBeNull();
+    expect(ownerGroup).not.toBeNull();
+    expect(ownerGroup as HTMLElement).toHaveTextContent("Lucas Pereira");
   });
 
   it("blocks team member from creating events or editing the event setlist", async () => {
