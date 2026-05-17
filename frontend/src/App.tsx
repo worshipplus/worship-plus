@@ -28,7 +28,7 @@ interface FormErrors {
 }
 
 const FOCUSABLE_ELEMENT_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="button"], audio[controls], video[controls], details, [tabindex]:not([tabindex="-1"])';
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="button"], audio[controls], video[controls], details, summary, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
 const songsById = new Map(mockSongs.map((song) => [song.id, song]));
 
