@@ -327,13 +327,16 @@ function App() {
               <p className="eyebrow">US-007</p>
               <h2>Criar Event</h2>
             </div>
-            <button
+            <span
               className="ghost-button"
-              type="button"
-              disabled={!canCreate}
+              aria-label={
+                canCreate
+                  ? "Nova criação liberada"
+                  : "Nova criação não liberada"
+              }
             >
               Nova criação liberada
-            </button>
+            </span>
           </div>
 
           {!canCreate ? (
