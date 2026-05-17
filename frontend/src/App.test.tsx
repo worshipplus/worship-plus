@@ -51,7 +51,7 @@ describe("PRD-005 event flow", () => {
 
     expect(
       screen.getByText(
-        "Evento criado em rascunho com owner definido automaticamente.",
+        "Evento criado em rascunho com owner definido por Admin como Lucas Pereira.",
       ),
     ).toBeInTheDocument();
     expect(detailSection).not.toBeNull();
@@ -77,6 +77,29 @@ describe("PRD-005 event flow", () => {
     expect(
       screen.getByText(
         "Owner definido automaticamente como o usuário criador.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows automatic owner feedback when a minister creates an event", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.selectOptions(
+      screen.getByLabelText("Usuário atual"),
+      "user-minister",
+    );
+    await user.type(screen.getByLabelText("Título"), "Culto de Oração");
+    await user.type(screen.getByLabelText("Data e hora"), "2026-06-10T20:00");
+    await user.type(
+      screen.getByLabelText("Descrição"),
+      "Encontro semanal com foco em oração e ministrações espontâneas.",
+    );
+    await user.click(screen.getByRole("button", { name: "Criar evento" }));
+
+    expect(
+      screen.getByText(
+        "Evento criado em rascunho com owner definido automaticamente como Lucas Pereira.",
       ),
     ).toBeInTheDocument();
   });

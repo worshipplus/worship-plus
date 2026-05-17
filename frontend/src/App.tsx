@@ -151,6 +151,8 @@ function App() {
 
     const ownerId =
       currentUser.role === "admin" ? formValues.ownerId : currentUser.id;
+    const ownerUser =
+      mockUsers.find((user) => user.id === ownerId) ?? currentUser;
     const newEventId = `event-${eventCounterRef.current}`;
     eventCounterRef.current += 1;
 
@@ -170,7 +172,9 @@ function App() {
     setFormValues(createDefaultEventForm(currentUser.id));
     setFormErrors({});
     setSubmitFeedback(
-      "Evento criado em rascunho com owner definido automaticamente.",
+      ownerId === currentUser.id
+        ? `Evento criado em rascunho com owner definido automaticamente como ${ownerUser.name}.`
+        : `Evento criado em rascunho com owner definido por Admin como ${ownerUser.name}.`,
     );
   };
 
