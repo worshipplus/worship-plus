@@ -68,10 +68,11 @@ describe("EventsPage", () => {
   });
 
   it("admin e ministro veem ação de criar event", () => {
-    renderEventsPage("admin");
+    const adminRender = renderEventsPage("admin");
     expect(
       screen.getByRole("button", { name: /criar event/i }),
     ).toBeInTheDocument();
+    adminRender.unmount();
 
     renderEventsPage("ministro");
     expect(

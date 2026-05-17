@@ -97,6 +97,7 @@ export function EventDetailPage({
 
   const canEditSetlist =
     currentUserRole === "admin" || currentUserName === event.owner;
+  const eventId = event.id;
 
   const availableSetlistItems = mockSetlistItems.filter(
     (song) =>
@@ -107,7 +108,7 @@ export function EventDetailPage({
 
   function handleDrop(toIndex: number) {
     if (!canEditSetlist || draggedIndex === null) return;
-    reorderEventSetlist(event.id, draggedIndex, toIndex);
+    reorderEventSetlist(eventId, draggedIndex, toIndex);
     setDraggedIndex(null);
     setDragOverIndex(null);
   }
@@ -433,7 +434,7 @@ export function EventDetailPage({
                       <button
                         type="button"
                         onClick={() => {
-                          addSongToEventSetlist(event.id, song);
+                          addSongToEventSetlist(eventId, song);
                           setShowSetlistModal(false);
                           setSearch("");
                         }}

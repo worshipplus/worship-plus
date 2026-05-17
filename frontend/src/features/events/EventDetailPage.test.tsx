@@ -47,10 +47,8 @@ describe("EventDetailPage", () => {
     for (const item of event.eventSetlist) {
       expect(screen.getByText(item.title)).toBeInTheDocument();
       expect(
-        screen.getAllByRole("link", {
-          name: new RegExp(`abrir ${item.title} no youtube`, "i"),
-        }).length,
-      ).toBeGreaterThan(0);
+        screen.getByRole("link", { name: `Abrir ${item.title} no YouTube` }),
+      ).toBeInTheDocument();
     }
   });
 
