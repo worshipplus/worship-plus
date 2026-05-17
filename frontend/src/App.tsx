@@ -1,10 +1,10 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   type FormEvent,
-  type KeyboardEvent,
 } from "react";
 import "./App.css";
 import {
@@ -311,56 +311,72 @@ function App() {
     setSearchModalOpen(true);
   };
 
-  const closeSearchModal = () => {
+  const closeSearchModal = useCallback(() => {
     setSearchModalOpen(false);
     setSongSearch("");
     modalTriggerRef.current?.focus();
-  };
+  }, []);
 
-  const handleSearchModalKeyDown = (
-    keyboardEvent: KeyboardEvent<HTMLDivElement>,
-  ) => {
-    if (keyboardEvent.key === "Escape") {
-      keyboardEvent.preventDefault();
-      closeSearchModal();
-      return;
-    }
-
-    if (keyboardEvent.key !== "Tab") {
-      return;
-    }
-
-    const focusableElements = Array.from(
-      modalRef.current?.querySelectorAll<HTMLElement>(
-        FOCUSABLE_ELEMENT_SELECTOR,
-      ) ?? [],
-    );
-
-    if (focusableElements.length === 0) {
-      keyboardEvent.preventDefault();
-      return;
-    }
-
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-    const activeElement = document.activeElement;
-
-    if (keyboardEvent.shiftKey) {
-      if (
-        activeElement === firstFocusable ||
-        !modalRef.current?.contains(activeElement)
-      ) {
+  const trapSearchModalFocus = useCallback(
+    (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Escape") {
         keyboardEvent.preventDefault();
-        lastFocusable.focus();
+        closeSearchModal();
+        return;
       }
+
+      if (keyboardEvent.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        modalRef.current?.querySelectorAll<HTMLElement>(
+          FOCUSABLE_ELEMENT_SELECTOR,
+        ) ?? [],
+      ).filter((element) => element.tabIndex >= 0);
+
+      if (focusableElements.length === 0) {
+        keyboardEvent.preventDefault();
+        return;
+      }
+
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      const isFocusInsideModal =
+        modalRef.current?.contains(activeElement) ?? false;
+
+      if (keyboardEvent.shiftKey) {
+        if (!isFocusInsideModal || activeElement === firstFocusable) {
+          keyboardEvent.preventDefault();
+          lastFocusable.focus();
+        }
+        return;
+      }
+
+      if (!isFocusInsideModal || activeElement === lastFocusable) {
+        keyboardEvent.preventDefault();
+        firstFocusable.focus();
+      }
+    },
+    [closeSearchModal],
+  );
+
+  useEffect(() => {
+    if (!searchModalOpen) {
       return;
     }
 
-    if (activeElement === lastFocusable) {
-      keyboardEvent.preventDefault();
-      firstFocusable.focus();
-    }
-  };
+    const handleDocumentKeyDown = (keyboardEvent: KeyboardEvent) => {
+      trapSearchModalFocus(keyboardEvent);
+    };
+
+    document.addEventListener("keydown", handleDocumentKeyDown, true);
+
+    return () => {
+      document.removeEventListener("keydown", handleDocumentKeyDown, true);
+    };
+  }, [searchModalOpen, trapSearchModalFocus]);
 
   const ownerName = selectedEvent
     ? (mockUsers.find((user) => user.id === selectedEvent.ownerId)?.name ??
@@ -732,7 +748,6 @@ function App() {
             aria-modal="true"
             aria-labelledby="song-modal-title"
             ref={modalRef}
-            onKeyDown={handleSearchModalKeyDown}
           >
             <div className="section-heading">
               <div>

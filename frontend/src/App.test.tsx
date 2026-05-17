@@ -218,4 +218,19 @@ describe("PRD-005 event flow", () => {
 
     expect(closeButton).toHaveFocus();
   });
+
+  it("brings focus back into the modal when tab starts from outside it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const openButton = screen.getByRole("button", { name: "Adicionar música" });
+    await user.click(openButton);
+
+    const closeButton = screen.getByRole("button", { name: "Fechar" });
+
+    openButton.focus();
+    await user.tab();
+
+    expect(closeButton).toHaveFocus();
+  });
 });
