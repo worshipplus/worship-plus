@@ -27,6 +27,9 @@ interface FormErrors {
   ownerId?: string;
 }
 
+const FOCUSABLE_ELEMENT_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="button"], audio[controls], video[controls], details, [tabindex]:not([tabindex="-1"])';
+
 const songsById = new Map(mockSongs.map((song) => [song.id, song]));
 
 function App() {
@@ -329,7 +332,7 @@ function App() {
 
     const focusableElements = Array.from(
       modalRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="button"], audio[controls], video[controls], details, [tabindex]:not([tabindex="-1"])',
+        FOCUSABLE_ELEMENT_SELECTOR,
       ) ?? [],
     );
 
