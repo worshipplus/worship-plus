@@ -50,6 +50,23 @@ function formatDateTime(isoString: string): string {
   });
 }
 
+function isSongInEventSetlist(
+  eventSetlist: EventSetlistItem[],
+  song: EventSetlistItem,
+): boolean {
+  return eventSetlist.some(
+    (item) =>
+      item.title === song.title &&
+      item.author === song.author &&
+      item.youtubeUrl === song.youtubeUrl,
+  );
+}
+
+function generateItemId(songId: string): string {
+  const randomUUID = globalThis.crypto?.randomUUID?.();
+  return randomUUID ? `${songId}-${randomUUID}` : `${songId}-${Date.now()}`;
+}
+
 interface EventDetailPageProps {
   currentUserRole?: UserRole;
   currentUserName?: string;
@@ -61,14 +78,13 @@ export function EventDetailPage({
 }: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const baseEvent = mockEvents.find((item) => item.id === id);
-  const [event, setEvent] = useState(baseEvent ?? mockEvents[0]);
+  const [event, setEvent] = useState(mockEvents.find((item) => item.id === id));
   const [search, setSearch] = useState("");
   const [showSongModal, setShowSongModal] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  if (!baseEvent) {
+  if (!event) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
         <p
@@ -104,35 +120,41 @@ export function EventDetailPage({
   });
 
   function handleAddSong(songId: string) {
+    if (!event) return;
     const selectedSong = mockSetlistItems.find((song) => song.id === songId);
     if (!selectedSong) return;
-    const alreadyAdded = event.eventSetlist.some(
-      (item) =>
-        item.title === selectedSong.title &&
-        item.author === selectedSong.author &&
-        item.youtubeUrl === selectedSong.youtubeUrl,
-    );
+    const alreadyAdded = isSongInEventSetlist(event.eventSetlist, selectedSong);
     if (alreadyAdded) return;
 
     const newSong: EventSetlistItem = {
-      id: `${songId}-${Date.now()}`,
+      id: generateItemId(songId),
       title: selectedSong.title,
       author: selectedSong.author,
       key: selectedSong.key,
       youtubeUrl: selectedSong.youtubeUrl,
     };
 
-    setEvent((prev) => ({
-      ...prev,
-      eventSetlist: [...prev.eventSetlist, newSong],
-    }));
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            eventSetlist: [...prev.eventSetlist, newSong],
+          }
+        : prev,
+    );
   }
 
   function handleRemoveSong(songId: string) {
-    setEvent((prev) => ({
-      ...prev,
-      eventSetlist: prev.eventSetlist.filter((item) => item.id !== songId),
-    }));
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            eventSetlist: prev.eventSetlist.filter(
+              (item) => item.id !== songId,
+            ),
+          }
+        : prev,
+    );
   }
 
   function handleDrop(dropIndex: number) {
@@ -142,6 +164,7 @@ export function EventDetailPage({
     }
 
     setEvent((prev) => {
+      if (!prev) return prev;
       const reordered = [...prev.eventSetlist];
       const [dragged] = reordered.splice(dragIndex, 1);
       reordered.splice(dropIndex, 0, dragged);
@@ -340,10 +363,11 @@ export function EventDetailPage({
                         href={item.youtubeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs break-all hover:opacity-70"
+                        aria-label={`Link do YouTube para ${item.title}`}
+                        className="text-xs hover:opacity-70"
                         style={{ color: "var(--color-primary)" }}
                       >
-                        {item.youtubeUrl}
+                        Ver no YouTube
                       </a>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -415,11 +439,9 @@ export function EventDetailPage({
             />
             <ul className="grid gap-2 overflow-y-auto" role="list">
               {filteredSetlist.map((song) => {
-                const alreadyAdded = event.eventSetlist.some(
-                  (item) =>
-                    item.title === song.title &&
-                    item.author === song.author &&
-                    item.youtubeUrl === song.youtubeUrl,
+                const alreadyAdded = isSongInEventSetlist(
+                  event.eventSetlist,
+                  song,
                 );
                 return (
                   <li

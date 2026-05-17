@@ -121,7 +121,9 @@ describe("EventDetailPage", () => {
 
     const titlesAfterReorder = screen
       .getAllByRole("listitem")
-      .map((item) => item.textContent ?? "");
+      .map((item) => item.textContent ?? "")
+      .slice(0, event.eventSetlist.length);
     expect(titlesAfterReorder[0]).toContain(secondSong);
+    expect(titlesAfterReorder[1]).toContain(initialFirstSong);
   });
 });

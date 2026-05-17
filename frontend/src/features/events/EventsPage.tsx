@@ -36,6 +36,12 @@ const STATUS_TEXT_COLORS: Record<EventStatus, string> = {
   scheduled: "rgb(22,163,74)",
   locked: "rgb(79,70,229)",
 };
+const DEFAULT_USER_NAME = "Ana Lima";
+
+function generateEventId(): string {
+  const randomUUID = globalThis.crypto?.randomUUID?.();
+  return randomUUID ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
@@ -50,7 +56,7 @@ function formatDate(isoString: string): string {
 
 export function EventsPage({
   userRole = "team-member",
-  currentUserName = "Usuário Atual",
+  currentUserName = DEFAULT_USER_NAME,
 }: EventsPageProps) {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>(mockEvents);
@@ -95,8 +101,11 @@ export function EventsPage({
   function validate() {
     const nextErrors: Partial<typeof formData> = {};
     if (!formData.title.trim()) nextErrors.title = "Título é obrigatório.";
-    if (!formData.date.trim())
+    if (!formData.date.trim()) {
       nextErrors.date = "Data e hora são obrigatórias.";
+    } else if (Number.isNaN(new Date(formData.date).getTime())) {
+      nextErrors.date = "Data e hora inválidas.";
+    }
     if (!formData.description.trim())
       nextErrors.description = "Descrição é obrigatória.";
     if (!formData.owner.trim()) nextErrors.owner = "Owner é obrigatório.";
@@ -111,7 +120,7 @@ export function EventsPage({
     }
 
     const newEvent: Event = {
-      id: String(Date.now()),
+      id: generateEventId(),
       title: formData.title.trim(),
       date: new Date(formData.date).toISOString(),
       description: formData.description.trim(),
