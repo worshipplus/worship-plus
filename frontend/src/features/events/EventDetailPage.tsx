@@ -6,7 +6,6 @@ import {
   User,
   FileText,
   Music,
-  ExternalLink,
   Plus,
   Search,
   Trash2,
@@ -323,17 +322,6 @@ export function EventDetailPage({
                         YouTube Link
                       </a>
                     </div>
-
-                    <a
-                      href={item.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Abrir ${item.title} no YouTube`}
-                      className="shrink-0 p-1.5 rounded-full transition-opacity hover:opacity-70"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      <ExternalLink size={15} />
-                    </a>
 
                     {canEditSetlist && (
                       <button

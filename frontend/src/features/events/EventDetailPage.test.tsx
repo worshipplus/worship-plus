@@ -46,10 +46,10 @@ describe("EventDetailPage", () => {
     ).toBeInTheDocument();
     for (const item of event.eventSetlist) {
       expect(screen.getByText(item.title)).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: `Abrir ${item.title} no YouTube` }),
-      ).toBeInTheDocument();
     }
+    expect(screen.getAllByRole("link", { name: /youtube link/i })).toHaveLength(
+      event.eventSetlist.length,
+    );
   });
 
   it("exibe mensagem de erro para evento não encontrado", () => {
