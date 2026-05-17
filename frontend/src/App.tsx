@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import "./App.css";
 import {
   canCreateEvent,
@@ -25,6 +32,9 @@ const songsById = new Map(mockSongs.map((song) => [song.id, song]));
 function App() {
   const eventCounterRef = useRef(initialEvents.length + 1);
   const setlistCounterRef = useRef(100);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const songSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
 
   const [currentUserId, setCurrentUserId] = useState(mockUsers[0].id);
   const [events, setEvents] = useState<EventRecord[]>(initialEvents);
@@ -55,6 +65,14 @@ function App() {
     setFormErrors({});
     setSubmitFeedback("");
   }, [currentUser.id]);
+
+  useEffect(() => {
+    if (!searchModalOpen) {
+      return;
+    }
+
+    songSearchInputRef.current?.focus();
+  }, [searchModalOpen]);
 
   const filteredSongs = useMemo(() => {
     const normalizedQuery = songSearch.trim().toLowerCase();
@@ -200,8 +218,7 @@ function App() {
           : event,
       ),
     );
-    setSearchModalOpen(false);
-    setSongSearch("");
+    closeSearchModal();
   };
 
   const handleRemoveSong = (itemId: string) => {
@@ -281,6 +298,65 @@ function App() {
     );
     setDraggedItemId(null);
     setDropTargetItemId(null);
+  };
+
+  const openSearchModal = () => {
+    modalTriggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setSearchModalOpen(true);
+  };
+
+  const closeSearchModal = () => {
+    setSearchModalOpen(false);
+    setSongSearch("");
+    modalTriggerRef.current?.focus();
+  };
+
+  const handleSearchModalKeyDown = (
+    keyboardEvent: KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (keyboardEvent.key === "Escape") {
+      keyboardEvent.preventDefault();
+      closeSearchModal();
+      return;
+    }
+
+    if (keyboardEvent.key !== "Tab") {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      modalRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    );
+
+    if (focusableElements.length === 0) {
+      keyboardEvent.preventDefault();
+      return;
+    }
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (keyboardEvent.shiftKey) {
+      if (
+        activeElement === firstFocusable ||
+        !modalRef.current?.contains(activeElement)
+      ) {
+        keyboardEvent.preventDefault();
+        lastFocusable.focus();
+      }
+      return;
+    }
+
+    if (activeElement === lastFocusable) {
+      keyboardEvent.preventDefault();
+      firstFocusable.focus();
+    }
   };
 
   const ownerName = selectedEvent
@@ -540,7 +616,7 @@ function App() {
             <button
               className="primary-button"
               type="button"
-              onClick={() => setSearchModalOpen(true)}
+              onClick={openSearchModal}
               disabled={!canEditSelectedEventSetlist}
             >
               Adicionar música
@@ -652,6 +728,8 @@ function App() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="song-modal-title"
+            ref={modalRef}
+            onKeyDown={handleSearchModalKeyDown}
           >
             <div className="section-heading">
               <div>
@@ -661,10 +739,7 @@ function App() {
               <button
                 className="ghost-button"
                 type="button"
-                onClick={() => {
-                  setSearchModalOpen(false);
-                  setSongSearch("");
-                }}
+                onClick={closeSearchModal}
               >
                 Fechar
               </button>
@@ -676,6 +751,7 @@ function App() {
                 id="song-search"
                 className="text-input"
                 type="search"
+                ref={songSearchInputRef}
                 value={songSearch}
                 onChange={(changeEvent) =>
                   setSongSearch(changeEvent.target.value)

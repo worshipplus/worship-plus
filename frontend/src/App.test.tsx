@@ -179,4 +179,43 @@ describe("PRD-005 event flow", () => {
       screen.queryByRole("heading", { name: "Santo Pra Sempre" }),
     ).not.toBeInTheDocument();
   });
+
+  it("moves focus into the search modal and closes it with Escape", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const openButton = screen.getByRole("button", { name: "Adicionar música" });
+    await user.click(openButton);
+
+    const searchInput = screen.getByLabelText("Buscar no Setlist");
+
+    expect(searchInput).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+
+    expect(
+      screen.queryByRole("dialog", { name: "Buscar músicas" }),
+    ).not.toBeInTheDocument();
+    expect(openButton).toHaveFocus();
+  });
+
+  it("traps keyboard focus inside the search modal", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Adicionar música" }));
+
+    const closeButton = screen.getByRole("button", { name: "Fechar" });
+    const addButtons = screen.getAllByRole("button", { name: "Adicionar" });
+    const lastAddButton = addButtons[addButtons.length - 1];
+
+    closeButton.focus();
+    await user.tab({ shift: true });
+
+    expect(lastAddButton).toHaveFocus();
+
+    await user.tab();
+
+    expect(closeButton).toHaveFocus();
+  });
 });
