@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -13,14 +13,15 @@ import {
   X,
 } from "lucide-react";
 import type {
+  Event,
   EventStatus,
   UserRole,
   EventSetlistItem,
   ScaleEntry,
 } from "../../types/event";
-import { mockEvents } from "../../mocks/eventMocks";
-import { mockSetlistItems } from "../../mocks/setlistMocks";
-import { mockUsers } from "../../mocks/userMocks";
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 import { ScaleSection } from "./ScaleSection";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
@@ -83,14 +84,25 @@ export function EventDetailPage({
 }: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(mockEvents.find((item) => item.id === id));
+  const { data: allEvents, loading: eventsLoading } = useGetEventsByOwner();
+  const { data: allUsers } = useGetAllUsers();
   const [search, setSearch] = useState("");
+  const { data: filteredSetlist } = useSearchSetlist(search);
+  const [event, setEvent] = useState<Event | undefined>(undefined);
   const [showSongModal, setShowSongModal] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [scale, setScale] = useState<ScaleEntry[]>(event?.scale ?? []);
+  const [scale, setScale] = useState<ScaleEntry[]>([]);
 
-  if (!event) {
+  useEffect(() => {
+    const found = allEvents.find((item) => item.id === id);
+    if (found) {
+      setEvent(found);
+      setScale(found.scale);
+    }
+  }, [allEvents, id]);
+
+  if (!eventsLoading && !event) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
         <p
@@ -113,28 +125,23 @@ export function EventDetailPage({
     );
   }
 
+  if (!event) {
+    return null;
+  }
+
   const canEditEventSetlist =
     currentUserRole === "admin" || event.owner === currentUserName;
 
   const canEditScale =
     currentUserRole === "admin" || currentUserId === event.owner_id;
 
-  const usersNotInScale = mockUsers.filter(
+  const usersNotInScale = allUsers.filter(
     (user) => !scale.some((entry) => entry.userId === user.id),
   );
 
-  const filteredSetlist = mockSetlistItems.filter((song) => {
-    const query = search.trim().toLowerCase();
-    if (!query) return true;
-    return (
-      song.title.toLowerCase().includes(query) ||
-      song.author.toLowerCase().includes(query)
-    );
-  });
-
   function handleAddSong(songId: string) {
     if (!event) return;
-    const selectedSong = mockSetlistItems.find((song) => song.id === songId);
+    const selectedSong = filteredSetlist.find((song) => song.id === songId);
     if (!selectedSong) return;
     const alreadyAdded = isSongInEventSetlist(event.eventSetlist, selectedSong);
     if (alreadyAdded) return;

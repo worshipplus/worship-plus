@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -9,8 +9,8 @@ import {
   X,
 } from "lucide-react";
 import type { UserRole, EventStatus, Event } from "../../types/event";
-import { mockEvents } from "../../mocks/eventMocks";
-import { mockUsers } from "../../mocks/userMocks";
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -59,7 +59,10 @@ export function EventsPage({
   currentUserName = DEFAULT_USER_NAME,
 }: EventsPageProps) {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const { data: sourceEvents } = useGetEventsByOwner();
+  const { data: allUsers } = useGetAllUsers();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -70,9 +73,16 @@ export function EventsPage({
   });
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
+  useEffect(() => {
+    if (!initialized && sourceEvents.length > 0) {
+      setEvents(sourceEvents);
+      setInitialized(true);
+    }
+  }, [sourceEvents, initialized]);
+
   const canCreateEvent = userRole === "admin" || userRole === "ministro";
   const canChangeOwner = userRole === "admin";
-  const ownerOptions = mockUsers.map((user) => user.name);
+  const ownerOptions = allUsers.map((user) => user.name);
 
   const now = new Date();
   const filtered = events.filter((event) => {
@@ -120,7 +130,7 @@ export function EventsPage({
     }
 
     const ownerName = formData.owner.trim();
-    const ownerId = mockUsers.find((user) => user.name === ownerName)?.id ?? "";
+    const ownerId = allUsers.find((user) => user.name === ownerName)?.id ?? "";
 
     const newEvent: Event = {
       id: generateEventId(),

@@ -1,9 +1,53 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { EventDetailPage } from "./EventDetailPage";
-import { mockEvents } from "../../mocks/eventMocks";
+import { EVENT_DATA } from "../../adapters/implementations/MockEventSource";
+import { SETLIST_DATA } from "../../adapters/implementations/MockSetlistSource";
+import { USER_DATA } from "../../adapters/implementations/MockUserSource";
+
+vi.mock("../../hooks/useGetEventsByOwner", () => ({
+  useGetEventsByOwner: vi.fn(),
+}));
+vi.mock("../../hooks/useSearchSetlist", () => ({
+  useSearchSetlist: vi.fn(),
+}));
+vi.mock("../../hooks/useGetAllUsers", () => ({
+  useGetAllUsers: vi.fn(),
+}));
+
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+
+const mockUseGetEventsByOwner = vi.mocked(useGetEventsByOwner);
+const mockUseSearchSetlist = vi.mocked(useSearchSetlist);
+const mockUseGetAllUsers = vi.mocked(useGetAllUsers);
+
+beforeEach(() => {
+  mockUseGetEventsByOwner.mockReturnValue({
+    data: EVENT_DATA,
+    loading: false,
+    error: null,
+  });
+  mockUseSearchSetlist.mockImplementation((query = "") => ({
+    data: query.trim()
+      ? SETLIST_DATA.filter(
+          (item) =>
+            item.title.toLowerCase().includes(query.trim().toLowerCase()) ||
+            item.author.toLowerCase().includes(query.trim().toLowerCase()),
+        )
+      : SETLIST_DATA,
+    loading: false,
+    error: null,
+  }));
+  mockUseGetAllUsers.mockReturnValue({
+    data: USER_DATA,
+    loading: false,
+    error: null,
+  });
+});
 
 function renderDetail(
   id: string,
@@ -33,7 +77,7 @@ function renderDetail(
 
 describe("EventDetailPage", () => {
   it("renderiza detalhe de evento encontrado", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(screen.getByText(event.title)).toBeInTheDocument();
     expect(screen.getByText(event.owner)).toBeInTheDocument();
@@ -41,7 +85,7 @@ describe("EventDetailPage", () => {
   });
 
   it("exibe o Event Setlist com as músicas do evento", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(
       screen.getByRole("heading", { name: /event setlist/i }),
@@ -59,13 +103,13 @@ describe("EventDetailPage", () => {
   });
 
   it("exibe botão voltar para evento encontrado", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(screen.getByRole("button", { name: /voltar/i })).toBeInTheDocument();
   });
 
   it("exibe mensagem quando o setlist está vazio", () => {
-    const draftEvent = mockEvents.find(
+    const draftEvent = EVENT_DATA.find(
       (event) => event.eventSetlist.length === 0,
     );
     expect(draftEvent).toBeDefined();
@@ -76,7 +120,7 @@ describe("EventDetailPage", () => {
 
   it("admin pode adicionar e remover música no Event Setlist", async () => {
     const user = userEvent.setup();
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     await user.click(screen.getByRole("button", { name: /adicionar música/i }));
@@ -95,7 +139,7 @@ describe("EventDetailPage", () => {
   });
 
   it("owner do Event pode editar Event Setlist", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id, {
       role: "ministro",
       name: event.owner,
@@ -107,7 +151,7 @@ describe("EventDetailPage", () => {
   });
 
   it("usuário sem privilégio não pode editar Event Setlist", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id, {
       role: "team-member",
       name: "Fernanda Oliveira",
@@ -119,7 +163,7 @@ describe("EventDetailPage", () => {
   });
 
   it("permite reordenar músicas por drag-and-drop", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     const initialFirstSong = event.eventSetlist[0].title;

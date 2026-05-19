@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExternalLink, Plus, Pencil, Trash2, X, Music } from "lucide-react";
 import type {
   UserRole,
   SetlistItem,
   SetlistFormData,
 } from "../../types/setlist";
-import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
 
 interface SetlistPageProps {
   userRole?: UserRole;
@@ -26,12 +26,21 @@ function isEditable(role: UserRole): boolean {
 }
 
 export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
-  const [items, setItems] = useState<SetlistItem[]>(mockSetlistItems);
+  const { data: sourceItems } = useSearchSetlist("");
+  const [items, setItems] = useState<SetlistItem[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SetlistFormData>(emptyForm);
   const [errors, setErrors] = useState<Partial<SetlistFormData>>({});
+
+  useEffect(() => {
+    if (!initialized && sourceItems.length > 0) {
+      setItems(sourceItems);
+      setInitialized(true);
+    }
+  }, [sourceItems, initialized]);
 
   const canEdit = isEditable(userRole);
 

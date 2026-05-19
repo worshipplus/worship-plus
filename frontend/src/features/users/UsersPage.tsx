@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, X, Users } from "lucide-react";
 import type { UserRole, User } from "../../types/user";
 import { useAuth } from "../../context/auth";
-import { mockUsers } from "../../mocks/userMocks";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
@@ -56,12 +56,21 @@ function validate(data: UserFormData): FormErrors {
 
 export function UsersPage() {
   const { currentUser } = useAuth();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const { data: sourceUsers } = useGetAllUsers();
+  const [users, setUsers] = useState<User[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [form, setForm] = useState<UserFormData>(emptyForm);
   const [editRole, setEditRole] = useState<UserRole>("team-member");
   const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (!initialized && sourceUsers.length > 0) {
+      setUsers(sourceUsers);
+      setInitialized(true);
+    }
+  }, [sourceUsers, initialized]);
 
   const isAdmin = currentUser?.role === "admin";
 

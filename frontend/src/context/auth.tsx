@@ -1,12 +1,14 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import type { User } from "../types/user";
-import { mockUsers } from "../mocks/userMocks";
+import { useDataSources } from "./providers";
+import { GetAdminUserUseCase } from "../usecases/user/GetAdminUserUseCase";
 
 type AuthContextValue = {
   currentUser: User | null;
@@ -15,10 +17,15 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const defaultAdmin = mockUsers.find((u) => u.role === "admin") ?? null;
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(defaultAdmin);
+  const { userSource } = useDataSources();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    new GetAdminUserUseCase(userSource).execute().then((user) => {
+      setCurrentUser(user);
+    });
+  }, [userSource]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ currentUser, setCurrentUser }),
