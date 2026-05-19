@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Storybook build output
+storybook-static
+
+# Playwright outputs
+playwright-report
+test-results
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
