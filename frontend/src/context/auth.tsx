@@ -22,14 +22,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     new GetAdminUserUseCase(userSource)
       .execute()
       .then((user) => {
-        setCurrentUser(user);
+        if (!cancelled) {
+          setCurrentUser(user);
+        }
       })
       .catch(() => {
-        setCurrentUser(null);
+        if (!cancelled) {
+          setCurrentUser(null);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [userSource]);
 
   const value = useMemo<AuthContextValue>(
