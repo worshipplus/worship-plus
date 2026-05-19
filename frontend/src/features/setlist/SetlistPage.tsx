@@ -6,10 +6,8 @@ import type {
   SetlistFormData,
 } from "../../types/setlist";
 import { useSearchSetlist } from "../../hooks/useSearchSetlist";
-import { AddSetlistItemUseCase } from "../../usecases/setlist/AddSetlistItemUseCase";
-import { EditSetlistItemUseCase } from "../../usecases/setlist/EditSetlistItemUseCase";
-import { RemoveSetlistItemUseCase } from "../../usecases/setlist/RemoveSetlistItemUseCase";
-import { DomainError } from "../../domain/errors/DomainError";
+import { useUpsertSetlistItem } from "../../hooks/useUpsertSetlistItem";
+import { useRemoveSetlistItem } from "../../hooks/useRemoveSetlistItem";
 
 interface SetlistPageProps {
   userRole?: UserRole;
@@ -24,6 +22,8 @@ const emptyForm: SetlistFormData = {
 
 export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   const { data: sourceItems } = useSearchSetlist("");
+  const { upsert } = useUpsertSetlistItem(userRole);
+  const { remove } = useRemoveSetlistItem(userRole);
   const [items, setItems] = useState<SetlistItem[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [search, setSearch] = useState("");
@@ -74,40 +74,26 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   }
 
   function handleSave() {
-    try {
-      if (editingId) {
-        const updated = new EditSetlistItemUseCase().execute(userRole, form);
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === editingId ? { ...item, ...updated } : item,
-          ),
-        );
-      } else {
-        const newItem = new AddSetlistItemUseCase().execute(userRole, form);
-        setItems((prev) => [newItem, ...prev]);
-      }
-      closeForm();
-    } catch (err) {
-      if (!(err instanceof DomainError)) {
-        throw err;
-      }
-
-      const field =
-        typeof err.details?.field === "string" ? err.details.field : null;
-      if (field) {
-        setErrors({ [field]: err.message });
-      }
+    const result = upsert(editingId, form);
+    if (!result.ok) {
+      setErrors({ [result.field]: result.message });
+      return;
     }
+    if (editingId) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingId ? { ...item, ...result.item } : item,
+        ),
+      );
+    } else {
+      setItems((prev) => [result.item as SetlistItem, ...prev]);
+    }
+    closeForm();
   }
 
   function handleRemove(id: string) {
-    try {
-      new RemoveSetlistItemUseCase().execute(userRole);
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      if (!(err instanceof DomainError)) throw err;
-      // DomainError: button is only rendered for authorized users; safe to ignore
-    }
+    remove();
+    setItems((prev) => prev.filter((item) => item.id !== id));
   }
 
   function handleFormChange(field: keyof SetlistFormData, value: string) {

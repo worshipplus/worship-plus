@@ -11,8 +11,7 @@ import {
 import type { UserRole, EventStatus, Event } from "../../types/event";
 import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
 import { useGetAllUsers } from "../../hooks/useGetAllUsers";
-import { CreateEventUseCase } from "../../usecases/event/CreateEventUseCase";
-import { DomainError } from "../../domain/errors/DomainError";
+import { useCreateEvent } from "../../hooks/useCreateEvent";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -58,6 +57,7 @@ export function EventsPage({
   const navigate = useNavigate();
   const { data: sourceEvents } = useGetEventsByOwner();
   const { data: allUsers } = useGetAllUsers();
+  const { createEvent } = useCreateEvent(userRole, currentUserName, allUsers);
   const [events, setEvents] = useState<Event[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -106,29 +106,18 @@ export function EventsPage({
   }
 
   function handleCreateEvent() {
-    try {
-      const newEvent = new CreateEventUseCase().execute(
-        userRole,
-        currentUserName,
-        {
-          title: formData.title,
-          date: formData.date,
-          description: formData.description,
-          ownerName: formData.owner,
-        },
-        allUsers,
-      );
-      setEvents((prev) => [newEvent, ...prev]);
-      closeCreateModal();
-    } catch (err) {
-      if (err instanceof DomainError) {
-        const field =
-          typeof err.details?.field === "string" ? err.details.field : null;
-        if (field) {
-          setErrors({ [field]: err.message });
-        }
-      }
+    const result = createEvent({
+      title: formData.title,
+      date: formData.date,
+      description: formData.description,
+      ownerName: formData.owner,
+    });
+    if (!result.ok) {
+      setErrors({ [result.field]: result.message });
+      return;
     }
+    setEvents((prev) => [result.event, ...prev]);
+    closeCreateModal();
   }
 
   function handleChange(field: keyof typeof formData, value: string) {

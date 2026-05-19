@@ -139,7 +139,8 @@ describe("EventDetailPage", () => {
   });
 
   it("owner do Event pode editar Event Setlist", () => {
-    const event = EVENT_DATA[0];
+    // EVENT_DATA[3] is a scheduled event owned by Carlos Souza (u2)
+    const event = EVENT_DATA[3];
     renderDetail(event.id, {
       role: "ministro",
       name: event.owner,

@@ -23,11 +23,8 @@ import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
 import { useSearchSetlist } from "../../hooks/useSearchSetlist";
 import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 import { ScaleSection } from "./ScaleSection";
-import { AddToEventSetlistUseCase } from "../../usecases/event/AddToEventSetlistUseCase";
-import { RemoveFromEventSetlistUseCase } from "../../usecases/event/RemoveFromEventSetlistUseCase";
-import { AddToScaleUseCase } from "../../usecases/scale/AddToScaleUseCase";
-import { RemoveFromScaleUseCase } from "../../usecases/scale/RemoveFromScaleUseCase";
-import { DomainError } from "../../domain/errors/DomainError";
+import { useEventSetlistMutations } from "../../hooks/useEventSetlistMutations";
+import { useScaleMutations } from "../../hooks/useScaleMutations";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -86,6 +83,15 @@ export function EventDetailPage({
   const navigate = useNavigate();
   const { data: allEvents, loading: eventsLoading } = useGetEventsByOwner();
   const { data: allUsers } = useGetAllUsers();
+  const { addSong, removeSong } = useEventSetlistMutations(
+    currentUserRole,
+    currentUserName,
+  );
+  const { addToScale, removeFromScale } = useScaleMutations(
+    currentUserRole,
+    currentUserId,
+    allUsers,
+  );
   const [search, setSearch] = useState("");
   const { data: filteredSetlist } = useSearchSetlist(search);
   const [event, setEvent] = useState<Event | undefined>(undefined);
@@ -131,60 +137,45 @@ export function EventDetailPage({
   }
 
   const canEditEventSetlist =
-    currentUserRole === "admin" || event.owner === currentUserName;
+    event.status !== "locked" &&
+    (currentUserRole === "admin" || event.owner === currentUserName);
 
   const canEditScale =
-    currentUserRole === "admin" || currentUserId === event.owner_id;
+    event.status !== "locked" &&
+    (currentUserRole === "admin" || currentUserId === event.owner_id);
 
   const usersNotInScale = allUsers.filter(
     (user) => !scale.some((entry) => entry.userId === user.id),
   );
 
   function handleAddSong(songId: string) {
-    if (!event) return;
     const selectedSong = filteredSetlist.find((song) => song.id === songId);
     if (!selectedSong) return;
-    try {
-      const newSong = new AddToEventSetlistUseCase().execute(
-        currentUserRole,
-        currentUserName,
-        event,
-        selectedSong,
-      );
-      setEvent((prev) =>
-        prev
-          ? { ...prev, eventSetlist: [...prev.eventSetlist, newSong] }
-          : prev,
-      );
-      setSongModalError(null);
-    } catch (err) {
-      if (err instanceof DomainError) {
-        setSongModalError(err.message);
-      }
+    const result = addSong(event, selectedSong);
+    if (!result.ok) {
+      setSongModalError(result.message);
+      return;
     }
+    setEvent((prev) =>
+      prev
+        ? { ...prev, eventSetlist: [...prev.eventSetlist, result.item] }
+        : prev,
+    );
+    setSongModalError(null);
   }
 
   function handleRemoveSong(songId: string) {
-    try {
-      new RemoveFromEventSetlistUseCase().execute(
-        currentUserRole,
-        currentUserName,
-        event,
-      );
-      setEvent((prev) =>
-        prev
-          ? {
-              ...prev,
-              eventSetlist: prev.eventSetlist.filter(
-                (item) => item.id !== songId,
-              ),
-            }
-          : prev,
-      );
-    } catch (err) {
-      if (!(err instanceof DomainError)) throw err;
-      // DomainError: button is only rendered for authorized users on unlocked events
-    }
+    removeSong(event);
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            eventSetlist: prev.eventSetlist.filter(
+              (item) => item.id !== songId,
+            ),
+          }
+        : prev,
+    );
   }
 
   function handleDrop(dropIndex: number) {
@@ -209,36 +200,15 @@ export function EventDetailPage({
     userName: string,
     papel: string,
   ): string | null {
-    try {
-      const newEntry = new AddToScaleUseCase().execute(
-        currentUserRole,
-        currentUserId,
-        event,
-        userId,
-        userName,
-        papel,
-        allUsers,
-      );
-      setScale((prev) => [...prev, newEntry]);
-      return null;
-    } catch (err) {
-      if (err instanceof DomainError) return err.message;
-      return "Erro inesperado.";
-    }
+    const result = addToScale(event, userId, userName, papel);
+    if (!result.ok) return result.message;
+    setScale((prev) => [...prev, result.entry]);
+    return null;
   }
 
   function handleRemoveFromScale(entryId: string) {
-    try {
-      new RemoveFromScaleUseCase().execute(
-        currentUserRole,
-        currentUserId,
-        event,
-      );
-      setScale((prev) => prev.filter((entry) => entry.id !== entryId));
-    } catch (err) {
-      if (!(err instanceof DomainError)) throw err;
-      // DomainError: button is only rendered for authorized users on unlocked events
-    }
+    removeFromScale(event);
+    setScale((prev) => prev.filter((entry) => entry.id !== entryId));
   }
 
   function handleEditPapel(entryId: string, papel: string) {
