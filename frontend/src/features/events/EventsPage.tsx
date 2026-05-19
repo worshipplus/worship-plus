@@ -79,11 +79,11 @@ export function EventsPage({
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
   useEffect(() => {
-    if (!eventsLoading && !initialized) {
+    if (!eventsLoading && !eventsError && !initialized) {
       setEvents(sourceEvents);
       setInitialized(true);
     }
-  }, [sourceEvents, eventsLoading, initialized]);
+  }, [sourceEvents, eventsLoading, eventsError, initialized]);
 
   const canCreateEvent = userRole === "admin" || userRole === "ministro";
   const canChangeOwner = userRole === "admin";
