@@ -149,6 +149,7 @@ export function EventDetailPage({
   );
 
   function handleAddSong(songId: string) {
+    if (!event) return;
     const selectedSong = filteredSetlist.find((song) => song.id === songId);
     if (!selectedSong) return;
     const result = addSong(event, selectedSong);
