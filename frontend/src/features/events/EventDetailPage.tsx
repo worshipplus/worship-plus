@@ -116,11 +116,7 @@ export function EventDetailPage({
   if (!eventsLoading && eventsError) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
-        <p
-          className="text-center text-sm text-red-500"
-          style={{ color: "var(--color-text-secondary)" }}
-          role="alert"
-        >
+        <p className="text-center text-sm text-red-500" role="alert">
           Erro ao carregar evento. Tente novamente.
         </p>
         <button
