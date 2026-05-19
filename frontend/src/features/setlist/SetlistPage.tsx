@@ -88,12 +88,14 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
       }
       closeForm();
     } catch (err) {
-      if (err instanceof DomainError) {
-        const field =
-          typeof err.details?.field === "string" ? err.details.field : null;
-        if (field) {
-          setErrors({ [field]: err.message });
-        }
+      if (!(err instanceof DomainError)) {
+        throw err;
+      }
+
+      const field =
+        typeof err.details?.field === "string" ? err.details.field : null;
+      if (field) {
+        setErrors({ [field]: err.message });
       }
     }
   }
