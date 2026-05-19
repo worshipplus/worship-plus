@@ -236,6 +236,8 @@ interface Song {
 - [ ] Alerta se tentar escalar quem está indisponível (pode continuar se necessário)
 - [ ] Definir papel específico (ex: Ministro, Backing Vocal, Violão, Bateria)
 - [ ] Remover integrante da escala
+- [ ] Apenas Admin e Owner do Event podem editar escala
+- [ ] Team Member sem privilégio visualiza escala em modo read-only
 
 **Bounded Context:** Worship Context  
 **Agregado:** Event (Schedule + Assignment)  
@@ -275,6 +277,8 @@ integrantes.forEach(member => {
 **Invariante:** `event.isOwner(userId) || user.isAdmin()`  
 **Estimativa:** 5 pontos  
 **Prioridade:** P0
+
+**Referência de Detalhamento:** `docs/planning/prds/PRD-005-edicao-escala-no-evento.md`
 
 ---
 
