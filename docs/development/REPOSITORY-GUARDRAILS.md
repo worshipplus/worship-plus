@@ -12,12 +12,33 @@ Este documento descreve os guard rails que evitam quebras de pipeline e reduzem 
 
 Scripts canônicos (rodar no diretório `frontend/`):
 
+- `npm run -s lint:css` (Stylelint — valida posição de `@import` e diretivas CSS)
 - `npm run -s tsc:build` (TypeScript build mode com project references)
 - `npm run -s build` (encadeia `tsc:build` + build do Vite)
 
-O GitHub Actions deve chamar esses scripts (não comandos “soltos”) para reduzir drift.
+O GitHub Actions deve chamar esses scripts (não comandos "soltos") para reduzir drift.
 
-## 3) Validação automática antes do push (Husky)
+## 3) Convenção de ordem de diretivas CSS
+
+O arquivo CSS global (`src/index.css`) deve seguir a sequência:
+
+```css
+/* 1️⃣ @import — sempre primeiro */
+@import "./styles/tokens.css";
+@import "./styles/base.css";
+@import "./styles/components.css";
+
+/* 2️⃣ @tailwind — após os imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+Colocar `@import` após `@tailwind` invalida o CSS e causa falha de build no Vite.
+O Stylelint (`npm run lint:css`) detecta e bloqueia essa ordem inválida automaticamente.
+
+## 4) Validação automática antes do push (Husky)
+## 5) Validação automática antes do push (Husky)
 
 Hook:
 
@@ -28,7 +49,7 @@ Break-glass (apenas em casos excepcionais):
 - `git push --no-verify`
 - ou `HUSKY=0 git push`
 
-## 4) Branch Protection (ação manual no GitHub)
+## 6) Branch Protection (ação manual no GitHub)
 
 GitHub → **Settings → Branches → Branch protection rules**
 
@@ -53,7 +74,7 @@ Checks recomendados (workflow CI/CD):
 
 Observação: este repositório adota **trunk-based development**, então a governança se concentra em `main`.
 
-## 5) Observabilidade e manutenção
+## 7) Observabilidade e manutenção
 
 - Sempre que alterar `tsconfig.*` ou versão do TypeScript, rode `npm run -s tsc:build`
 - Em caso de quebra no CI, priorize alinhar versão de toolchain (`typescript`, `@typescript-eslint/*`) e scripts canônicos

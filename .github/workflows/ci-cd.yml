@@ -51,6 +51,10 @@ jobs:
         run: npm run lint
         continue-on-error: false
       
+      - name: 🎨 Run Stylelint (CSS lint)
+        run: npm run lint:css
+        continue-on-error: false
+      
       - name: 💅 Check code formatting (Prettier)
         run: npm run format:check
         continue-on-error: false
