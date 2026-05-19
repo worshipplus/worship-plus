@@ -66,7 +66,7 @@ describe("EventDetailPage", () => {
 
   it("exibe mensagem quando o setlist está vazio", () => {
     const draftEvent = mockEvents.find(
-      (eventItem) => eventItem.eventSetlist.length === 0,
+      (event) => event.eventSetlist.length === 0,
     );
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;

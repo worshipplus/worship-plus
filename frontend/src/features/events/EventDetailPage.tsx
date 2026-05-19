@@ -467,7 +467,7 @@ export function EventDetailPage({
             <input
               type="search"
               value={search}
-              onChange={(eventTarget) => setSearch(eventTarget.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por título ou autor..."
               aria-label="Buscar músicas no Setlist"
               className="w-full px-3 py-2 rounded-lg text-sm outline-none border"
