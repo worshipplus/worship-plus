@@ -16,9 +16,12 @@ import type {
   EventStatus,
   UserRole,
   EventSetlistItem,
+  ScaleEntry,
 } from "../../types/event";
 import { mockEvents } from "../../mocks/eventMocks";
 import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { mockUsers } from "../../mocks/userMocks";
+import { ScaleSection } from "./ScaleSection";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -70,11 +73,13 @@ function generateItemId(songId: string): string {
 interface EventDetailPageProps {
   currentUserRole?: UserRole;
   currentUserName?: string;
+  currentUserId?: string;
 }
 
 export function EventDetailPage({
   currentUserRole = "team-member",
   currentUserName = "",
+  currentUserId = "",
 }: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -83,6 +88,7 @@ export function EventDetailPage({
   const [showSongModal, setShowSongModal] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [scale, setScale] = useState<ScaleEntry[]>(event?.scale ?? []);
 
   if (!event) {
     return (
@@ -109,6 +115,13 @@ export function EventDetailPage({
 
   const canEditEventSetlist =
     currentUserRole === "admin" || event.owner === currentUserName;
+
+  const canEditScale =
+    currentUserRole === "admin" || currentUserId === event.owner_id;
+
+  const usersNotInScale = mockUsers.filter(
+    (user) => !scale.some((entry) => entry.userId === user.id),
+  );
 
   const filteredSetlist = mockSetlistItems.filter((song) => {
     const query = search.trim().toLowerCase();
@@ -172,6 +185,23 @@ export function EventDetailPage({
     });
     setDragIndex(null);
     setDragOverIndex(null);
+  }
+
+  function handleAddToScale(userId: string, userName: string, papel: string) {
+    setScale((prev) => [
+      ...prev,
+      { id: String(Date.now()), userId, userName, papel },
+    ]);
+  }
+
+  function handleRemoveFromScale(entryId: string) {
+    setScale((prev) => prev.filter((entry) => entry.id !== entryId));
+  }
+
+  function handleEditPapel(entryId: string, papel: string) {
+    setScale((prev) =>
+      prev.map((entry) => (entry.id === entryId ? { ...entry, papel } : entry)),
+    );
   }
 
   return (
@@ -398,6 +428,15 @@ export function EventDetailPage({
             )}
           </div>
         </section>
+
+        <ScaleSection
+          scale={scale}
+          canEdit={canEditScale}
+          availableUsers={usersNotInScale}
+          onAdd={handleAddToScale}
+          onRemove={handleRemoveFromScale}
+          onEditPapel={handleEditPapel}
+        />
       </div>
 
       {showSongModal && (

@@ -7,7 +7,11 @@ import { mockEvents } from "../../mocks/eventMocks";
 
 function renderDetail(
   id: string,
-  props?: { role?: "admin" | "ministro" | "team-member"; name?: string },
+  props?: {
+    role?: "admin" | "ministro" | "team-member";
+    name?: string;
+    id?: string;
+  },
 ) {
   return render(
     <MemoryRouter initialEntries={[`/events/${id}`]}>
@@ -18,6 +22,7 @@ function renderDetail(
             <EventDetailPage
               currentUserRole={props?.role}
               currentUserName={props?.name}
+              currentUserId={props?.id}
             />
           }
         />
@@ -60,7 +65,9 @@ describe("EventDetailPage", () => {
   });
 
   it("exibe mensagem quando o setlist está vazio", () => {
-    const draftEvent = mockEvents.find((e) => e.eventSetlist.length === 0);
+    const draftEvent = mockEvents.find(
+      (event) => event.eventSetlist.length === 0,
+    );
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
     renderDetail(draftEvent.id);
@@ -70,7 +77,7 @@ describe("EventDetailPage", () => {
   it("admin pode adicionar e remover música no Event Setlist", async () => {
     const user = userEvent.setup();
     const event = mockEvents[0];
-    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+    renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     await user.click(screen.getByRole("button", { name: /adicionar música/i }));
     await user.type(
@@ -89,7 +96,11 @@ describe("EventDetailPage", () => {
 
   it("owner do Event pode editar Event Setlist", () => {
     const event = mockEvents[0];
-    renderDetail(event.id, { role: "ministro", name: event.owner });
+    renderDetail(event.id, {
+      role: "ministro",
+      name: event.owner,
+      id: event.owner_id,
+    });
     expect(
       screen.getByRole("button", { name: /adicionar música/i }),
     ).toBeInTheDocument();
@@ -97,7 +108,11 @@ describe("EventDetailPage", () => {
 
   it("usuário sem privilégio não pode editar Event Setlist", () => {
     const event = mockEvents[0];
-    renderDetail(event.id, { role: "team-member", name: "Fernanda Oliveira" });
+    renderDetail(event.id, {
+      role: "team-member",
+      name: "Fernanda Oliveira",
+      id: "u3",
+    });
     expect(
       screen.queryByRole("button", { name: /adicionar música/i }),
     ).not.toBeInTheDocument();
@@ -105,7 +120,7 @@ describe("EventDetailPage", () => {
 
   it("permite reordenar músicas por drag-and-drop", () => {
     const event = mockEvents[0];
-    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+    renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     const initialFirstSong = event.eventSetlist[0].title;
     const secondSong = event.eventSetlist[1].title;

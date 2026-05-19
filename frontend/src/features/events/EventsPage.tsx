@@ -119,14 +119,19 @@ export function EventsPage({
       return;
     }
 
+    const ownerName = formData.owner.trim();
+    const ownerId = mockUsers.find((user) => user.name === ownerName)?.id ?? "";
+
     const newEvent: Event = {
       id: generateEventId(),
       title: formData.title.trim(),
       date: new Date(formData.date).toISOString(),
       description: formData.description.trim(),
-      owner: formData.owner.trim(),
+      owner: ownerName,
+      owner_id: ownerId,
       status: "draft",
       eventSetlist: [],
+      scale: [],
     };
 
     setEvents((prev) => [newEvent, ...prev]);

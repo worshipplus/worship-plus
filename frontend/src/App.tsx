@@ -59,6 +59,7 @@ function App() {
   const { currentUser } = useAuth();
   const userRole = currentUser?.role ?? "team-member";
   const currentUserName = currentUser?.name ?? "";
+  const currentUserId = currentUser?.id ?? "";
 
   return (
     <BrowserRouter>
@@ -94,6 +95,7 @@ function App() {
                 <EventDetailPage
                   currentUserRole={userRole}
                   currentUserName={currentUserName}
+                  currentUserId={currentUserId}
                 />
               }
             />
