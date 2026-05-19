@@ -19,6 +19,7 @@ import type {
 } from "../../types/event";
 import { mockEvents } from "../../mocks/eventMocks";
 import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { canViewEvent } from "./permissions";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -107,12 +108,13 @@ export function EventDetailPage({
     );
   }
 
-  const canViewEvent =
-    event.status !== "draft" ||
-    currentUserRole !== "team-member" ||
-    event.owner === currentUserName;
+  const hasEventVisibility = canViewEvent(
+    event,
+    currentUserRole,
+    currentUserName,
+  );
 
-  if (!canViewEvent) {
+  if (!hasEventVisibility) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
         <p

@@ -109,7 +109,7 @@ describe("EventDetailPage", () => {
     if (!draftEvent) return;
     renderDetail(draftEvent.id, { role: "team-member", name: "Ana Lima" });
     expect(screen.getByRole("alert")).toHaveTextContent(
-      /não tem permissão para visualizar este event em rascunho/i,
+      /não tem permissão para visualizar este Event em rascunho/i,
     );
     expect(
       screen.queryByRole("heading", { name: /event setlist/i }),

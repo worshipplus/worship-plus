@@ -11,6 +11,7 @@ import {
 import type { UserRole, EventStatus, Event } from "../../types/event";
 import { mockEvents } from "../../mocks/eventMocks";
 import { mockUsers } from "../../mocks/userMocks";
+import { canViewEvent } from "./permissions";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -76,11 +77,7 @@ export function EventsPage({
 
   const now = new Date();
   const filtered = events.filter((event) => {
-    const isDraftHiddenForCurrentUser =
-      userRole === "team-member" &&
-      event.status === "draft" &&
-      event.owner !== currentUserName;
-    if (isDraftHiddenForCurrentUser) return false;
+    if (!canViewEvent(event, userRole, currentUserName)) return false;
     if (filter === "upcoming") {
       return new Date(event.date) >= now;
     }
