@@ -11,6 +11,8 @@ import {
 import type { UserRole, EventStatus, Event } from "../../types/event";
 import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
 import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+import { CreateEventUseCase } from "../../usecases/event/CreateEventUseCase";
+import { DomainError } from "../../domain/errors/DomainError";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -37,11 +39,6 @@ const STATUS_TEXT_COLORS: Record<EventStatus, string> = {
   locked: "rgb(79,70,229)",
 };
 const DEFAULT_USER_NAME = "Ana Lima";
-
-function generateEventId(): string {
-  const randomUUID = globalThis.crypto?.randomUUID?.();
-  return randomUUID ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
@@ -108,44 +105,30 @@ export function EventsPage({
     setErrors({});
   }
 
-  function validate() {
-    const nextErrors: Partial<typeof formData> = {};
-    if (!formData.title.trim()) nextErrors.title = "Título é obrigatório.";
-    if (!formData.date.trim()) {
-      nextErrors.date = "Data e hora são obrigatórias.";
-    } else if (Number.isNaN(new Date(formData.date).getTime())) {
-      nextErrors.date = "Data e hora inválidas.";
-    }
-    if (!formData.description.trim())
-      nextErrors.description = "Descrição é obrigatória.";
-    if (!formData.owner.trim()) nextErrors.owner = "Owner é obrigatório.";
-    return nextErrors;
-  }
-
   function handleCreateEvent() {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+    try {
+      const newEvent = new CreateEventUseCase().execute(
+        userRole,
+        currentUserName,
+        {
+          title: formData.title,
+          date: formData.date,
+          description: formData.description,
+          ownerName: formData.owner,
+        },
+        allUsers,
+      );
+      setEvents((prev) => [newEvent, ...prev]);
+      closeCreateModal();
+    } catch (err) {
+      if (err instanceof DomainError) {
+        const field =
+          typeof err.details?.field === "string" ? err.details.field : null;
+        if (field) {
+          setErrors({ [field]: err.message });
+        }
+      }
     }
-
-    const ownerName = formData.owner.trim();
-    const ownerId = allUsers.find((user) => user.name === ownerName)?.id ?? "";
-
-    const newEvent: Event = {
-      id: generateEventId(),
-      title: formData.title.trim(),
-      date: new Date(formData.date).toISOString(),
-      description: formData.description.trim(),
-      owner: ownerName,
-      owner_id: ownerId,
-      status: "draft",
-      eventSetlist: [],
-      scale: [],
-    };
-
-    setEvents((prev) => [newEvent, ...prev]);
-    closeCreateModal();
   }
 
   function handleChange(field: keyof typeof formData, value: string) {

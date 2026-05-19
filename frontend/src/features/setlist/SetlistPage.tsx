@@ -6,13 +6,14 @@ import type {
   SetlistFormData,
 } from "../../types/setlist";
 import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { AddSetlistItemUseCase } from "../../usecases/setlist/AddSetlistItemUseCase";
+import { EditSetlistItemUseCase } from "../../usecases/setlist/EditSetlistItemUseCase";
+import { RemoveSetlistItemUseCase } from "../../usecases/setlist/RemoveSetlistItemUseCase";
+import { DomainError } from "../../domain/errors/DomainError";
 
 interface SetlistPageProps {
   userRole?: UserRole;
 }
-
-const YOUTUBE_REGEX =
-  /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
 
 const emptyForm: SetlistFormData = {
   title: "",
@@ -20,10 +21,6 @@ const emptyForm: SetlistFormData = {
   key: "",
   youtubeUrl: "",
 };
-
-function isEditable(role: UserRole): boolean {
-  return role === "admin" || role === "ministro";
-}
 
 export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   const { data: sourceItems } = useSearchSetlist("");
@@ -42,7 +39,7 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
     }
   }, [sourceItems, initialized]);
 
-  const canEdit = isEditable(userRole);
+  const canEdit = userRole === "admin" || userRole === "ministro";
 
   const filtered = items.filter(
     (item) =>
@@ -76,54 +73,38 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
     setErrors({});
   }
 
-  function validate(data: SetlistFormData): Partial<SetlistFormData> {
-    const errs: Partial<SetlistFormData> = {};
-    if (!data.title.trim()) errs.title = "Título é obrigatório.";
-    if (!data.author.trim()) errs.author = "Autor é obrigatório.";
-    if (!data.youtubeUrl.trim()) {
-      errs.youtubeUrl = "Link do YouTube é obrigatório.";
-    } else if (!YOUTUBE_REGEX.test(data.youtubeUrl.trim())) {
-      errs.youtubeUrl = "Insira um link válido do YouTube.";
-    }
-    return errs;
-  }
-
   function handleSave() {
-    const errs = validate(form);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
+    try {
+      if (editingId) {
+        const updated = new EditSetlistItemUseCase().execute(userRole, form);
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === editingId ? { ...item, ...updated } : item,
+          ),
+        );
+      } else {
+        const newItem = new AddSetlistItemUseCase().execute(userRole, form);
+        setItems((prev) => [newItem, ...prev]);
+      }
+      closeForm();
+    } catch (err) {
+      if (err instanceof DomainError) {
+        const field =
+          typeof err.details?.field === "string" ? err.details.field : null;
+        if (field) {
+          setErrors({ [field]: err.message });
+        }
+      }
     }
-    if (editingId) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                title: form.title,
-                author: form.author,
-                key: form.key || undefined,
-                youtubeUrl: form.youtubeUrl,
-              }
-            : item,
-        ),
-      );
-    } else {
-      const newItem: SetlistItem = {
-        id: String(Date.now()),
-        title: form.title,
-        author: form.author,
-        key: form.key || undefined,
-        youtubeUrl: form.youtubeUrl,
-        createdAt: new Date().toISOString(),
-      };
-      setItems((prev) => [newItem, ...prev]);
-    }
-    closeForm();
   }
 
   function handleRemove(id: string) {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    try {
+      new RemoveSetlistItemUseCase().execute(userRole);
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch {
+      // button is only shown for authorized users; error is swallowed silently
+    }
   }
 
   function handleFormChange(field: keyof SetlistFormData, value: string) {

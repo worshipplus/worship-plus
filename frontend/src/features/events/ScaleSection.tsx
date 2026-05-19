@@ -2,24 +2,15 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Users, Lock } from "lucide-react";
 import type { ScaleEntry } from "../../types/event";
 import type { User } from "../../types/user";
+import { ALLOWED_PAPEIS } from "../../domain/constants/scale";
 
-const PAPEIS = [
-  "Vocais",
-  "Guitarra",
-  "Violão",
-  "Baixo",
-  "Bateria",
-  "Teclado",
-  "Backing Vocal",
-  "Técnico de Som",
-  "Outro",
-];
+const PAPEIS: string[] = [...ALLOWED_PAPEIS];
 
 interface ScaleSectionProps {
   scale: ScaleEntry[];
   canEdit: boolean;
   availableUsers: User[];
-  onAdd: (userId: string, userName: string, papel: string) => void;
+  onAdd: (userId: string, userName: string, papel: string) => string | null;
   onRemove: (entryId: string) => void;
   onEditPapel: (entryId: string, papel: string) => void;
 }
@@ -68,7 +59,11 @@ export function ScaleSection({
       setAddError("Integrante não encontrado.");
       return;
     }
-    onAdd(user.id, user.name, addForm.papel);
+    const errorMsg = onAdd(user.id, user.name, addForm.papel);
+    if (errorMsg) {
+      setAddError(errorMsg);
+      return;
+    }
     closeAddForm();
   }
 
