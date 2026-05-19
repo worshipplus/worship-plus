@@ -81,7 +81,11 @@ export function EventDetailPage({
 }: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: allEvents, loading: eventsLoading } = useGetEventsByOwner();
+  const {
+    data: allEvents,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useGetEventsByOwner();
   const { data: allUsers } = useGetAllUsers();
   const { addSong, removeSong } = useEventSetlistMutations(
     currentUserRole,
@@ -109,7 +113,30 @@ export function EventDetailPage({
     }
   }, [allEvents, id]);
 
-  if (!eventsLoading && !event) {
+  if (!eventsLoading && eventsError) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p
+          className="text-center text-sm text-red-500"
+          style={{ color: "var(--color-text-secondary)" }}
+          role="alert"
+        >
+          Erro ao carregar evento. Tente novamente.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/events")}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-opacity hover:opacity-70"
+          style={{ color: "var(--color-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Voltar para Eventos
+        </button>
+      </div>
+    );
+  }
+
+  if (!eventsLoading && !eventsError && !event) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
         <p
@@ -175,7 +202,8 @@ export function EventDetailPage({
   }
 
   function handleRemoveSong(songId: string) {
-    removeSong(event);
+    const result = removeSong(event);
+    if (!result.ok) return;
     setEvent((prev) =>
       prev
         ? {
@@ -217,7 +245,8 @@ export function EventDetailPage({
   }
 
   function handleRemoveFromScale(entryId: string) {
-    removeFromScale(event);
+    const result = removeFromScale(event);
+    if (!result.ok) return;
     setScale((prev) => prev.filter((entry) => entry.id !== entryId));
   }
 

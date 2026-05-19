@@ -8,6 +8,10 @@ export type AddToScaleResult =
   | { ok: true; entry: ScaleEntry }
   | { ok: false; message: string };
 
+export type RemoveFromScaleResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 export function useScaleMutations(
   role: UserRole,
   callerId: string,
@@ -19,7 +23,7 @@ export function useScaleMutations(
     userName: string,
     papel: string,
   ) => AddToScaleResult;
-  removeFromScale: (event: Event | undefined) => void;
+  removeFromScale: (event: Event | undefined) => RemoveFromScaleResult;
 } {
   function addToScale(
     event: Event | undefined,
@@ -45,12 +49,14 @@ export function useScaleMutations(
     }
   }
 
-  function removeFromScale(event: Event | undefined): void {
+  function removeFromScale(event: Event | undefined): RemoveFromScaleResult {
     try {
       new RemoveFromScaleUseCase().execute(role, callerId, event);
+      return { ok: true };
     } catch (err) {
-      if (!(err instanceof DomainError)) throw err;
-      // DomainError: button is only rendered for authorized users on unlocked events
+      if (err instanceof DomainError)
+        return { ok: false, message: err.message };
+      throw err;
     }
   }
 

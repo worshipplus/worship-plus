@@ -21,7 +21,11 @@ const emptyForm: SetlistFormData = {
 };
 
 export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
-  const { data: sourceItems } = useSearchSetlist("");
+  const {
+    data: sourceItems,
+    loading: setlistLoading,
+    error: setlistError,
+  } = useSearchSetlist("");
   const { upsert } = useUpsertSetlistItem(userRole);
   const { remove } = useRemoveSetlistItem(userRole);
   const [items, setItems] = useState<SetlistItem[]>([]);
@@ -33,11 +37,11 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   const [errors, setErrors] = useState<Partial<SetlistFormData>>({});
 
   useEffect(() => {
-    if (!initialized && sourceItems.length > 0) {
+    if (!setlistLoading && !initialized) {
       setItems(sourceItems);
       setInitialized(true);
     }
-  }, [sourceItems, initialized]);
+  }, [sourceItems, setlistLoading, initialized]);
 
   const canEdit = userRole === "admin" || userRole === "ministro";
 
@@ -92,7 +96,8 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   }
 
   function handleRemove(id: string) {
-    remove();
+    const result = remove();
+    if (!result.ok) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
   }
 
@@ -160,7 +165,18 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
         </div>
 
         {/* List */}
-        {filtered.length === 0 ? (
+        {setlistLoading ? (
+          <p
+            className="text-center py-8 text-sm"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Carregando músicas...
+          </p>
+        ) : setlistError ? (
+          <p className="text-center py-8 text-sm text-red-500" role="alert">
+            Erro ao carregar músicas. Tente novamente.
+          </p>
+        ) : filtered.length === 0 ? (
           <p
             className="text-center py-8 text-sm"
             style={{ color: "var(--color-text-secondary)" }}

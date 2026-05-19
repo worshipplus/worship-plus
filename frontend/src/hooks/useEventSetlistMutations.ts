@@ -8,6 +8,10 @@ export type AddToEventSetlistResult =
   | { ok: true; item: EventSetlistItem }
   | { ok: false; message: string };
 
+export type RemoveFromEventSetlistResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 export function useEventSetlistMutations(
   role: UserRole,
   callerName: string,
@@ -16,7 +20,7 @@ export function useEventSetlistMutations(
     event: Event | undefined,
     song: SetlistItem,
   ) => AddToEventSetlistResult;
-  removeSong: (event: Event | undefined) => void;
+  removeSong: (event: Event | undefined) => RemoveFromEventSetlistResult;
 } {
   function addSong(
     event: Event | undefined,
@@ -37,12 +41,14 @@ export function useEventSetlistMutations(
     }
   }
 
-  function removeSong(event: Event | undefined): void {
+  function removeSong(event: Event | undefined): RemoveFromEventSetlistResult {
     try {
       new RemoveFromEventSetlistUseCase().execute(role, callerName, event);
+      return { ok: true };
     } catch (err) {
-      if (!(err instanceof DomainError)) throw err;
-      // DomainError: button is only rendered for authorized users on unlocked events
+      if (err instanceof DomainError)
+        return { ok: false, message: err.message };
+      throw err;
     }
   }
 
