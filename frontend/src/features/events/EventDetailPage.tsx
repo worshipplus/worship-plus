@@ -107,10 +107,8 @@ export function EventDetailPage({
 
   useEffect(() => {
     const found = allEvents.find((item) => item.id === id);
-    if (found) {
-      setEvent(found);
-      setScale(found.scale);
-    }
+    setEvent(found);
+    setScale(found?.scale ?? []);
   }, [allEvents, id]);
 
   if (!eventsLoading && eventsError) {

@@ -70,11 +70,11 @@ export function UsersPage() {
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
-    if (!usersLoading && !initialized) {
+    if (!usersLoading && !usersError && !initialized) {
       setUsers(sourceUsers);
       setInitialized(true);
     }
-  }, [sourceUsers, usersLoading, initialized]);
+  }, [sourceUsers, usersLoading, usersError, initialized]);
 
   const isAdmin = currentUser?.role === "admin";
 

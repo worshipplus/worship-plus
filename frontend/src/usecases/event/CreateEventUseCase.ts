@@ -70,14 +70,21 @@ export class CreateEventUseCase {
       );
     }
     const ownerName = command.ownerName.trim();
-    const ownerId = allUsers.find((u) => u.name === ownerName)?.id ?? "";
+    const ownerUser = allUsers.find((u) => u.name === ownerName);
+    if (!ownerUser) {
+      throw new DomainError(
+        DomainErrorCode.EVENT_REQUIRED_FIELDS,
+        "Owner não encontrado.",
+        { field: "owner" },
+      );
+    }
     return {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       title: command.title.trim(),
       date: parsedDate.toISOString(),
       description: command.description.trim(),
       owner: ownerName,
-      owner_id: ownerId,
+      owner_id: ownerUser.id,
       status: "draft",
       eventSetlist: [],
       scale: [],

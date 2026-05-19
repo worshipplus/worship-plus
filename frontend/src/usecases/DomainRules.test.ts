@@ -451,6 +451,28 @@ describe("DOMAIN-008: Campos obrigatórios no Event", () => {
     expect(err.code).toBe(DomainErrorCode.EVENT_REQUIRED_FIELDS);
     expect(err.details?.field).toBe("description");
   });
+
+  it("rejeita ownerName que não existe em allUsers", () => {
+    const err = (() => {
+      try {
+        new CreateEventUseCase().execute(
+          "admin",
+          "Ana Lima",
+          {
+            title: "Evento",
+            date: "2031-10-20T10:00",
+            description: "Desc",
+            ownerName: "Usuário Inexistente",
+          },
+          allUsers,
+        );
+      } catch (e) {
+        return e;
+      }
+    })() as DomainError;
+    expect(err.code).toBe(DomainErrorCode.EVENT_REQUIRED_FIELDS);
+    expect(err.details?.field).toBe("owner");
+  });
 });
 
 // ---------------------------------------------------------------------------
