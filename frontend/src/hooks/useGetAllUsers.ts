@@ -16,6 +16,7 @@ export function useGetAllUsers(): {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     new GetAllUsersUseCase(userSource)
       .execute()
       .then((users) => {

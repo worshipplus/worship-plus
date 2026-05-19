@@ -16,6 +16,7 @@ export function useGetMinistros(): {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     new GetMinistrosUseCase(userSource)
       .execute()
       .then((users) => {

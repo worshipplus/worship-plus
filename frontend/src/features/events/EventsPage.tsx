@@ -56,7 +56,7 @@ export function EventsPage({
 }: EventsPageProps) {
   const navigate = useNavigate();
   const { data: sourceEvents } = useGetEventsByOwner();
-  const { data: allUsers } = useGetAllUsers();
+  const { data: allUsers, loading: usersLoading } = useGetAllUsers();
   const { createEvent } = useCreateEvent(userRole, currentUserName, allUsers);
   const [events, setEvents] = useState<Event[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -155,7 +155,7 @@ export function EventsPage({
           <button
             type="button"
             onClick={openCreateModal}
-            disabled={!canCreateEvent}
+            disabled={!canCreateEvent || usersLoading}
             title={
               canCreateEvent
                 ? "Criar Event"
@@ -375,7 +375,8 @@ export function EventsPage({
                 <button
                   type="button"
                   onClick={handleCreateEvent}
-                  className="px-4 py-2 rounded-full text-sm font-semibold"
+                  disabled={usersLoading}
+                  className="px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
                     background: "var(--color-primary)",
                     color: "var(--color-neutral-50)",

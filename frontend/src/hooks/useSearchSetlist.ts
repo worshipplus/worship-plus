@@ -16,6 +16,7 @@ export function useSearchSetlist(query = ""): {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     new SearchSetlistItemsUseCase(setlistSource)
       .execute(query)
       .then((items) => {

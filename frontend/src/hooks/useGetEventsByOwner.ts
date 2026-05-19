@@ -16,6 +16,7 @@ export function useGetEventsByOwner(ownerId?: string): {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     new GetEventsByOwnerUseCase(eventSource)
       .execute(ownerId)
       .then((events) => {

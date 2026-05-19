@@ -16,6 +16,7 @@ export function useGetAdminUser(): {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     new GetAdminUserUseCase(userSource)
       .execute()
       .then((user) => {
