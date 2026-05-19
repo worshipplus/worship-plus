@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -7,8 +8,11 @@ import {
   Music,
   ExternalLink,
 } from "lucide-react";
-import type { EventStatus } from "../../types/event";
+import type { EventStatus, ScaleEntry } from "../../types/event";
 import { mockEvents } from "../../mocks/eventMocks";
+import { mockUsers } from "../../mocks/userMocks";
+import { useAuth } from "../../context/auth";
+import { ScaleSection } from "./ScaleSection";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -43,8 +47,37 @@ function formatDateTime(isoString: string): string {
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const event = mockEvents.find((e) => e.id === id);
+
+  const [scale, setScale] = useState<ScaleEntry[]>(event?.scale ?? []);
+
+  const canEdit = Boolean(
+    event &&
+    (currentUser?.role === "admin" || currentUser?.id === event.owner_id),
+  );
+
+  const usersNotInScale = mockUsers.filter(
+    (u) => !scale.some((s) => s.userId === u.id),
+  );
+
+  function handleAddToScale(userId: string, userName: string, papel: string) {
+    setScale((prev) => [
+      ...prev,
+      { id: String(Date.now()), userId, userName, papel },
+    ]);
+  }
+
+  function handleRemoveFromScale(entryId: string) {
+    setScale((prev) => prev.filter((e) => e.id !== entryId));
+  }
+
+  function handleEditPapel(entryId: string, papel: string) {
+    setScale((prev) =>
+      prev.map((e) => (e.id === entryId ? { ...e, papel } : e)),
+    );
+  }
 
   if (!event) {
     return (
@@ -234,6 +267,16 @@ export function EventDetailPage() {
             )}
           </div>
         </section>
+
+        {/* Escala */}
+        <ScaleSection
+          scale={scale}
+          canEdit={canEdit}
+          availableUsers={usersNotInScale}
+          onAdd={handleAddToScale}
+          onRemove={handleRemoveFromScale}
+          onEditPapel={handleEditPapel}
+        />
       </div>
     </div>
   );

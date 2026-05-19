@@ -3,14 +3,17 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { EventDetailPage } from "./EventDetailPage";
 import { mockEvents } from "../../mocks/eventMocks";
+import { AuthProvider } from "../../context/auth";
 
 function renderDetail(id: string) {
   return render(
-    <MemoryRouter initialEntries={[`/events/${id}`]}>
-      <Routes>
-        <Route path="/events/:id" element={<EventDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <AuthProvider>
+      <MemoryRouter initialEntries={[`/events/${id}`]}>
+        <Routes>
+          <Route path="/events/:id" element={<EventDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>,
   );
 }
 
