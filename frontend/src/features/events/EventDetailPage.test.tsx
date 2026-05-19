@@ -1,14 +1,26 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { EventDetailPage } from "./EventDetailPage";
 import { mockEvents } from "../../mocks/eventMocks";
 
-function renderDetail(id: string) {
+function renderDetail(
+  id: string,
+  props?: { role?: "admin" | "ministro" | "team-member"; name?: string },
+) {
   return render(
     <MemoryRouter initialEntries={[`/events/${id}`]}>
       <Routes>
-        <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route
+          path="/events/:id"
+          element={
+            <EventDetailPage
+              currentUserRole={props?.role}
+              currentUserName={props?.name}
+            />
+          }
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -53,5 +65,65 @@ describe("EventDetailPage", () => {
     if (!draftEvent) return;
     renderDetail(draftEvent.id);
     expect(screen.getByText(/nenhuma música no setlist/i)).toBeInTheDocument();
+  });
+
+  it("admin pode adicionar e remover música no Event Setlist", async () => {
+    const user = userEvent.setup();
+    const event = mockEvents[0];
+    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+
+    await user.click(screen.getByRole("button", { name: /adicionar música/i }));
+    await user.type(
+      screen.getByRole("searchbox", { name: /buscar músicas no setlist/i }),
+      "Way Maker",
+    );
+    await user.click(screen.getByRole("button", { name: /^adicionar$/i }));
+
+    expect(screen.getAllByText("Way Maker").length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: /fechar busca/i }));
+    await user.click(
+      screen.getByRole("button", { name: /remover way maker/i }),
+    );
+    expect(screen.queryByText("Way Maker")).not.toBeInTheDocument();
+  });
+
+  it("owner do Event pode editar Event Setlist", () => {
+    const event = mockEvents[0];
+    renderDetail(event.id, { role: "ministro", name: event.owner });
+    expect(
+      screen.getByRole("button", { name: /adicionar música/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("usuário sem privilégio não pode editar Event Setlist", () => {
+    const event = mockEvents[0];
+    renderDetail(event.id, { role: "team-member", name: "Fernanda Oliveira" });
+    expect(
+      screen.queryByRole("button", { name: /adicionar música/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("permite reordenar músicas por drag-and-drop", () => {
+    const event = mockEvents[0];
+    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+
+    const initialFirstSong = event.eventSetlist[0].title;
+    const secondSong = event.eventSetlist[1].title;
+    const firstSongElement = screen.getByText(initialFirstSong).closest("li");
+    const secondSongElement = screen.getByText(secondSong).closest("li");
+    expect(firstSongElement).toBeTruthy();
+    expect(secondSongElement).toBeTruthy();
+    if (!firstSongElement || !secondSongElement) return;
+
+    fireEvent.dragStart(firstSongElement);
+    fireEvent.dragOver(secondSongElement);
+    fireEvent.drop(secondSongElement);
+
+    const titlesAfterReorder = screen
+      .getAllByRole("listitem")
+      .map((item) => item.textContent ?? "")
+      .slice(0, event.eventSetlist.length);
+    expect(titlesAfterReorder[0]).toContain(secondSong);
+    expect(titlesAfterReorder[1]).toContain(initialFirstSong);
   });
 });
