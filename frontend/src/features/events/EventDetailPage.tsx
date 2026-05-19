@@ -71,11 +71,6 @@ function isSongInEventSetlist(
   );
 }
 
-function generateItemId(songId: string): string {
-  const randomUUID = globalThis.crypto?.randomUUID?.();
-  return randomUUID ? `${songId}-${randomUUID}` : `${songId}-${Date.now()}`;
-}
-
 interface EventDetailPageProps {
   currentUserRole?: UserRole;
   currentUserName?: string;
@@ -157,7 +152,9 @@ export function EventDetailPage({
         selectedSong,
       );
       setEvent((prev) =>
-        prev ? { ...prev, eventSetlist: [...prev.eventSetlist, newSong] } : prev,
+        prev
+          ? { ...prev, eventSetlist: [...prev.eventSetlist, newSong] }
+          : prev,
       );
       setSongModalError(null);
     } catch (err) {
@@ -231,7 +228,11 @@ export function EventDetailPage({
 
   function handleRemoveFromScale(entryId: string) {
     try {
-      new RemoveFromScaleUseCase().execute(currentUserRole, currentUserId, event);
+      new RemoveFromScaleUseCase().execute(
+        currentUserRole,
+        currentUserId,
+        event,
+      );
       setScale((prev) => prev.filter((entry) => entry.id !== entryId));
     } catch {
       // button is only shown for authorized users on unlocked events
@@ -338,7 +339,10 @@ export function EventDetailPage({
               {canEditEventSetlist && (
                 <button
                   type="button"
-                  onClick={() => setShowSongModal(true)}
+                  onClick={() => {
+                    setShowSongModal(true);
+                    setSongModalError(null);
+                  }}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
                   style={{
                     background: "var(--color-primary)",
@@ -496,7 +500,10 @@ export function EventDetailPage({
               </h3>
               <button
                 type="button"
-                onClick={() => setShowSongModal(false)}
+                onClick={() => {
+                  setShowSongModal(false);
+                  setSongModalError(null);
+                }}
                 aria-label="Fechar busca"
                 className="p-1 rounded-full hover:opacity-70"
                 style={{ color: "var(--color-text-secondary)" }}
@@ -504,6 +511,11 @@ export function EventDetailPage({
                 <X size={18} />
               </button>
             </div>
+            {songModalError && (
+              <p className="text-xs text-red-500" role="alert">
+                {songModalError}
+              </p>
+            )}
             <input
               type="search"
               value={search}

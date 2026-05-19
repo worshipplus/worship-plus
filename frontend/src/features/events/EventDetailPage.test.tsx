@@ -120,7 +120,7 @@ describe("EventDetailPage", () => {
 
   it("admin pode adicionar e remover música no Event Setlist", async () => {
     const user = userEvent.setup();
-    const event = EVENT_DATA[0];
+    const event = EVENT_DATA[1]; // scheduled event owned by Ana Lima (u1)
     renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     await user.click(screen.getByRole("button", { name: /adicionar música/i }));
