@@ -15,7 +15,7 @@ export const DomainErrorCode = {
   SETLIST_REQUIRED_FIELDS: "DOMAIN-007",
   /** title, date, description e owner são obrigatórios no Event */
   EVENT_REQUIRED_FIELDS: "DOMAIN-008",
-  /** Event deve ter data válida em formato ISO */
+  /** Event deve ter data válida em formato parseável */
   INVALID_EVENT_DATE: "DOMAIN-009",
   /** Música já presente no Event Setlist */
   DUPLICATE_SETLIST_ITEM: "DOMAIN-010",
