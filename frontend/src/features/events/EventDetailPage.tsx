@@ -107,6 +107,34 @@ export function EventDetailPage({
     );
   }
 
+  const canViewEvent =
+    event.status !== "draft" ||
+    currentUserRole !== "team-member" ||
+    event.owner === currentUserName;
+
+  if (!canViewEvent) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p
+          className="text-center text-sm"
+          style={{ color: "var(--color-text-secondary)" }}
+          role="alert"
+        >
+          Você não tem permissão para visualizar este Event em rascunho.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/events")}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-opacity hover:opacity-70"
+          style={{ color: "var(--color-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Voltar para Eventos
+        </button>
+      </div>
+    );
+  }
+
   const canEditEventSetlist =
     currentUserRole === "admin" || event.owner === currentUserName;
 

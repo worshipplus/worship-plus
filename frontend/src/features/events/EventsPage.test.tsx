@@ -80,6 +80,21 @@ describe("EventsPage", () => {
     );
   });
 
+  it("team-member não visualiza Event em rascunho de outro owner", () => {
+    renderEventsPage({ userRole: "team-member", currentUserName: "Ana Lima" });
+    expect(
+      screen.queryByText("Culto de Células — Rascunho"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("team-member visualiza Event em rascunho quando for o owner", () => {
+    renderEventsPage({
+      userRole: "team-member",
+      currentUserName: "Paulo Mendes",
+    });
+    expect(screen.getByText("Culto de Células — Rascunho")).toBeInTheDocument();
+  });
+
   it("admin cria Event em rascunho com owner automático", async () => {
     const user = userEvent.setup();
     renderEventsPage({ userRole: "admin", currentUserName: "Ana Lima" });
