@@ -76,3 +76,10 @@ Nenhum PR pode ser submetido com falha em qualquer um desses comandos.
 - PRD-004 (Usuários): `docs/planning/prds/PRD-004-cadastro-usuario-privilegios.md`
 - Instrucional: `.github/instructions/instrucional.instructions.md`
 - Skills: `.github/instructions/skills.instructions.md`
+- Performance (Rules & Skills): `.github/instructions/performance-rules-skills.instructions.md`
+
+## R-11 — Guard Rails de Performance (Lighthouse)
+
+- Alterações de frontend devem evitar regressão perceptível de performance no carregamento inicial.
+- Em mudanças de UI/rotas/componentes, revisar impacto de bundle e custo de render no primeiro paint.
+- Em caso de falha do Lighthouse por oscilação de infraestrutura, o baseline só pode ser ajustado com evidência do histórico de runs.

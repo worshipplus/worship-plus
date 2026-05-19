@@ -65,3 +65,13 @@ applyTo: "**"
 
 - [instrucional.instructions.md](./instrucional.instructions.md) — Checklist de abertura/encerramento de sessão
 - [rules.instructions.md](./rules.instructions.md) — Políticas de execução e qualidade
+- [performance-rules-skills.instructions.md](./performance-rules-skills.instructions.md) — Guard rails de performance e Lighthouse
+
+## 7. Performance (Lighthouse)
+
+| Skill | Descrição |
+|-------|-----------|
+| Leitura de impacto de bundle | Identificar aumento de JS inicial e dependências adicionadas antes do commit |
+| Carregamento sob demanda | Aplicar import dinâmico para partes não críticas no primeiro carregamento |
+| Otimização de render inicial | Evitar processamento pesado síncrono na montagem da tela |
+| Revisão de regressão web-vitals | Verificar risco de queda de score em mudanças visuais/estruturais |
