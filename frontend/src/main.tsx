@@ -4,13 +4,16 @@ import "./index.css";
 import App from "./App.tsx";
 import { ThemeProvider } from "./context/theme";
 import { AuthProvider } from "./context/auth";
+import { DataSourcesProvider } from "./context/providers";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <DataSourcesProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </DataSourcesProvider>
     </ThemeProvider>
   </StrictMode>,
 );

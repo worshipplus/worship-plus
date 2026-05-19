@@ -27,7 +27,7 @@ function renderScale(
     scale: mockScale,
     canEdit: false,
     availableUsers: mockAvailableUsers,
-    onAdd: vi.fn(),
+    onAdd: vi.fn().mockReturnValue(null),
     onRemove: vi.fn(),
     onEditPapel: vi.fn(),
   };
@@ -115,7 +115,7 @@ describe("ScaleSection — edição (Admin / Owner)", () => {
   });
 
   it("chama onAdd ao confirmar adição de integrante", async () => {
-    const onAdd = vi.fn();
+    const onAdd = vi.fn().mockReturnValue(null);
     renderScale({ canEdit: true, onAdd });
     await userEvent.click(
       screen.getByRole("button", { name: /adicionar integrante/i }),

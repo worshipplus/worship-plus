@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -9,8 +9,9 @@ import {
   X,
 } from "lucide-react";
 import type { UserRole, EventStatus, Event } from "../../types/event";
-import { mockEvents } from "../../mocks/eventMocks";
-import { mockUsers } from "../../mocks/userMocks";
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+import { useCreateEvent } from "../../hooks/useCreateEvent";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -38,11 +39,6 @@ const STATUS_TEXT_COLORS: Record<EventStatus, string> = {
 };
 const DEFAULT_USER_NAME = "Ana Lima";
 
-function generateEventId(): string {
-  const randomUUID = globalThis.crypto?.randomUUID?.();
-  return randomUUID ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleDateString("pt-BR", {
@@ -59,7 +55,19 @@ export function EventsPage({
   currentUserName = DEFAULT_USER_NAME,
 }: EventsPageProps) {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const {
+    data: sourceEvents,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useGetEventsByOwner();
+  const {
+    data: allUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useGetAllUsers();
+  const { createEvent } = useCreateEvent(userRole, currentUserName, allUsers);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -70,9 +78,16 @@ export function EventsPage({
   });
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
+  useEffect(() => {
+    if (!eventsLoading && !eventsError && !initialized) {
+      setEvents(sourceEvents);
+      setInitialized(true);
+    }
+  }, [sourceEvents, eventsLoading, eventsError, initialized]);
+
   const canCreateEvent = userRole === "admin" || userRole === "ministro";
   const canChangeOwner = userRole === "admin";
-  const ownerOptions = mockUsers.map((user) => user.name);
+  const ownerOptions = allUsers.map((user) => user.name);
 
   const now = new Date();
   const filtered = events.filter((event) => {
@@ -98,43 +113,18 @@ export function EventsPage({
     setErrors({});
   }
 
-  function validate() {
-    const nextErrors: Partial<typeof formData> = {};
-    if (!formData.title.trim()) nextErrors.title = "Título é obrigatório.";
-    if (!formData.date.trim()) {
-      nextErrors.date = "Data e hora são obrigatórias.";
-    } else if (Number.isNaN(new Date(formData.date).getTime())) {
-      nextErrors.date = "Data e hora inválidas.";
-    }
-    if (!formData.description.trim())
-      nextErrors.description = "Descrição é obrigatória.";
-    if (!formData.owner.trim()) nextErrors.owner = "Owner é obrigatório.";
-    return nextErrors;
-  }
-
   function handleCreateEvent() {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    const result = createEvent({
+      title: formData.title,
+      date: formData.date,
+      description: formData.description,
+      ownerName: formData.owner,
+    });
+    if (!result.ok) {
+      setErrors({ [result.field]: result.message });
       return;
     }
-
-    const ownerName = formData.owner.trim();
-    const ownerId = mockUsers.find((user) => user.name === ownerName)?.id ?? "";
-
-    const newEvent: Event = {
-      id: generateEventId(),
-      title: formData.title.trim(),
-      date: new Date(formData.date).toISOString(),
-      description: formData.description.trim(),
-      owner: ownerName,
-      owner_id: ownerId,
-      status: "draft",
-      eventSetlist: [],
-      scale: [],
-    };
-
-    setEvents((prev) => [newEvent, ...prev]);
+    setEvents((prev) => [result.event, ...prev]);
     closeCreateModal();
   }
 
@@ -173,7 +163,7 @@ export function EventsPage({
           <button
             type="button"
             onClick={openCreateModal}
-            disabled={!canCreateEvent}
+            disabled={!canCreateEvent || usersLoading || !!usersError}
             title={
               canCreateEvent
                 ? "Criar Event"
@@ -218,7 +208,18 @@ export function EventsPage({
         </div>
 
         {/* Event List */}
-        {filtered.length === 0 ? (
+        {eventsLoading ? (
+          <p
+            className="text-center py-8 text-sm"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Carregando eventos...
+          </p>
+        ) : eventsError ? (
+          <p className="text-center py-8 text-sm text-red-500" role="alert">
+            Erro ao carregar eventos.
+          </p>
+        ) : filtered.length === 0 ? (
           <p
             className="text-center py-8 text-sm"
             style={{ color: "var(--color-text-secondary)" }}
@@ -393,7 +394,8 @@ export function EventsPage({
                 <button
                   type="button"
                   onClick={handleCreateEvent}
-                  className="px-4 py-2 rounded-full text-sm font-semibold"
+                  disabled={usersLoading || !!usersError}
+                  className="px-4 py-2 rounded-full text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
                     background: "var(--color-primary)",
                     color: "var(--color-neutral-50)",
