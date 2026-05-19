@@ -7,11 +7,20 @@ import {
   FileText,
   Music,
   ExternalLink,
+  Plus,
+  Trash2,
+  GripVertical,
+  X,
 } from "lucide-react";
-import type { EventStatus, ScaleEntry } from "../../types/event";
+import type {
+  EventStatus,
+  UserRole,
+  EventSetlistItem,
+  ScaleEntry,
+} from "../../types/event";
 import { mockEvents } from "../../mocks/eventMocks";
+import { mockSetlistItems } from "../../mocks/setlistMocks";
 import { mockUsers } from "../../mocks/userMocks";
-import { useAuth } from "../../context/auth";
 import { ScaleSection } from "./ScaleSection";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
@@ -44,40 +53,42 @@ function formatDateTime(isoString: string): string {
   });
 }
 
-export function EventDetailPage() {
+function isSongInEventSetlist(
+  eventSetlist: EventSetlistItem[],
+  song: EventSetlistItem,
+): boolean {
+  return eventSetlist.some(
+    (item) =>
+      item.title === song.title &&
+      item.author === song.author &&
+      item.youtubeUrl === song.youtubeUrl,
+  );
+}
+
+function generateItemId(songId: string): string {
+  const randomUUID = globalThis.crypto?.randomUUID?.();
+  return randomUUID ? `${songId}-${randomUUID}` : `${songId}-${Date.now()}`;
+}
+
+interface EventDetailPageProps {
+  currentUserRole?: UserRole;
+  currentUserName?: string;
+  currentUserId?: string;
+}
+
+export function EventDetailPage({
+  currentUserRole = "team-member",
+  currentUserName = "",
+  currentUserId = "",
+}: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
-
-  const event = mockEvents.find((e) => e.id === id);
-
+  const [event, setEvent] = useState(mockEvents.find((item) => item.id === id));
+  const [search, setSearch] = useState("");
+  const [showSongModal, setShowSongModal] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [scale, setScale] = useState<ScaleEntry[]>(event?.scale ?? []);
-
-  const canEdit = Boolean(
-    event &&
-    (currentUser?.role === "admin" || currentUser?.id === event.owner_id),
-  );
-
-  const usersNotInScale = mockUsers.filter(
-    (u) => !scale.some((s) => s.userId === u.id),
-  );
-
-  function handleAddToScale(userId: string, userName: string, papel: string) {
-    setScale((prev) => [
-      ...prev,
-      { id: String(Date.now()), userId, userName, papel },
-    ]);
-  }
-
-  function handleRemoveFromScale(entryId: string) {
-    setScale((prev) => prev.filter((e) => e.id !== entryId));
-  }
-
-  function handleEditPapel(entryId: string, papel: string) {
-    setScale((prev) =>
-      prev.map((e) => (e.id === entryId ? { ...e, papel } : e)),
-    );
-  }
 
   if (!event) {
     return (
@@ -102,10 +113,100 @@ export function EventDetailPage() {
     );
   }
 
+  const canEditEventSetlist =
+    currentUserRole === "admin" || event.owner === currentUserName;
+
+  const canEditScale =
+    currentUserRole === "admin" || currentUserId === event.owner_id;
+
+  const usersNotInScale = mockUsers.filter(
+    (user) => !scale.some((entry) => entry.userId === user.id),
+  );
+
+  const filteredSetlist = mockSetlistItems.filter((song) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      song.title.toLowerCase().includes(query) ||
+      song.author.toLowerCase().includes(query)
+    );
+  });
+
+  function handleAddSong(songId: string) {
+    if (!event) return;
+    const selectedSong = mockSetlistItems.find((song) => song.id === songId);
+    if (!selectedSong) return;
+    const alreadyAdded = isSongInEventSetlist(event.eventSetlist, selectedSong);
+    if (alreadyAdded) return;
+
+    const newSong: EventSetlistItem = {
+      id: generateItemId(songId),
+      title: selectedSong.title,
+      author: selectedSong.author,
+      key: selectedSong.key,
+      youtubeUrl: selectedSong.youtubeUrl,
+    };
+
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            eventSetlist: [...prev.eventSetlist, newSong],
+          }
+        : prev,
+    );
+  }
+
+  function handleRemoveSong(songId: string) {
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            eventSetlist: prev.eventSetlist.filter(
+              (item) => item.id !== songId,
+            ),
+          }
+        : prev,
+    );
+  }
+
+  function handleDrop(dropIndex: number) {
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragOverIndex(null);
+      return;
+    }
+
+    setEvent((prev) => {
+      if (!prev) return prev;
+      const reordered = [...prev.eventSetlist];
+      const [dragged] = reordered.splice(dragIndex, 1);
+      reordered.splice(dropIndex, 0, dragged);
+      return { ...prev, eventSetlist: reordered };
+    });
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }
+
+  function handleAddToScale(userId: string, userName: string, papel: string) {
+    setScale((prev) => [
+      ...prev,
+      { id: String(Date.now()), userId, userName, papel },
+    ]);
+  }
+
+  function handleRemoveFromScale(entryId: string) {
+    setScale((prev) => prev.filter((entry) => entry.id !== entryId));
+  }
+
+  function handleEditPapel(entryId: string, papel: string) {
+    setScale((prev) =>
+      prev.map((entry) => (entry.id === entryId ? { ...entry, papel } : entry)),
+    );
+  }
+
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-3xl mx-auto grid gap-4">
-        {/* Back button */}
         <button
           type="button"
           onClick={() => navigate("/events")}
@@ -117,7 +218,6 @@ export function EventDetailPage() {
           Voltar
         </button>
 
-        {/* Event header card */}
         <div className="glass-card p-5 grid gap-3">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <h1
@@ -181,7 +281,6 @@ export function EventDetailPage() {
           )}
         </div>
 
-        {/* Event Setlist */}
         <section aria-labelledby="event-setlist-heading">
           <div className="glass-card p-4 grid gap-3">
             <div className="flex items-center gap-2">
@@ -196,6 +295,20 @@ export function EventDetailPage() {
               >
                 Event Setlist
               </h2>
+              {canEditEventSetlist && (
+                <button
+                  type="button"
+                  onClick={() => setShowSongModal(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "var(--color-neutral-50)",
+                  }}
+                >
+                  <Plus size={13} />
+                  Adicionar música
+                </button>
+              )}
               <span
                 className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
                 style={{
@@ -220,9 +333,35 @@ export function EventDetailPage() {
                 {event.eventSetlist.map((item, index) => (
                   <li
                     key={item.id}
+                    draggable={canEditEventSetlist}
+                    onDragStart={() => setDragIndex(index)}
+                    onDragOver={(dragEvent) => {
+                      dragEvent.preventDefault();
+                      setDragOverIndex(index);
+                    }}
+                    onDragLeave={() => setDragOverIndex(null)}
+                    onDrop={() => handleDrop(index)}
+                    onDragEnd={() => {
+                      setDragIndex(null);
+                      setDragOverIndex(null);
+                    }}
                     className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: "var(--color-surface)" }}
+                    style={{
+                      background: "var(--color-surface)",
+                      outline:
+                        dragOverIndex === index
+                          ? "2px solid var(--color-primary)"
+                          : undefined,
+                    }}
                   >
+                    {canEditEventSetlist && (
+                      <GripVertical
+                        size={14}
+                        className="shrink-0 cursor-grab"
+                        style={{ color: "var(--color-text-secondary)" }}
+                        aria-hidden="true"
+                      />
+                    )}
                     <span
                       className="text-xs font-mono w-5 text-center shrink-0"
                       style={{ color: "var(--color-text-secondary)" }}
@@ -250,17 +389,39 @@ export function EventDetailPage() {
                           </span>
                         )}
                       </span>
+                      <a
+                        href={item.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Link do YouTube para ${item.title}`}
+                        className="text-xs hover:opacity-70"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        Ver no YouTube
+                      </a>
                     </div>
-                    <a
-                      href={item.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Abrir ${item.title} no YouTube`}
-                      className="shrink-0 p-1.5 rounded-full transition-opacity hover:opacity-70"
-                      style={{ color: "var(--color-primary)" }}
-                    >
-                      <ExternalLink size={15} />
-                    </a>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={item.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Abrir ${item.title} no YouTube`}
+                        className="p-1.5 rounded-full transition-opacity hover:opacity-70"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        <ExternalLink size={15} />
+                      </a>
+                      {canEditEventSetlist && (
+                        <button
+                          type="button"
+                          aria-label={`Remover ${item.title}`}
+                          onClick={() => handleRemoveSong(item.id)}
+                          className="p-1.5 rounded-full transition-opacity hover:opacity-70 text-red-500"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -268,16 +429,95 @@ export function EventDetailPage() {
           </div>
         </section>
 
-        {/* Escala */}
         <ScaleSection
           scale={scale}
-          canEdit={canEdit}
+          canEdit={canEditScale}
           availableUsers={usersNotInScale}
           onAdd={handleAddToScale}
           onRemove={handleRemoveFromScale}
           onEditPapel={handleEditPapel}
         />
       </div>
+
+      {showSongModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Buscar músicas do Setlist"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="glass-card w-full max-w-xl p-5 grid gap-4 max-h-[85vh] overflow-hidden">
+            <div className="flex items-center justify-between gap-2">
+              <h3
+                style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}
+              >
+                Buscar no Setlist
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSongModal(false)}
+                aria-label="Fechar busca"
+                className="p-1 rounded-full hover:opacity-70"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <input
+              type="search"
+              value={search}
+              onChange={(eventTarget) => setSearch(eventTarget.target.value)}
+              placeholder="Buscar por título ou autor..."
+              aria-label="Buscar músicas no Setlist"
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none border"
+              style={{
+                background: "var(--color-surface)",
+                borderColor: "rgba(255,255,255,0.15)",
+              }}
+            />
+            <ul className="grid gap-2 overflow-y-auto" role="list">
+              {filteredSetlist.map((song) => {
+                const alreadyAdded = isSongInEventSetlist(
+                  event.eventSetlist,
+                  song,
+                );
+                return (
+                  <li
+                    key={song.id}
+                    className="p-3 rounded-lg flex items-start justify-between gap-3"
+                    style={{ background: "var(--color-surface)" }}
+                  >
+                    <div className="min-w-0 grid">
+                      <span className="text-sm font-semibold truncate">
+                        {song.title}
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--color-text-secondary)" }}
+                      >
+                        {song.author}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddSong(song.id)}
+                      disabled={alreadyAdded}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold disabled:opacity-40"
+                      style={{
+                        background: "var(--color-primary)",
+                        color: "var(--color-neutral-50)",
+                      }}
+                    >
+                      {alreadyAdded ? "Adicionada" : "Adicionar"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

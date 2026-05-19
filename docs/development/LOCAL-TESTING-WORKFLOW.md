@@ -209,6 +209,9 @@ npm run lint
 # Lint + fix automático
 npm run lint:fix
 
+# Lint CSS (Stylelint — valida ordem de @import)
+npm run lint:css
+
 # Prettier check
 npm run format:check
 
@@ -328,6 +331,7 @@ curl -I https://xyz.supabase.co
 | **Lighthouse Accessibility** | ≥ 95 | Chrome DevTools → Lighthouse |
 | **TypeScript Errors** | 0 | `npm run type-check` |
 | **ESLint Warnings** | 0 | `npm run lint` |
+| **CSS Lint Errors** | 0 | `npm run lint:css` |
 | **First Load** | < 2s | Network tab (Slow 3G) |
 
 ---
