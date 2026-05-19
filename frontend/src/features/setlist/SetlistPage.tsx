@@ -37,11 +37,11 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
   const [errors, setErrors] = useState<Partial<SetlistFormData>>({});
 
   useEffect(() => {
-    if (!setlistLoading && !initialized) {
+    if (!setlistLoading && !initialized && !setlistError) {
       setItems(sourceItems);
       setInitialized(true);
     }
-  }, [sourceItems, setlistLoading, initialized]);
+  }, [sourceItems, setlistLoading, setlistError, initialized]);
 
   const canEdit = userRole === "admin" || userRole === "ministro";
 
