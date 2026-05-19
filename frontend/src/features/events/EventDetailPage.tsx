@@ -181,8 +181,9 @@ export function EventDetailPage({
             }
           : prev,
       );
-    } catch {
-      // button is only shown for authorized users on unlocked events
+    } catch (err) {
+      if (!(err instanceof DomainError)) throw err;
+      // DomainError: button is only rendered for authorized users on unlocked events
     }
   }
 
@@ -234,8 +235,9 @@ export function EventDetailPage({
         event,
       );
       setScale((prev) => prev.filter((entry) => entry.id !== entryId));
-    } catch {
-      // button is only shown for authorized users on unlocked events
+    } catch (err) {
+      if (!(err instanceof DomainError)) throw err;
+      // DomainError: button is only rendered for authorized users on unlocked events
     }
   }
 

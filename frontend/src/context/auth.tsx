@@ -22,9 +22,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    new GetAdminUserUseCase(userSource).execute().then((user) => {
-      setCurrentUser(user);
-    });
+    new GetAdminUserUseCase(userSource)
+      .execute()
+      .then((user) => {
+        setCurrentUser(user);
+      })
+      .catch(() => {
+        setCurrentUser(null);
+      });
   }, [userSource]);
 
   const value = useMemo<AuthContextValue>(

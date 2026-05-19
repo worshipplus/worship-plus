@@ -1,6 +1,10 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
-import type { UserRole, SetlistItem, SetlistFormData } from "../../types/setlist";
+import type {
+  UserRole,
+  SetlistItem,
+  SetlistFormData,
+} from "../../types/setlist";
 
 const YOUTUBE_REGEX =
   /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
@@ -10,7 +14,7 @@ export class AddSetlistItemUseCase {
     if (callerRole !== "admin" && callerRole !== "ministro") {
       throw new DomainError(
         DomainErrorCode.UNAUTHORIZED_SETLIST,
-        "Sem privilégio para editar o Setlist.",
+        "Sem privilégio para adicionar item ao Setlist.",
       );
     }
     if (!command.title.trim()) {

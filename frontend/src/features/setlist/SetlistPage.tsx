@@ -102,8 +102,9 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
     try {
       new RemoveSetlistItemUseCase().execute(userRole);
       setItems((prev) => prev.filter((item) => item.id !== id));
-    } catch {
-      // button is only shown for authorized users; error is swallowed silently
+    } catch (err) {
+      if (!(err instanceof DomainError)) throw err;
+      // DomainError: button is only rendered for authorized users; safe to ignore
     }
   }
 
