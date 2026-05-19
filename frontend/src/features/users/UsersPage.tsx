@@ -56,7 +56,11 @@ function validate(data: UserFormData): FormErrors {
 
 export function UsersPage() {
   const { currentUser } = useAuth();
-  const { data: sourceUsers } = useGetAllUsers();
+  const {
+    data: sourceUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useGetAllUsers();
   const [users, setUsers] = useState<User[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
@@ -66,11 +70,11 @@ export function UsersPage() {
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
-    if (!initialized && sourceUsers.length > 0) {
+    if (!usersLoading && !initialized) {
       setUsers(sourceUsers);
       setInitialized(true);
     }
-  }, [sourceUsers, initialized]);
+  }, [sourceUsers, usersLoading, initialized]);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -175,46 +179,59 @@ export function UsersPage() {
         </header>
 
         {/* User List */}
-        <ul className="grid gap-3" role="list">
-          {users.map((user) => (
-            <li key={user.id} className="glass-card p-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="grid gap-0.5 min-w-0">
-                  <span
-                    className="font-semibold truncate"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {user.name}
-                  </span>
-                  <span
-                    className="text-sm truncate"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
-                    {user.email}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <RoleBadge role={user.role} />
-                  {isAdmin && user.id !== currentUser?.id && (
-                    <button
-                      type="button"
-                      onClick={() => openEditPrivilege(user)}
-                      aria-label={`Editar Privilégio de ${user.name}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-opacity hover:opacity-70"
-                      style={{
-                        background: "var(--color-surface)",
-                        color: "var(--color-text-secondary)",
-                      }}
+        {usersLoading ? (
+          <p
+            className="text-center py-8 text-sm"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Carregando usuários...
+          </p>
+        ) : usersError ? (
+          <p className="text-center py-8 text-sm text-red-500" role="alert">
+            Erro ao carregar usuários.
+          </p>
+        ) : (
+          <ul className="grid gap-3" role="list">
+            {users.map((user) => (
+              <li key={user.id} className="glass-card p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="grid gap-0.5 min-w-0">
+                    <span
+                      className="font-semibold truncate"
+                      style={{ fontFamily: "var(--font-display)" }}
                     >
-                      <Pencil size={12} />
-                      Editar Privilégio
-                    </button>
-                  )}
+                      {user.name}
+                    </span>
+                    <span
+                      className="text-sm truncate"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      {user.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <RoleBadge role={user.role} />
+                    {isAdmin && user.id !== currentUser?.id && (
+                      <button
+                        type="button"
+                        onClick={() => openEditPrivilege(user)}
+                        aria-label={`Editar Privilégio de ${user.name}`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-opacity hover:opacity-70"
+                        style={{
+                          background: "var(--color-surface)",
+                          color: "var(--color-text-secondary)",
+                        }}
+                      >
+                        <Pencil size={12} />
+                        Editar Privilégio
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Modal: Novo Usuário */}

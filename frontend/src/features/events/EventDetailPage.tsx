@@ -133,7 +133,16 @@ export function EventDetailPage({
   }
 
   if (!event) {
-    return null;
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p
+          className="text-center text-sm"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          Carregando evento...
+        </p>
+      </div>
+    );
   }
 
   const canEditEventSetlist =
