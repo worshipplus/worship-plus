@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import {
+  BrowserRouter,
+  HashRouter,
+  Routes,
+  Route,
+  NavLink,
+} from "react-router-dom";
 import { useTheme } from "./context/theme";
 import { useAuth } from "./context/auth";
 import { SetlistPage } from "./features/setlist";
@@ -60,9 +66,11 @@ function App() {
   const userRole = currentUser?.role ?? "team-member";
   const currentUserName = currentUser?.name ?? "";
   const currentUserId = currentUser?.id ?? "";
+  const Router =
+    import.meta.env.VITE_ROUTER_MODE === "hash" ? HashRouter : BrowserRouter;
 
   return (
-    <BrowserRouter>
+    <Router basename={import.meta.env.BASE_URL}>
       <div className="min-h-screen grid grid-rows-[auto_1fr] gap-4 p-4 sm:p-6">
         <Nav />
         <main>
@@ -103,7 +111,7 @@ function App() {
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
 
