@@ -1,0 +1,176 @@
+openapi: 3.1.0
+info:
+  title: Worship+ Event Role Assignment API
+  version: 1.0.0
+  description: |
+    Contrato para atribuicao e edicao de papel de integrante na Escala de Event.
+
+    Regras centrais:
+    - Integrante executa apenas um papel por Event.
+    - Papel principal e sugestao inicial.
+    - Edicao depende de Privilégio.
+
+servers:
+  - url: https://api.worshipplus.local/v1
+    description: Mock/BFF local (MVP)
+
+tags:
+  - name: EventScaleRoles
+    description: Gestao de papel de integrante por Event
+
+paths:
+  /events/{eventId}/scale-members/{memberId}/role:
+    post:
+      operationId: assignMemberRole
+      summary: Atribui papel para integrante na Escala do Event
+      tags: [EventScaleRoles]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  description: Papel executado pelo integrante no Event
+                source:
+                  type: string
+                  enum: [principal, secondary, manual]
+                  description: Origem da definicao de papel
+      responses:
+        '200':
+          description: Papel atribuido com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventScaleMemberRole'
+        '400':
+          description: Erro de validacao de dominio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+              examples:
+                invalid_role:
+                  value:
+                    code: DOMAIN-013
+                    message: Papel invalido para o integrante
+        '403':
+          description: Usuario sem privilegio para a acao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+              examples:
+                forbidden_scale_edit:
+                  value:
+                    code: DOMAIN-005
+                    message: Sem privilegio para editar Escala
+        '409':
+          description: Event bloqueado para mutacao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+              examples:
+                locked_event:
+                  value:
+                    code: DOMAIN-014
+                    message: Event Locked nao aceita alteracoes
+
+    patch:
+      operationId: updateMemberRole
+      summary: Atualiza papel do integrante na Escala do Event
+      tags: [EventScaleRoles]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Papel atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventScaleMemberRole'
+        '400':
+          description: Erro de validacao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+        '403':
+          description: Erro de autorizacao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+        '409':
+          description: Event Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainError'
+
+components:
+  schemas:
+    EventScaleMemberRole:
+      type: object
+      required: [eventId, memberId, role]
+      properties:
+        eventId:
+          type: string
+        memberId:
+          type: string
+        role:
+          type: string
+        source:
+          type: string
+          enum: [principal, secondary, manual]
+        updatedAt:
+          type: string
+          format: date-time
+
+    DomainError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Codigo estavel de erro de dominio
+        message:
+          type: string
+          description: Mensagem amigavel para camada de apresentacao
+        details:
+          type: object
+          additionalProperties: true

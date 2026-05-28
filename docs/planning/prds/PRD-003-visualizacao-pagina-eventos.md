@@ -54,3 +54,24 @@ Sem uma visão central de eventos, membros e líderes perdem contexto de datas, 
 - Tela de listagem de eventos.
 - Tela de detalhe de evento (read-only MVP).
 - Fluxo de navegação entre lista e detalhe.
+
+## 12. Atualizacao de Regras de Negocio (2026-05)
+
+Contexto da atualizacao:
+- O integrante pode possuir multiplas habilidades no cadastro do projeto (ex.: violao e voz; piano e bateria).
+- O integrante precisa ter um papel principal e pode ter papeis secundarios.
+- Em cada Event, o integrante executa apenas um papel na Escala.
+
+Novas regras aplicadas ao dominio:
+1. Cadastro de integrante deve permitir definir 1 papel principal e 0..N papeis secundarios.
+2. Papel principal do integrante deve ser sugerido por padrao na montagem da Escala do Event.
+3. Papel definido na Escala pode ser alterado durante o planejamento do Event, respeitando Privilégio.
+4. Alteracao de papel na Escala deve ser permitida apenas para admin ou Owner/Ministro responsavel pelo Event.
+5. Team Member pode informar disponibilidade de papeis no cadastro, mas nao pode alterar papeis de terceiros na Escala.
+6. Event Locked nao aceita mudanca de papel na Escala.
+
+Critérios de aceite adicionais:
+- [ ] Cadastro de integrante suporta papel principal e papeis secundarios.
+- [ ] Escala do Event atribui apenas um papel por integrante no mesmo Event.
+- [ ] Papel principal e sugerido automaticamente na insercao do integrante na Escala.
+- [ ] Fluxo de edicao de papel na Escala respeita Privilégio e bloqueio de Event Locked.
