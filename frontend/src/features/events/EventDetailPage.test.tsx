@@ -1,13 +1,61 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { EventDetailPage } from "./EventDetailPage";
-import { mockEvents } from "../../mocks/eventMocks";
+import { EVENT_DATA } from "../../adapters/implementations/MockEventSource";
+import { SETLIST_DATA } from "../../adapters/implementations/MockSetlistSource";
+import { USER_DATA } from "../../adapters/implementations/MockUserSource";
+
+vi.mock("../../hooks/useGetEventsByOwner", () => ({
+  useGetEventsByOwner: vi.fn(),
+}));
+vi.mock("../../hooks/useSearchSetlist", () => ({
+  useSearchSetlist: vi.fn(),
+}));
+vi.mock("../../hooks/useGetAllUsers", () => ({
+  useGetAllUsers: vi.fn(),
+}));
+
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+
+const mockUseGetEventsByOwner = vi.mocked(useGetEventsByOwner);
+const mockUseSearchSetlist = vi.mocked(useSearchSetlist);
+const mockUseGetAllUsers = vi.mocked(useGetAllUsers);
+
+beforeEach(() => {
+  mockUseGetEventsByOwner.mockReturnValue({
+    data: EVENT_DATA,
+    loading: false,
+    error: null,
+  });
+  mockUseSearchSetlist.mockImplementation((query = "") => ({
+    data: query.trim()
+      ? SETLIST_DATA.filter(
+          (item) =>
+            item.title.toLowerCase().includes(query.trim().toLowerCase()) ||
+            item.author.toLowerCase().includes(query.trim().toLowerCase()),
+        )
+      : SETLIST_DATA,
+    loading: false,
+    error: null,
+  }));
+  mockUseGetAllUsers.mockReturnValue({
+    data: USER_DATA,
+    loading: false,
+    error: null,
+  });
+});
 
 function renderDetail(
   id: string,
-  props?: { role?: "admin" | "ministro" | "team-member"; name?: string },
+  props?: {
+    role?: "admin" | "ministro" | "team-member";
+    name?: string;
+    id?: string;
+  },
 ) {
   return render(
     <MemoryRouter initialEntries={[`/events/${id}`]}>
@@ -18,6 +66,7 @@ function renderDetail(
             <EventDetailPage
               currentUserRole={props?.role}
               currentUserName={props?.name}
+              currentUserId={props?.id}
             />
           }
         />
@@ -28,7 +77,7 @@ function renderDetail(
 
 describe("EventDetailPage", () => {
   it("renderiza detalhe de evento encontrado", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(screen.getByText(event.title)).toBeInTheDocument();
     expect(screen.getByText(event.owner)).toBeInTheDocument();
@@ -36,7 +85,7 @@ describe("EventDetailPage", () => {
   });
 
   it("exibe o Event Setlist com as músicas do evento", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(
       screen.getByRole("heading", { name: /event setlist/i }),
@@ -54,13 +103,15 @@ describe("EventDetailPage", () => {
   });
 
   it("exibe botão voltar para evento encontrado", () => {
-    const event = mockEvents[0];
+    const event = EVENT_DATA[0];
     renderDetail(event.id);
     expect(screen.getByRole("button", { name: /voltar/i })).toBeInTheDocument();
   });
 
   it("exibe mensagem quando o setlist está vazio", () => {
-    const draftEvent = mockEvents.find((e) => e.eventSetlist.length === 0);
+    const draftEvent = EVENT_DATA.find(
+      (event) => event.eventSetlist.length === 0,
+    );
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
     renderDetail(draftEvent.id, { role: "admin", name: "Ana Lima" });
@@ -69,8 +120,8 @@ describe("EventDetailPage", () => {
 
   it("admin pode adicionar e remover música no Event Setlist", async () => {
     const user = userEvent.setup();
-    const event = mockEvents[0];
-    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+    const event = EVENT_DATA[1]; // scheduled event owned by Ana Lima (u1)
+    renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     await user.click(screen.getByRole("button", { name: /adicionar música/i }));
     await user.type(
@@ -88,28 +139,37 @@ describe("EventDetailPage", () => {
   });
 
   it("owner do Event pode editar Event Setlist", () => {
-    const event = mockEvents[0];
-    renderDetail(event.id, { role: "ministro", name: event.owner });
+    // EVENT_DATA[3] is a scheduled event owned by Carlos Souza (u2)
+    const event = EVENT_DATA[3];
+    renderDetail(event.id, {
+      role: "ministro",
+      name: event.owner,
+      id: event.owner_id,
+    });
     expect(
       screen.getByRole("button", { name: /adicionar música/i }),
     ).toBeInTheDocument();
   });
 
   it("usuário sem privilégio não pode editar Event Setlist", () => {
-    const event = mockEvents[0];
-    renderDetail(event.id, { role: "team-member", name: "Fernanda Oliveira" });
+    const event = EVENT_DATA[0];
+    renderDetail(event.id, {
+      role: "team-member",
+      name: "Fernanda Oliveira",
+      id: "u3",
+    });
     expect(
       screen.queryByRole("button", { name: /adicionar música/i }),
     ).not.toBeInTheDocument();
   });
 
   it("team-member sem ownership não pode visualizar Event em rascunho", () => {
-    const draftEvent = mockEvents.find((item) => item.status === "draft");
+    const draftEvent = EVENT_DATA.find((item) => item.status === "draft");
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
     renderDetail(draftEvent.id, { role: "team-member", name: "Ana Lima" });
     expect(screen.getByRole("alert")).toHaveTextContent(
-      /não tem permissão para visualizar este Event em rascunho/i,
+      /não tem permissão para visualizar este evento em rascunho/i,
     );
     expect(
       screen.queryByRole("heading", { name: /event setlist/i }),
@@ -117,7 +177,7 @@ describe("EventDetailPage", () => {
   });
 
   it("team-member owner pode visualizar Event em rascunho", () => {
-    const draftEvent = mockEvents.find((item) => item.status === "draft");
+    const draftEvent = EVENT_DATA.find((item) => item.status === "draft");
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
     renderDetail(draftEvent.id, {
@@ -131,8 +191,8 @@ describe("EventDetailPage", () => {
   });
 
   it("permite reordenar músicas por drag-and-drop", () => {
-    const event = mockEvents[0];
-    renderDetail(event.id, { role: "admin", name: "Ana Lima" });
+    const event = EVENT_DATA[0];
+    renderDetail(event.id, { role: "admin", name: "Ana Lima", id: "u1" });
 
     const initialFirstSong = event.eventSetlist[0].title;
     const secondSong = event.eventSetlist[1].title;

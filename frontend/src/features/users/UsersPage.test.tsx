@@ -1,16 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { UsersPage } from "./UsersPage";
-import { mockUsers } from "../../mocks/userMocks";
+import { USER_DATA } from "../../adapters/implementations/MockUserSource";
 import type { User } from "../../types/user";
 
 vi.mock("../../context/auth", () => ({
   useAuth: vi.fn(),
 }));
 
+vi.mock("../../hooks/useGetAllUsers", () => ({
+  useGetAllUsers: vi.fn(),
+}));
+
 import { useAuth } from "../../context/auth";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 
 const mockUseAuth = vi.mocked(useAuth);
+const mockUseGetAllUsers = vi.mocked(useGetAllUsers);
 
 function makeSetCurrentUser() {
   return vi.fn();
@@ -23,12 +29,17 @@ function setupUser(user: User | null) {
   });
 }
 
-const adminUser = mockUsers.find((u) => u.role === "admin")!;
-const ministroUser = mockUsers.find((u) => u.role === "ministro")!;
-const memberUser = mockUsers.find((u) => u.role === "team-member")!;
+const adminUser = USER_DATA.find((u) => u.role === "admin")!;
+const ministroUser = USER_DATA.find((u) => u.role === "ministro")!;
+const memberUser = USER_DATA.find((u) => u.role === "team-member")!;
 
 beforeEach(() => {
   setupUser(adminUser);
+  mockUseGetAllUsers.mockReturnValue({
+    data: USER_DATA,
+    loading: false,
+    error: null,
+  });
 });
 
 describe("UsersPage — Admin", () => {
@@ -46,7 +57,7 @@ describe("UsersPage — Admin", () => {
     });
     expect(editButtons.length).toBeGreaterThan(0);
     // Admin does not see edit button for themselves
-    expect(editButtons.length).toBe(mockUsers.length - 1);
+    expect(editButtons.length).toBe(USER_DATA.length - 1);
   });
 
   it("Admin não vê botão Editar Privilégio para si mesmo", () => {
@@ -152,7 +163,7 @@ describe("UsersPage — Cadastro de novo usuário", () => {
 describe("UsersPage — Lista de usuários", () => {
   it("Exibe todos os usuários mockados com nome, email e badge de privilégio", () => {
     render(<UsersPage />);
-    for (const user of mockUsers) {
+    for (const user of USER_DATA) {
       expect(screen.getByText(user.name)).toBeInTheDocument();
       expect(screen.getByText(user.email)).toBeInTheDocument();
     }

@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import {
+  BrowserRouter,
+  HashRouter,
+  Routes,
+  Route,
+  NavLink,
+} from "react-router-dom";
 import { useTheme } from "./context/theme";
 import { useAuth } from "./context/auth";
 import { SetlistPage } from "./features/setlist";
@@ -59,48 +65,59 @@ function App() {
   const { currentUser } = useAuth();
   const userRole = currentUser?.role ?? "team-member";
   const currentUserName = currentUser?.name ?? "";
+  const currentUserId = currentUser?.id ?? "";
+  const shouldUseHashRouter = import.meta.env.VITE_ROUTER_MODE === "hash";
+
+  const appContent = (
+    <div className="min-h-screen grid grid-rows-[auto_1fr] gap-4 p-4 sm:p-6">
+      <Nav />
+      <main>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <EventsPage
+                userRole={userRole}
+                currentUserName={currentUserName}
+              />
+            }
+          />
+          <Route
+            path="/setlist"
+            element={<SetlistPage userRole={userRole} />}
+          />
+          <Route
+            path="/events"
+            element={
+              <EventsPage
+                userRole={userRole}
+                currentUserName={currentUserName}
+              />
+            }
+          />
+          <Route
+            path="/events/:id"
+            element={
+              <EventDetailPage
+                currentUserRole={userRole}
+                currentUserName={currentUserName}
+                currentUserId={currentUserId}
+              />
+            }
+          />
+          <Route path="/users" element={<UsersPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
+
+  if (shouldUseHashRouter) {
+    return <HashRouter>{appContent}</HashRouter>;
+  }
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen grid grid-rows-[auto_1fr] gap-4 p-4 sm:p-6">
-        <Nav />
-        <main>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <EventsPage
-                  userRole={userRole}
-                  currentUserName={currentUserName}
-                />
-              }
-            />
-            <Route
-              path="/setlist"
-              element={<SetlistPage userRole={userRole} />}
-            />
-            <Route
-              path="/events"
-              element={
-                <EventsPage
-                  userRole={userRole}
-                  currentUserName={currentUserName}
-                />
-              }
-            />
-            <Route
-              path="/events/:id"
-              element={
-                <EventDetailPage
-                  currentUserRole={userRole}
-                  currentUserName={currentUserName}
-                />
-              }
-            />
-            <Route path="/users" element={<UsersPage />} />
-          </Routes>
-        </main>
-      </div>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      {appContent}
     </BrowserRouter>
   );
 }

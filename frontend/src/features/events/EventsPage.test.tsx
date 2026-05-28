@@ -1,9 +1,36 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { EventsPage } from "./EventsPage";
-import { mockEvents } from "../../mocks/eventMocks";
+import { EVENT_DATA } from "../../adapters/implementations/MockEventSource";
+import { USER_DATA } from "../../adapters/implementations/MockUserSource";
+
+vi.mock("../../hooks/useGetEventsByOwner", () => ({
+  useGetEventsByOwner: vi.fn(),
+}));
+vi.mock("../../hooks/useGetAllUsers", () => ({
+  useGetAllUsers: vi.fn(),
+}));
+
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+
+const mockUseGetEventsByOwner = vi.mocked(useGetEventsByOwner);
+const mockUseGetAllUsers = vi.mocked(useGetAllUsers);
+
+beforeEach(() => {
+  mockUseGetEventsByOwner.mockReturnValue({
+    data: EVENT_DATA,
+    loading: false,
+    error: null,
+  });
+  mockUseGetAllUsers.mockReturnValue({
+    data: USER_DATA,
+    loading: false,
+    error: null,
+  });
+});
 
 function renderEventsPage({
   userRole = "admin",
@@ -22,7 +49,7 @@ function renderEventsPage({
 describe("EventsPage", () => {
   it("renderiza a lista de eventos com dados mockados", () => {
     renderEventsPage();
-    for (const event of mockEvents) {
+    for (const event of EVENT_DATA) {
       expect(screen.getByText(event.title)).toBeInTheDocument();
     }
   });
@@ -31,7 +58,7 @@ describe("EventsPage", () => {
     renderEventsPage();
     const todoBtn = screen.getByRole("button", { name: /todos/i });
     fireEvent.click(todoBtn);
-    for (const event of mockEvents) {
+    for (const event of EVENT_DATA) {
       expect(screen.getByText(event.title)).toBeInTheDocument();
     }
   });
@@ -42,8 +69,8 @@ describe("EventsPage", () => {
     fireEvent.click(proximosBtn);
 
     const now = new Date();
-    const futureEvents = mockEvents.filter((e) => new Date(e.date) >= now);
-    const pastEvents = mockEvents.filter((e) => new Date(e.date) < now);
+    const futureEvents = EVENT_DATA.filter((e) => new Date(e.date) >= now);
+    const pastEvents = EVENT_DATA.filter((e) => new Date(e.date) < now);
 
     for (const event of futureEvents) {
       expect(screen.getByText(event.title)).toBeInTheDocument();
@@ -55,8 +82,7 @@ describe("EventsPage", () => {
 
   it("card de evento contém título e nome do owner", () => {
     renderEventsPage();
-    // Pick an event with a unique owner name in the mock data
-    const uniqueOwnerEvent = mockEvents.find((e) => e.owner === "Ana Oliveira");
+    const uniqueOwnerEvent = EVENT_DATA.find((e) => e.owner === "Ana Lima");
     expect(uniqueOwnerEvent).toBeDefined();
     if (!uniqueOwnerEvent) return;
     expect(screen.getByText(uniqueOwnerEvent.title)).toBeInTheDocument();
@@ -90,7 +116,7 @@ describe("EventsPage", () => {
   it("team-member visualiza Event em rascunho quando for o Owner", () => {
     renderEventsPage({
       userRole: "team-member",
-      currentUserName: "Paulo Mendes",
+      currentUserName: "Carlos Souza",
     });
     expect(screen.getByText("Culto de Células — Rascunho")).toBeInTheDocument();
   });
@@ -111,11 +137,11 @@ describe("EventsPage", () => {
       within(dialog).getByRole("button", { name: /^criar event$/i }),
     );
 
-    expect(screen.getByText("Novo Event de Teste")).toBeInTheDocument();
-    expect(screen.getByText("Ana Lima")).toBeInTheDocument();
     const newEventCard = screen.getByRole("button", {
       name: /ver detalhes de novo event de teste/i,
     });
+    expect(screen.getByText("Novo Event de Teste")).toBeInTheDocument();
+    expect(within(newEventCard).getByText("Ana Lima")).toBeInTheDocument();
     expect(within(newEventCard).getByText("Rascunho")).toBeInTheDocument();
   });
 
@@ -136,7 +162,12 @@ describe("EventsPage", () => {
       within(dialog).getByRole("button", { name: /^criar event$/i }),
     );
 
+    const createdEventCard = screen.getByRole("button", {
+      name: /ver detalhes de event com owner alterado/i,
+    });
     expect(screen.getByText("Event com Owner Alterado")).toBeInTheDocument();
-    expect(screen.getByText("Carlos Souza")).toBeInTheDocument();
+    expect(
+      within(createdEventCard).getByText("Carlos Souza"),
+    ).toBeInTheDocument();
   });
 });

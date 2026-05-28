@@ -1,12 +1,28 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { SetlistPage } from "./SetlistPage";
-import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { SETLIST_DATA } from "../../adapters/implementations/MockSetlistSource";
+
+vi.mock("../../hooks/useSearchSetlist", () => ({
+  useSearchSetlist: vi.fn(),
+}));
+
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+
+const mockUseSearchSetlist = vi.mocked(useSearchSetlist);
+
+beforeEach(() => {
+  mockUseSearchSetlist.mockReturnValue({
+    data: SETLIST_DATA,
+    loading: false,
+    error: null,
+  });
+});
 
 describe("SetlistPage", () => {
   it("renderiza a lista com dados mockados", () => {
     render(<SetlistPage userRole="admin" />);
-    for (const item of mockSetlistItems) {
+    for (const item of SETLIST_DATA) {
       expect(screen.getByText(item.title)).toBeInTheDocument();
     }
   });
@@ -84,7 +100,7 @@ describe("SetlistPage", () => {
 
   it("remove item da lista ao clicar em remover", () => {
     render(<SetlistPage userRole="admin" />);
-    const firstItem = mockSetlistItems[0];
+    const firstItem = SETLIST_DATA[0];
     expect(screen.getByText(firstItem.title)).toBeInTheDocument();
 
     const removeButtons = screen.getAllByRole("button", { name: /^remover /i });
@@ -118,12 +134,10 @@ describe("SetlistPage", () => {
     render(<SetlistPage userRole="admin" />);
     const searchInput = screen.getByRole("searchbox");
     fireEvent.change(searchInput, {
-      target: { value: mockSetlistItems[0].title },
+      target: { value: SETLIST_DATA[0].title },
     });
 
-    expect(screen.getByText(mockSetlistItems[0].title)).toBeInTheDocument();
-    expect(
-      screen.queryByText(mockSetlistItems[1].title),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText(SETLIST_DATA[0].title)).toBeInTheDocument();
+    expect(screen.queryByText(SETLIST_DATA[1].title)).not.toBeInTheDocument();
   });
 });

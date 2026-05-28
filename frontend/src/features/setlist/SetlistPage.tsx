@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExternalLink, Plus, Pencil, Trash2, X, Music } from "lucide-react";
 import type {
   UserRole,
   SetlistItem,
   SetlistFormData,
 } from "../../types/setlist";
-import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { useUpsertSetlistItem } from "../../hooks/useUpsertSetlistItem";
+import { useRemoveSetlistItem } from "../../hooks/useRemoveSetlistItem";
 
 interface SetlistPageProps {
   userRole?: UserRole;
 }
-
-const YOUTUBE_REGEX =
-  /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
 
 const emptyForm: SetlistFormData = {
   title: "",
@@ -21,19 +20,30 @@ const emptyForm: SetlistFormData = {
   youtubeUrl: "",
 };
 
-function isEditable(role: UserRole): boolean {
-  return role === "admin" || role === "ministro";
-}
-
 export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
-  const [items, setItems] = useState<SetlistItem[]>(mockSetlistItems);
+  const {
+    data: sourceItems,
+    loading: setlistLoading,
+    error: setlistError,
+  } = useSearchSetlist("");
+  const { upsert } = useUpsertSetlistItem(userRole);
+  const { remove } = useRemoveSetlistItem(userRole);
+  const [items, setItems] = useState<SetlistItem[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SetlistFormData>(emptyForm);
   const [errors, setErrors] = useState<Partial<SetlistFormData>>({});
 
-  const canEdit = isEditable(userRole);
+  useEffect(() => {
+    if (!setlistLoading && !initialized && !setlistError) {
+      setItems(sourceItems);
+      setInitialized(true);
+    }
+  }, [sourceItems, setlistLoading, setlistError, initialized]);
+
+  const canEdit = userRole === "admin" || userRole === "ministro";
 
   const filtered = items.filter(
     (item) =>
@@ -67,53 +77,27 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
     setErrors({});
   }
 
-  function validate(data: SetlistFormData): Partial<SetlistFormData> {
-    const errs: Partial<SetlistFormData> = {};
-    if (!data.title.trim()) errs.title = "Título é obrigatório.";
-    if (!data.author.trim()) errs.author = "Autor é obrigatório.";
-    if (!data.youtubeUrl.trim()) {
-      errs.youtubeUrl = "Link do YouTube é obrigatório.";
-    } else if (!YOUTUBE_REGEX.test(data.youtubeUrl.trim())) {
-      errs.youtubeUrl = "Insira um link válido do YouTube.";
-    }
-    return errs;
-  }
-
   function handleSave() {
-    const errs = validate(form);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+    const result = upsert(editingId, form);
+    if (!result.ok) {
+      setErrors({ [result.field]: result.message });
       return;
     }
     if (editingId) {
       setItems((prev) =>
         prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                title: form.title,
-                author: form.author,
-                key: form.key || undefined,
-                youtubeUrl: form.youtubeUrl,
-              }
-            : item,
+          item.id === editingId ? { ...item, ...result.item } : item,
         ),
       );
     } else {
-      const newItem: SetlistItem = {
-        id: String(Date.now()),
-        title: form.title,
-        author: form.author,
-        key: form.key || undefined,
-        youtubeUrl: form.youtubeUrl,
-        createdAt: new Date().toISOString(),
-      };
-      setItems((prev) => [newItem, ...prev]);
+      setItems((prev) => [result.item as SetlistItem, ...prev]);
     }
     closeForm();
   }
 
   function handleRemove(id: string) {
+    const result = remove();
+    if (!result.ok) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
   }
 
@@ -181,7 +165,18 @@ export function SetlistPage({ userRole = "team-member" }: SetlistPageProps) {
         </div>
 
         {/* List */}
-        {filtered.length === 0 ? (
+        {setlistLoading ? (
+          <p
+            className="text-center py-8 text-sm"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Carregando músicas...
+          </p>
+        ) : setlistError ? (
+          <p className="text-center py-8 text-sm text-red-500" role="alert">
+            Erro ao carregar músicas. Tente novamente.
+          </p>
+        ) : filtered.length === 0 ? (
           <p
             className="text-center py-8 text-sm"
             style={{ color: "var(--color-text-secondary)" }}

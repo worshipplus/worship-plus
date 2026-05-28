@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -13,12 +13,18 @@ import {
   X,
 } from "lucide-react";
 import type {
+  Event,
   EventStatus,
   UserRole,
   EventSetlistItem,
+  ScaleEntry,
 } from "../../types/event";
-import { mockEvents } from "../../mocks/eventMocks";
-import { mockSetlistItems } from "../../mocks/setlistMocks";
+import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
+import { useSearchSetlist } from "../../hooks/useSearchSetlist";
+import { useGetAllUsers } from "../../hooks/useGetAllUsers";
+import { ScaleSection } from "./ScaleSection";
+import { useEventSetlistMutations } from "../../hooks/useEventSetlistMutations";
+import { useScaleMutations } from "../../hooks/useScaleMutations";
 import { canViewEvent } from "./permissions";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
@@ -63,29 +69,69 @@ function isSongInEventSetlist(
   );
 }
 
-function generateItemId(songId: string): string {
-  const randomUUID = globalThis.crypto?.randomUUID?.();
-  return randomUUID ? `${songId}-${randomUUID}` : `${songId}-${Date.now()}`;
-}
-
 interface EventDetailPageProps {
   currentUserRole?: UserRole;
   currentUserName?: string;
+  currentUserId?: string;
 }
 
 export function EventDetailPage({
   currentUserRole = "team-member",
   currentUserName = "",
+  currentUserId = "",
 }: EventDetailPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(mockEvents.find((item) => item.id === id));
+  const {
+    data: allEvents,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useGetEventsByOwner();
+  const { data: allUsers } = useGetAllUsers();
+  const { addSong, removeSong } = useEventSetlistMutations(
+    currentUserRole,
+    currentUserName,
+  );
+  const { addToScale, removeFromScale } = useScaleMutations(
+    currentUserRole,
+    currentUserId,
+    allUsers,
+  );
   const [search, setSearch] = useState("");
+  const { data: filteredSetlist } = useSearchSetlist(search);
+  const [event, setEvent] = useState<Event | undefined>(undefined);
   const [showSongModal, setShowSongModal] = useState(false);
+  const [songModalError, setSongModalError] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [scale, setScale] = useState<ScaleEntry[]>([]);
 
-  if (!event) {
+  useEffect(() => {
+    const found = allEvents.find((item) => item.id === id);
+    setEvent(found);
+    setScale(found?.scale ?? []);
+  }, [allEvents, id]);
+
+  if (!eventsLoading && eventsError) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p className="text-center text-sm text-red-500" role="alert">
+          Erro ao carregar evento. Tente novamente.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/events")}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-opacity hover:opacity-70"
+          style={{ color: "var(--color-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Voltar para Eventos
+        </button>
+      </div>
+    );
+  }
+
+  if (!eventsLoading && !eventsError && !event) {
     return (
       <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
         <p
@@ -108,6 +154,19 @@ export function EventDetailPage({
     );
   }
 
+  if (!event) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p
+          className="text-center text-sm"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          Carregando evento...
+        </p>
+      </div>
+    );
+  }
+
   const hasEventVisibility = canViewEvent(
     event,
     currentUserRole,
@@ -122,7 +181,7 @@ export function EventDetailPage({
           style={{ color: "var(--color-text-secondary)" }}
           role="alert"
         >
-          Você não tem permissão para visualizar este Event em rascunho.
+          Você não tem permissão para visualizar este evento em rascunho.
         </p>
         <button
           type="button"
@@ -138,43 +197,37 @@ export function EventDetailPage({
   }
 
   const canEditEventSetlist =
-    currentUserRole === "admin" || event.owner === currentUserName;
+    event.status !== "locked" &&
+    (currentUserRole === "admin" || event.owner === currentUserName);
 
-  const filteredSetlist = mockSetlistItems.filter((song) => {
-    const query = search.trim().toLowerCase();
-    if (!query) return true;
-    return (
-      song.title.toLowerCase().includes(query) ||
-      song.author.toLowerCase().includes(query)
-    );
-  });
+  const canEditScale =
+    event.status !== "locked" &&
+    (currentUserRole === "admin" || currentUserId === event.owner_id);
+
+  const usersNotInScale = allUsers.filter(
+    (user) => !scale.some((entry) => entry.userId === user.id),
+  );
 
   function handleAddSong(songId: string) {
     if (!event) return;
-    const selectedSong = mockSetlistItems.find((song) => song.id === songId);
+    const selectedSong = filteredSetlist.find((song) => song.id === songId);
     if (!selectedSong) return;
-    const alreadyAdded = isSongInEventSetlist(event.eventSetlist, selectedSong);
-    if (alreadyAdded) return;
-
-    const newSong: EventSetlistItem = {
-      id: generateItemId(songId),
-      title: selectedSong.title,
-      author: selectedSong.author,
-      key: selectedSong.key,
-      youtubeUrl: selectedSong.youtubeUrl,
-    };
-
+    const result = addSong(event, selectedSong);
+    if (!result.ok) {
+      setSongModalError(result.message);
+      return;
+    }
     setEvent((prev) =>
       prev
-        ? {
-            ...prev,
-            eventSetlist: [...prev.eventSetlist, newSong],
-          }
+        ? { ...prev, eventSetlist: [...prev.eventSetlist, result.item] }
         : prev,
     );
+    setSongModalError(null);
   }
 
   function handleRemoveSong(songId: string) {
+    const result = removeSong(event);
+    if (!result.ok) return;
     setEvent((prev) =>
       prev
         ? {
@@ -202,6 +255,29 @@ export function EventDetailPage({
     });
     setDragIndex(null);
     setDragOverIndex(null);
+  }
+
+  function handleAddToScale(
+    userId: string,
+    userName: string,
+    papel: string,
+  ): string | null {
+    const result = addToScale(event, userId, userName, papel);
+    if (!result.ok) return result.message;
+    setScale((prev) => [...prev, result.entry]);
+    return null;
+  }
+
+  function handleRemoveFromScale(entryId: string) {
+    const result = removeFromScale(event);
+    if (!result.ok) return;
+    setScale((prev) => prev.filter((entry) => entry.id !== entryId));
+  }
+
+  function handleEditPapel(entryId: string, papel: string) {
+    setScale((prev) =>
+      prev.map((entry) => (entry.id === entryId ? { ...entry, papel } : entry)),
+    );
   }
 
   return (
@@ -298,7 +374,10 @@ export function EventDetailPage({
               {canEditEventSetlist && (
                 <button
                   type="button"
-                  onClick={() => setShowSongModal(true)}
+                  onClick={() => {
+                    setShowSongModal(true);
+                    setSongModalError(null);
+                  }}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
                   style={{
                     background: "var(--color-primary)",
@@ -428,6 +507,15 @@ export function EventDetailPage({
             )}
           </div>
         </section>
+
+        <ScaleSection
+          scale={scale}
+          canEdit={canEditScale}
+          availableUsers={usersNotInScale}
+          onAdd={handleAddToScale}
+          onRemove={handleRemoveFromScale}
+          onEditPapel={handleEditPapel}
+        />
       </div>
 
       {showSongModal && (
@@ -447,7 +535,10 @@ export function EventDetailPage({
               </h3>
               <button
                 type="button"
-                onClick={() => setShowSongModal(false)}
+                onClick={() => {
+                  setShowSongModal(false);
+                  setSongModalError(null);
+                }}
                 aria-label="Fechar busca"
                 className="p-1 rounded-full hover:opacity-70"
                 style={{ color: "var(--color-text-secondary)" }}
@@ -455,6 +546,11 @@ export function EventDetailPage({
                 <X size={18} />
               </button>
             </div>
+            {songModalError && (
+              <p className="text-xs text-red-500" role="alert">
+                {songModalError}
+              </p>
+            )}
             <input
               type="search"
               value={search}
