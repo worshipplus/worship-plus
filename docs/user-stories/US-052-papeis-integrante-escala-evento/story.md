@@ -2,7 +2,7 @@
 
 **Como** admin ou Owner/Ministro de um Event  
 **Quero** atribuir e ajustar o papel de cada integrante na Escala  
-**Para que** cada integrante execute apenas um papel por Event com controle claro de permissao
+**Para que** cada integrante execute apenas um papel por Event com controle claro de Privilégio
 
 **Bounded Context:** Worship Context (Core) + Team Context (Supporting)  
 **Prioridade:** P0 - CRITICO  
@@ -11,75 +11,75 @@
 
 ---
 
-## Criterios de Aceitacao
+## Critérios de Aceitação
 
-1. Cadastro de integrante permite 1 papel principal obrigatorio.
-2. Cadastro de integrante permite papeis secundarios opcionais sem duplicidade.
-3. Ao adicionar integrante na Escala, o papel principal e sugerido automaticamente.
+1. Cadastro de integrante permite 1 papel principal obrigatório.
+2. Cadastro de integrante permite papéis secundários opcionais sem duplicidade.
+3. Ao adicionar integrante na Escala, o papel principal é sugerido automaticamente.
 4. Cada integrante pode ter apenas 1 papel por Event.
 5. admin e Owner/Ministro do Event podem editar papel na Escala.
-6. team-member nao pode editar papel de terceiros na Escala.
-7. Event Locked bloqueia qualquer alteracao de papel na Escala.
-8. Mensagens de erro sao amigaveis e sem detalhes tecnicos internos.
+6. team-member não pode editar papel de terceiros na Escala.
+7. Event Locked bloqueia qualquer alteração de papel na Escala.
+8. Mensagens de erro são amigáveis e sem detalhes técnicos internos.
 
 ---
 
-## Regras de Negocio
+## Regras de Negócio
 
 - RB-001: Integrante possui exatamente 1 papel principal no cadastro.
-- RB-002: Integrante pode possuir 0..N papeis secundarios.
-- RB-003: Papel principal e default na atribuicao inicial da Escala.
-- RB-004: Integrante executa no maximo 1 papel por Event.
+- RB-002: Integrante pode possuir 0..N papéis secundários.
+- RB-003: Papel principal é default na atribuição inicial da Escala.
+- RB-004: Integrante executa no máximo 1 papel por Event.
 - RB-005: Somente admin ou Owner/Ministro do Event edita papel na Escala.
-- RB-006: team-member nao pode alterar papel de terceiros na Escala.
-- RB-007: Event Locked rejeita mutacao na Escala.
+- RB-006: team-member não pode alterar papel de terceiros na Escala.
+- RB-007: Event Locked rejeita mutação na Escala.
 
 ---
 
-## Eventos de Dominio
+## Eventos de Domínio
 
-| Evento | Quando disparar | Ouvintes | Acao |
+| Evento | Quando disparar | Ouvintes | Ação |
 |---|---|---|---|
 | `MemberRoleSetInEvent` | Integrante recebe papel na Escala | Event Context | Atualizar estado da Escala |
-| `MemberRoleUpdatedInEvent` | Papel da Escala e alterado | Event Context | Revalidar consistencia da Escala |
-| `RoleChangeDenied` | Usuario sem privilegio tenta editar | UI/Observabilidade | Exibir erro de autorizacao |
-| `LockedEventMutationBlocked` | Tentativa de alterar Event Locked | UI/Observabilidade | Exibir erro de estado invalido |
+| `MemberRoleUpdatedInEvent` | Papel da Escala é alterado | Event Context | Revalidar consistência da Escala |
+| `RoleChangeDenied` | Usuário sem Privilégio tenta editar | UI/Observabilidade | Exibir erro de autorização |
+| `LockedEventMutationBlocked` | Tentativa de alterar Event Locked | UI/Observabilidade | Exibir erro de estado inválido |
 
 ---
 
-## Dependencias
+## Dependências
 
-### Tecnicas
-- [ ] Fluxo de Privilégio ativo no contexto de autenticacao.
-- [ ] Use cases de Event/Escala com validacao de autorizacao e estado.
+### Técnicas
+- [ ] Fluxo de Privilégio ativo no contexto de autenticação.
+- [ ] Use cases de Event/Escala com validação de autorização e estado.
 - [ ] Hooks com mapeamento de DomainError para estado de UI.
 
 ### PRDs relacionados
-- [ ] PRD-003 - Visualizacao da Pagina de Eventos.
-- [ ] PRD-004 - Cadastro de Usuario com Privilegios.
-- [ ] PRD-006 - Papeis Principal/Secundarios e Papel Unico por Event.
+- [ ] PRD-003 - Visualização da Página de Eventos.
+- [ ] PRD-004 - Cadastro de Usuário com Privilégios.
+- [ ] PRD-006 - Papéis Principal/Secundários e Papel Único por Event.
 
 ---
 
-## Definicao de Pronto (DoD)
+## Definição de Pronto (DoD)
 
 - [ ] Regras RB-001..RB-007 implementadas.
-- [ ] Testes cobrindo permissao, validacao e Event Locked.
-- [ ] Nenhum erro de dominio tratado diretamente no componente.
+- [ ] Testes cobrindo Privilégio, validação e Event Locked.
+- [ ] Nenhum erro de domínio tratado diretamente no componente.
 - [ ] Lint, build e test:unit passando.
 - [ ] Sem schema/migration/ORM.
 
 ---
 
-## Referencias
+## Referências
 
 - **Contract API:** [contract.yaml](./contract.yaml)
 - **BDD Scenarios:** [scenarios.feature](./scenarios.feature)
-- **Testes de Aceitacao:** [acceptance-tests.md](./acceptance-tests.md)
+- **Testes de Aceitação:** [acceptance-tests.md](./acceptance-tests.md)
 - **PRD Isolado:** [PRD-006](../../planning/prds/PRD-006-papeis-principal-secundarios-escala-evento.md)
 
 ---
 
 **Criado em:** 2026-05-19  
 **Atualizado em:** 2026-05-19  
-**Responsavel:** Product Manager Agent
+**Responsável:** Product Manager Agent

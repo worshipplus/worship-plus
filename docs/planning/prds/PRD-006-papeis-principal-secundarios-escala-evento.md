@@ -1,85 +1,85 @@
-# PRD-006 - Papeis Principal/Secundarios e Papel Unico por Event
+# PRD-006 - Papéis Principal/Secundários e Papel Único por Event
 
 ## 1. Objetivo
-Definir e padronizar as regras de negocio para papeis de integrante no projeto e na Escala de Event, garantindo previsibilidade de dominio, consistencia de permissao e melhor experiencia de planejamento.
+Definir e padronizar as regras de negócio para papéis de integrante no projeto e na Escala de Event, garantindo previsibilidade de domínio, consistência de Privilégio e melhor experiência de planejamento.
 
 ## 2. Problema
-Hoje o fluxo de papeis nao esta explicitamente formalizado em um PRD isolado, o que gera risco de comportamento inconsistente entre cadastro de integrante, montagem de Escala e controle de permissoes.
+Hoje o fluxo de papéis não está explicitamente formalizado em um PRD isolado, o que gera risco de comportamento inconsistente entre cadastro de integrante, montagem de Escala e controle de Privilégios.
 
 ## 3. Escopo MVP
-- Permitir cadastro de integrante com 1 papel principal e 0..N papeis secundarios.
-- Permitir que o integrante informe seus papeis conforme disponibilidade.
+- Permitir cadastro de integrante com 1 papel principal e 0..N papéis secundários.
+- Permitir que o integrante informe seus papéis conforme disponibilidade.
 - Sugerir automaticamente o papel principal ao adicionar integrante na Escala do Event.
 - Garantir que o integrante execute apenas 1 papel por Event.
 - Permitir editar papel na Escala conforme Privilégio.
-- Bloquear alteracoes em Event Locked.
+- Bloquear alterações em Event Locked.
 
 ## 4. Fora de Escopo
-- Algoritmo automatico de otimizacao de Escala.
-- Recomendacao inteligente por historico de eventos.
-- Regras de carga horaria e conflito entre multiplos eventos.
+- Algoritmo automático de otimização de Escala.
+- Recomendação inteligente por histórico de eventos.
+- Regras de carga horária e conflito entre múltiplos eventos.
 - Modelagem de banco de dados, migrations ou ORM.
 
 ## 5. Personas e Privilégio (MVP)
-- admin: cria/edita cadastro, define papeis, altera papeis na Escala, altera Owner.
-- ministro (Owner): cria/edita Event e pode ajustar papel na Escala do proprio Event.
-- team-member: informa papeis no proprio cadastro conforme regras do projeto; nao altera papeis de terceiros na Escala.
+- admin: cria/edita cadastro, define papéis, altera papéis na Escala, altera Owner.
+- ministro (Owner): cria/edita Event e pode ajustar papel na Escala do próprio Event.
+- team-member: informa papéis no próprio cadastro conforme regras do projeto; não altera papéis de terceiros na Escala.
 
 ## 6. Requisitos Funcionais
-1. O cadastro de integrante deve exigir 1 papel principal valido.
-2. O cadastro de integrante deve aceitar lista de papeis secundarios sem duplicidade.
+1. O cadastro de integrante deve exigir 1 papel principal válido.
+2. O cadastro de integrante deve aceitar lista de papéis secundários sem duplicidade.
 3. O papel principal deve fazer parte da lista de habilidades do integrante.
 4. Ao adicionar integrante na Escala, o sistema deve sugerir o papel principal.
-5. Deve ser possivel substituir o papel sugerido por outro papel permitido do integrante.
-6. O integrante nao pode ter mais de um papel na Escala do mesmo Event.
-7. Em Event Locked, qualquer mutacao de papel na Escala deve ser rejeitada.
-8. Acoes de edicao devem respeitar Privilégio por perfil.
+5. Deve ser possível substituir o papel sugerido por outro papel permitido do integrante.
+6. O integrante não pode ter mais de um papel na Escala do mesmo Event.
+7. Em Event Locked, qualquer mutação de papel na Escala deve ser rejeitada.
+8. Ações de edição devem respeitar Privilégio por perfil.
 
-## 7. Requisitos Nao Funcionais
-- Mensagens de erro claras e sem termos tecnicos internos.
+## 7. Requisitos Não Funcionais
+- Mensagens de erro claras e sem termos técnicos internos.
 - Comportamento consistente entre use case, hook e UI.
 - Fluxo mobile-first sem scroll horizontal em 375px.
-- Testes de permissao e validacao para caminho principal e erro.
+- Testes de Privilégio e validação para caminho principal e erro.
 
-## 8. Regras de Negocio
+## 8. Regras de Negócio
 - Regra RB-001: integrante tem exatamente 1 papel principal no cadastro.
-- Regra RB-002: integrante pode ter 0..N papeis secundarios.
-- Regra RB-003: papel principal e sugestao inicial na Escala.
+- Regra RB-002: integrante pode ter 0..N papéis secundários.
+- Regra RB-003: papel principal é sugestão inicial na Escala.
 - Regra RB-004: em cada Event, integrante executa somente 1 papel.
 - Regra RB-005: apenas admin ou Owner do Event podem editar papel na Escala.
-- Regra RB-006: team-member nao altera papeis de terceiros na Escala.
-- Regra RB-007: Event Locked nao permite alteracao de papel.
+- Regra RB-006: team-member não altera papéis de terceiros na Escala.
+- Regra RB-007: Event Locked não permite alteração de papel.
 
-## 9. Mapeamento de Erros Prioritarios
-- DOMAIN-004: usuario sem privilegio tenta editar Event Setlist.
-- DOMAIN-005: usuario sem privilegio tenta editar Escala.
-- DOMAIN-013: papel invalido na Escala.
-- DOMAIN-014: Event Locked recebendo mutacao.
+## 9. Mapeamento de Erros Prioritários
+- DOMAIN-004: usuário sem Privilégio tenta editar Event Setlist.
+- DOMAIN-005: usuário sem Privilégio tenta editar Escala.
+- DOMAIN-013: papel inválido na Escala.
+- DOMAIN-014: Event Locked recebendo mutação.
 
-Observacao:
-- Para este PRD, DOMAIN-005, DOMAIN-013 e DOMAIN-014 sao obrigatorios para cobertura minima.
+Observação:
+- Para este PRD, DOMAIN-005, DOMAIN-013 e DOMAIN-014 são obrigatórios para cobertura mínima.
 
-## 10. Criterios de Aceitacao
-- [ ] Cadastro de integrante permite papel principal + papeis secundarios.
-- [ ] Escala sugere papel principal na insercao.
+## 10. Critérios de Aceitação
+- [ ] Cadastro de integrante permite papel principal + papéis secundários.
+- [ ] Escala sugere papel principal na inserção.
 - [ ] Escala impede mais de um papel por integrante no mesmo Event.
-- [ ] Edicao de papel na Escala respeita Privilégio (admin e Owner).
-- [ ] Team-member nao consegue editar papel de terceiros na Escala.
-- [ ] Event Locked bloqueia alteracoes de papel.
+- [ ] Edição de papel na Escala respeita Privilégio (admin e Owner).
+- [ ] Team-member não consegue editar papel de terceiros na Escala.
+- [ ] Event Locked bloqueia alterações de papel.
 - [ ] Fluxo validado com dados mockados.
 - [ ] Sem schema/modelagem de banco.
 
-## 11. Dados e Persistencia
+## 11. Dados e Persistência
 - Dados mockados em src/mocks durante MVP.
 - Proibido criar schema/tabelas/migrations/ORM nesta entrega.
 
-## 12. Entregaveis
-- Especificacao de regras de papel no cadastro de integrante.
-- Especificacao de regras de atribuicao de papel por Event na Escala.
-- Definicao de regras de permissao para edicao de papel.
-- Cobertura de testes minimos para permissao e validacao.
+## 12. Entregáveis
+- Especificação de regras de papel no cadastro de integrante.
+- Especificação de regras de atribuição de papel por Event na Escala.
+- Definição de regras de Privilégio para edição de papel.
+- Cobertura de testes mínimos para Privilégio e validação.
 
-## 13. Dependencias e Referencias
-- PRD-003 - Visualizacao da Pagina de Eventos.
-- PRD-004 - Cadastro de Usuario com Privilegios.
-- docs/guides/REFACTOR-MOCK-DECOUPLING.md (mapeamento de erros e resiliencia).
+## 13. Dependências e Referências
+- PRD-003 - Visualização da Página de Eventos.
+- PRD-004 - Cadastro de Usuário com Privilégios.
+- docs/guides/REFACTOR-MOCK-DECOUPLING.md (mapeamento de erros e resiliência).

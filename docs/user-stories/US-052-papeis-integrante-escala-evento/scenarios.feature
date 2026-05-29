@@ -1,3 +1,8 @@
+# US-052: Definir Papel de Integrante na Escala por Event - BDD Scenarios
+# Language: pt-BR
+# Framework: Cucumber/Jest/Vitest
+# Bounded Context: Worship Context + Team Context
+
 Feature: Definicao de papel de integrante na Escala por Event
   Como admin ou Owner/Ministro
   Quero definir o papel do integrante por Event

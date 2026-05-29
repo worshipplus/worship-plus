@@ -1,3 +1,9 @@
+# US-052: Definir Papel de Integrante na Escala por Event
+# Gerado por: Architecture Agent
+# Data: 2026-05-19
+# Versão: 1.0.0
+# Consumidores: Frontend (React), Backend (Future)
+
 openapi: 3.1.0
 info:
   title: Worship+ Event Role Assignment API
