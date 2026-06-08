@@ -22,13 +22,35 @@ const mockAvailableUsers: User[] = [
   },
 ];
 
+const mockAllUsers: User[] = [
+  {
+    id: "u3",
+    name: "Fernanda Oliveira",
+    email: "fernanda@worshipplus.app",
+    role: "team-member",
+    primaryScaleRole: "Vocais",
+    secondaryScaleRoles: ["Backing Vocal"],
+    createdAt: "2024-01-10T10:00:00Z",
+  },
+  {
+    id: "u4",
+    name: "Ricardo Mendes",
+    email: "ricardo@worshipplus.app",
+    role: "team-member",
+    primaryScaleRole: "Guitarra",
+    secondaryScaleRoles: ["Baixo"],
+    createdAt: "2024-01-15T11:00:00Z",
+  },
+  ...mockAvailableUsers,
+];
+
 function renderScale(
   overrides: Partial<Parameters<typeof ScaleSection>[0]> = {},
 ) {
   const defaults = {
     scale: mockScale,
     canEdit: false,
-    allUsers: mockAvailableUsers,
+    allUsers: mockAllUsers,
     availableUsers: mockAvailableUsers,
     onAdd: vi.fn().mockReturnValue(null),
     onRemove: vi.fn(),
@@ -139,6 +161,17 @@ describe("ScaleSection — edição (Admin / Owner)", () => {
     );
   });
 
+  it("sugere automaticamente o papel principal no formulário de adição", async () => {
+    renderScale({ canEdit: true });
+    await userEvent.click(
+      screen.getByRole("button", { name: /adicionar integrante/i }),
+    );
+    const dialog = screen.getByRole("dialog", {
+      name: /adicionar integrante/i,
+    });
+    expect(within(dialog).getByLabelText(/papel/i)).toHaveValue("Teclado");
+  });
+
   it("abre modal de editar papel ao clicar em Editar papel", async () => {
     renderScale({ canEdit: true });
     const editBtn = screen.getAllByRole("button", { name: /editar papel/i })[0];
@@ -155,11 +188,11 @@ describe("ScaleSection — edição (Admin / Owner)", () => {
     await userEvent.click(editBtn);
     const dialog = screen.getByRole("dialog", { name: /editar papel/i });
     const papelSelect = within(dialog).getByLabelText(/papel/i);
-    await userEvent.selectOptions(papelSelect, "Baixo");
+    await userEvent.selectOptions(papelSelect, "Backing Vocal");
     await userEvent.click(
       within(dialog).getByRole("button", { name: /salvar/i }),
     );
-    expect(onEditPapel).toHaveBeenCalledWith("sc1", "Baixo");
+    expect(onEditPapel).toHaveBeenCalledWith("sc1", "Backing Vocal");
   });
 
   it("fecha modal de adicionar ao clicar Cancelar", async () => {

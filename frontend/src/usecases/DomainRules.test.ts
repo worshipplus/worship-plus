@@ -698,8 +698,8 @@ describe("DOMAIN-013: Papel inválido na Escala", () => {
       "admin",
       "u1",
       openEvent,
-      "u3",
-      "Fernanda Oliveira",
+      "u1",
+      "Ana Lima",
       "Teclado",
       allUsers,
     );
