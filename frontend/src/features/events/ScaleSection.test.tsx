@@ -16,6 +16,8 @@ const mockAvailableUsers: User[] = [
     name: "Juliana Castro",
     email: "juliana@worshipplus.app",
     role: "team-member",
+    primaryScaleRole: "Teclado",
+    secondaryScaleRoles: ["Vocais"],
     createdAt: "2024-01-20T12:00:00Z",
   },
 ];
@@ -26,10 +28,11 @@ function renderScale(
   const defaults = {
     scale: mockScale,
     canEdit: false,
+    allUsers: mockAvailableUsers,
     availableUsers: mockAvailableUsers,
     onAdd: vi.fn().mockReturnValue(null),
     onRemove: vi.fn(),
-    onEditPapel: vi.fn(),
+    onEditPapel: vi.fn().mockReturnValue(null),
   };
   return render(<ScaleSection {...defaults} {...overrides} />);
 }

@@ -91,7 +91,7 @@ export function EventDetailPage({
     currentUserRole,
     currentUserName,
   );
-  const { addToScale, removeFromScale } = useScaleMutations(
+  const { addToScale, removeFromScale, updateScaleRole } = useScaleMutations(
     currentUserRole,
     currentUserId,
     allUsers,
@@ -244,10 +244,17 @@ export function EventDetailPage({
     setScale((prev) => prev.filter((entry) => entry.id !== entryId));
   }
 
-  function handleEditPapel(entryId: string, papel: string) {
+  function handleEditPapel(entryId: string, papel: string): string | null {
+    const member = scale.find((entry) => entry.id === entryId);
+    if (!member) return "Integrante não encontrado na escala.";
+
+    const result = updateScaleRole(event, member.userId, papel);
+    if (!result.ok) return result.message;
+
     setScale((prev) =>
-      prev.map((entry) => (entry.id === entryId ? { ...entry, papel } : entry)),
+      prev.map((entry) => (entry.id === entryId ? result.entry : entry)),
     );
+    return null;
   }
 
   return (
@@ -481,6 +488,7 @@ export function EventDetailPage({
         <ScaleSection
           scale={scale}
           canEdit={canEditScale}
+          allUsers={allUsers}
           availableUsers={usersNotInScale}
           onAdd={handleAddToScale}
           onRemove={handleRemoveFromScale}

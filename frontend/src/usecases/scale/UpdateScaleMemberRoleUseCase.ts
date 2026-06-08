@@ -1,17 +1,16 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
-import type { UserRole, Event, ScaleEntry } from "../../types/event";
+import type { Event, ScaleEntry, UserRole } from "../../types/event";
 import type { User } from "../../types/user";
 import { resolveMemberAllowedRoles } from "./memberRoles";
 
-export class AddToScaleUseCase {
+export class UpdateScaleMemberRoleUseCase {
   execute(
     callerRole: UserRole,
     callerId: string,
     event: Event | undefined,
-    userId: string,
-    userName: string,
-    papel: string | undefined,
+    memberId: string,
+    papel: string,
     allUsers: User[],
   ): ScaleEntry {
     if (!event) {
@@ -20,52 +19,48 @@ export class AddToScaleUseCase {
         "Evento não encontrado.",
       );
     }
+
     if (event.status === "locked") {
       throw new DomainError(
         DomainErrorCode.EVENT_LOCKED,
         "Evento finalizado não aceita alterações.",
       );
     }
+
     if (callerRole !== "admin" && callerId !== event.owner_id) {
       throw new DomainError(
         DomainErrorCode.UNAUTHORIZED_EDIT_SCALE,
         "Sem privilégio para editar a Escala.",
       );
     }
-    const member = allUsers.find((u) => u.id === userId);
+
+    const scaleMember = event.scale.find((entry) => entry.userId === memberId);
+    if (!scaleMember) {
+      throw new DomainError(
+        DomainErrorCode.USER_NOT_FOUND_IN_SCALE,
+        "Integrante não encontrado na Escala.",
+        { memberId },
+      );
+    }
+
+    const member = allUsers.find((user) => user.id === memberId);
     if (!member) {
       throw new DomainError(
         DomainErrorCode.USER_NOT_FOUND_IN_SCALE,
         "Integrante não encontrado na base.",
-        { userId },
-      );
-    }
-
-    if (event.scale.some((entry) => entry.userId === userId)) {
-      throw new DomainError(
-        DomainErrorCode.INVALID_SCALE_ROLE,
-        "Integrante já possui papel na Escala deste Event.",
-        { userId },
+        { memberId },
       );
     }
 
     const allowedRoles = resolveMemberAllowedRoles(member);
-    const suggestedRole = allowedRoles[0];
-    const selectedRole = papel?.trim() || suggestedRole;
-
-    if (!allowedRoles.includes(selectedRole)) {
+    if (!allowedRoles.includes(papel)) {
       throw new DomainError(
         DomainErrorCode.INVALID_SCALE_ROLE,
         "Papel inválido para o integrante.",
-        { papel: selectedRole },
+        { papel },
       );
     }
 
-    return {
-      id: String(Date.now()),
-      userId,
-      userName,
-      papel: selectedRole,
-    };
+    return { ...scaleMember, papel };
   }
 }
