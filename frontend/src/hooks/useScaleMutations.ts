@@ -30,7 +30,7 @@ function mapDomainError(err: DomainError): ScaleMutationError {
       ok: false,
       code: err.code,
       statusCode: 403,
-      message: "Você não tem permissão para editar a escala deste evento.",
+      message: "Você não tem permissão para editar a Escala deste evento.",
       domainEvent: "RoleChangeDenied",
     };
   }
@@ -40,7 +40,7 @@ function mapDomainError(err: DomainError): ScaleMutationError {
       code: err.code,
       statusCode: 409,
       message:
-        "Este evento está finalizado e não permite alterações na escala.",
+        "Este evento está finalizado e não permite alterações na Escala.",
       domainEvent: "LockedEventMutationBlocked",
     };
   }

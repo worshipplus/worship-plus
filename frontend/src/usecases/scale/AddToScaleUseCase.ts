@@ -1,8 +1,8 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
+import { resolveMemberAllowedRoles } from "../../domain/scale/memberRoles";
 import type { UserRole, Event, ScaleEntry } from "../../types/event";
 import type { User } from "../../types/user";
-import { resolveMemberAllowedRoles } from "./memberRoles";
 
 export class AddToScaleUseCase {
   execute(
@@ -41,15 +41,13 @@ export class AddToScaleUseCase {
       );
     }
 
-    if (event.scale.some((entry) => entry.userId === userId)) {
+    const allowedRoles = resolveMemberAllowedRoles(member);
+    if (allowedRoles.length === 0) {
       throw new DomainError(
         DomainErrorCode.INVALID_SCALE_ROLE,
-        "Integrante já possui papel na Escala deste Event.",
-        { userId },
+        "Papel inválido para o integrante.",
       );
     }
-
-    const allowedRoles = resolveMemberAllowedRoles(member);
     const suggestedRole = allowedRoles[0];
     const selectedRole = papel?.trim() || suggestedRole;
 

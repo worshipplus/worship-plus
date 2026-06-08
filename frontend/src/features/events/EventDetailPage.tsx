@@ -246,7 +246,7 @@ export function EventDetailPage({
 
   function handleEditPapel(entryId: string, papel: string): string | null {
     const member = scale.find((entry) => entry.id === entryId);
-    if (!member) return "Integrante não encontrado na escala.";
+    if (!member) return "Integrante não encontrado na Escala.";
 
     const result = updateScaleRole(event, member.userId, papel);
     if (!result.ok) return result.message;

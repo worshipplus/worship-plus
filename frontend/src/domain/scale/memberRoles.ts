@@ -1,6 +1,6 @@
-import { ALLOWED_PAPEIS } from "../../domain/constants/scale";
-import { DomainError } from "../../domain/errors/DomainError";
-import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
+import { ALLOWED_PAPEIS } from "../constants/scale";
+import { DomainError } from "../errors/DomainError";
+import { DomainErrorCode } from "../errors/DomainErrorCode";
 import type { User } from "../../types/user";
 
 const ALLOWED_ROLES = new Set<string>(ALLOWED_PAPEIS);
@@ -10,7 +10,7 @@ export function resolveMemberAllowedRoles(member: User): string[] {
   if (!primaryRole || !ALLOWED_ROLES.has(primaryRole)) {
     throw new DomainError(
       DomainErrorCode.INVALID_SCALE_ROLE,
-      "Papel inválido para o integrante.",
+      "Papel principal inválido para o integrante.",
     );
   }
 
@@ -23,7 +23,7 @@ export function resolveMemberAllowedRoles(member: User): string[] {
   if (uniqueSecondaryRoles.size !== secondaryRoles.length) {
     throw new DomainError(
       DomainErrorCode.INVALID_SCALE_ROLE,
-      "Papel inválido para o integrante.",
+      "Papéis secundários duplicados não são permitidos.",
     );
   }
 
@@ -36,5 +36,5 @@ export function resolveMemberAllowedRoles(member: User): string[] {
     }
   }
 
-  return [primaryRole, ...uniqueSecondaryRoles];
+  return [primaryRole, ...Array.from(uniqueSecondaryRoles)];
 }

@@ -1,8 +1,8 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
+import { resolveMemberAllowedRoles } from "../../domain/scale/memberRoles";
 import type { Event, ScaleEntry, UserRole } from "../../types/event";
 import type { User } from "../../types/user";
-import { resolveMemberAllowedRoles } from "./memberRoles";
 
 export class UpdateScaleMemberRoleUseCase {
   execute(

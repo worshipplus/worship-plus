@@ -722,17 +722,25 @@ describe("DOMAIN-013: Papel inválido na Escala", () => {
     );
   });
 
-  it("rejeita atribuir segundo papel para integrante já escalado", () => {
+  it("rejeita cadastro com papel secundário duplicado", () => {
+    const usersWithDuplicatedSecondaryRole: User[] = [
+      ...allUsers.slice(0, 2),
+      {
+        ...allUsers[2],
+        secondaryScaleRoles: ["Backing Vocal", "Backing Vocal"],
+      },
+    ];
+
     expectDomainError(
       () =>
         new AddToScaleUseCase().execute(
           "admin",
           "u1",
-          openEventWithScaleMember,
+          openEvent,
           "u3",
           "Fernanda Oliveira",
           "Vocais",
-          allUsers,
+          usersWithDuplicatedSecondaryRole,
         ),
       DomainErrorCode.INVALID_SCALE_ROLE,
     );
