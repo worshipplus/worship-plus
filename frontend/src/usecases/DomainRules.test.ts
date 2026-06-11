@@ -9,6 +9,7 @@ import { AddToEventSetlistUseCase } from "./event/AddToEventSetlistUseCase";
 import { RemoveFromEventSetlistUseCase } from "./event/RemoveFromEventSetlistUseCase";
 import { AddToScaleUseCase } from "./scale/AddToScaleUseCase";
 import { RemoveFromScaleUseCase } from "./scale/RemoveFromScaleUseCase";
+import { UpdateScaleMemberRoleUseCase } from "./scale/UpdateScaleMemberRoleUseCase";
 import type { Event } from "../types/event";
 import type { User } from "../types/user";
 import type { SetlistFormData } from "../types/setlist";
@@ -40,6 +41,8 @@ const allUsers: User[] = [
     name: "Ana Lima",
     email: "ana@test.com",
     role: "admin",
+    primaryScaleRole: "Teclado",
+    secondaryScaleRoles: ["Vocais"],
     createdAt: "2024-01-01T00:00:00Z",
   },
   {
@@ -47,6 +50,8 @@ const allUsers: User[] = [
     name: "Carlos Souza",
     email: "carlos@test.com",
     role: "ministro",
+    primaryScaleRole: "Violão",
+    secondaryScaleRoles: ["Vocais", "Guitarra"],
     createdAt: "2024-01-02T00:00:00Z",
   },
   {
@@ -54,6 +59,8 @@ const allUsers: User[] = [
     name: "Fernanda Oliveira",
     email: "fernanda@test.com",
     role: "team-member",
+    primaryScaleRole: "Vocais",
+    secondaryScaleRoles: ["Backing Vocal"],
     createdAt: "2024-01-03T00:00:00Z",
   },
 ];
@@ -71,6 +78,18 @@ const openEvent: Event = {
 };
 
 const lockedEvent: Event = { ...openEvent, status: "locked" };
+
+const openEventWithScaleMember: Event = {
+  ...openEvent,
+  scale: [
+    {
+      id: "sc-member",
+      userId: "u3",
+      userName: "Fernanda Oliveira",
+      papel: "Vocais",
+    },
+  ],
+};
 
 const songInEvent = {
   id: "s1",
@@ -320,6 +339,21 @@ describe("DOMAIN-005: Autorização para editar Escala", () => {
       allUsers,
     );
     expect(result.userName).toBe("Fernanda Oliveira");
+  });
+
+  it("team-member não pode editar papel de terceiros na Escala", () => {
+    expectDomainError(
+      () =>
+        new UpdateScaleMemberRoleUseCase().execute(
+          "team-member",
+          "u4",
+          openEventWithScaleMember,
+          "u3",
+          "Backing Vocal",
+          allUsers,
+        ),
+      DomainErrorCode.UNAUTHORIZED_EDIT_SCALE,
+    );
   });
 
   it("team-member não pode remover da Escala", () => {
@@ -618,6 +652,31 @@ describe("DOMAIN-012: Event não encontrado", () => {
 // ---------------------------------------------------------------------------
 
 describe("DOMAIN-013: Papel inválido na Escala", () => {
+  it("sugere papel principal quando papel não é informado", () => {
+    const result = new AddToScaleUseCase().execute(
+      "admin",
+      "u1",
+      openEvent,
+      "u2",
+      "Carlos Souza",
+      undefined,
+      allUsers,
+    );
+    expect(result.papel).toBe("Violão");
+  });
+
+  it("permite atualizar para papel secundário do integrante", () => {
+    const result = new UpdateScaleMemberRoleUseCase().execute(
+      "admin",
+      "u1",
+      openEventWithScaleMember,
+      "u3",
+      "Backing Vocal",
+      allUsers,
+    );
+    expect(result.papel).toBe("Backing Vocal");
+  });
+
   it("rejeita papel fora da lista permitida", () => {
     expectDomainError(
       () =>
@@ -639,12 +698,52 @@ describe("DOMAIN-013: Papel inválido na Escala", () => {
       "admin",
       "u1",
       openEvent,
-      "u3",
-      "Fernanda Oliveira",
+      "u1",
+      "Ana Lima",
       "Teclado",
       allUsers,
     );
     expect(result.papel).toBe("Teclado");
+  });
+
+  it("rejeita papel que o integrante não possui", () => {
+    expectDomainError(
+      () =>
+        new AddToScaleUseCase().execute(
+          "admin",
+          "u1",
+          openEvent,
+          "u3",
+          "Fernanda Oliveira",
+          "Bateria",
+          allUsers,
+        ),
+      DomainErrorCode.INVALID_SCALE_ROLE,
+    );
+  });
+
+  it("rejeita cadastro com papel secundário duplicado", () => {
+    const usersWithDuplicatedSecondaryRole: User[] = [
+      ...allUsers.slice(0, 2),
+      {
+        ...allUsers[2],
+        secondaryScaleRoles: ["Backing Vocal", "Backing Vocal"],
+      },
+    ];
+
+    expectDomainError(
+      () =>
+        new AddToScaleUseCase().execute(
+          "admin",
+          "u1",
+          openEvent,
+          "u3",
+          "Fernanda Oliveira",
+          "Vocais",
+          usersWithDuplicatedSecondaryRole,
+        ),
+      DomainErrorCode.INVALID_SCALE_ROLE,
+    );
   });
 });
 
@@ -697,6 +796,21 @@ describe("DOMAIN-014: Event Locked não aceita mutações", () => {
   it("bloqueio ao remover da Escala de Event Locked", () => {
     expectDomainError(
       () => new RemoveFromScaleUseCase().execute("admin", "u1", lockedEvent),
+      DomainErrorCode.EVENT_LOCKED,
+    );
+  });
+
+  it("bloqueio ao editar papel em Escala de Event Locked", () => {
+    expectDomainError(
+      () =>
+        new UpdateScaleMemberRoleUseCase().execute(
+          "admin",
+          "u1",
+          { ...lockedEvent, scale: openEventWithScaleMember.scale },
+          "u3",
+          "Backing Vocal",
+          allUsers,
+        ),
       DomainErrorCode.EVENT_LOCKED,
     );
   });
