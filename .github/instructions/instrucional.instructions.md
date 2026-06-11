@@ -86,5 +86,5 @@ frontend/src/
 
 - [skills.instructions.md](./skills.instructions.md) — Capacidades operacionais por tipo de tarefa
 - [rules.instructions.md](./rules.instructions.md) — Políticas de qualidade, terminologia e entrega
-- PRDs: `docs/planning/prds/PRD-00[2-4]-*.md`
+- PRDs: `docs/planning/prds/**/*.md`
 - Guia de agentes: `docs/guides/AGENTS-GUIDE.md`
