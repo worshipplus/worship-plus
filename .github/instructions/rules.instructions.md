@@ -73,7 +73,7 @@ Nenhum PR pode ser submetido com falha em qualquer um desses comandos.
 
 - PRD-002 (Setlist): `docs/planning/prds/PRD-002-lista-repertorio-youtube.md`
 - PRD-003 (Eventos): `docs/planning/prds/PRD-003-visualizacao-pagina-eventos.md`
-- PRD-004 (Usuários): `docs/planning/prds/PRD-004-cadastro-usuario-privilegios.md`
+- PRD-004 (Usuários): `docs/planning/prds/cadastro-usuario-privilegios/PRD.md`
 - Instrucional: `.github/instructions/instrucional.instructions.md`
 - Skills: `.github/instructions/skills.instructions.md`
 - Performance (Rules & Skills): `.github/instructions/performance-rules-skills.instructions.md`
