@@ -3,16 +3,19 @@ import { Plus, Pencil, Trash2, Users, Lock } from "lucide-react";
 import type { ScaleEntry } from "../../types/event";
 import type { User } from "../../types/user";
 import { ALLOWED_PAPEIS } from "../../domain/constants/scale";
+import { resolveMemberAllowedRoles } from "../../domain/scale/memberRoles";
 
 const PAPEIS: string[] = [...ALLOWED_PAPEIS];
+const DEFAULT_ROLE = PAPEIS[0] ?? "Outro";
 
 interface ScaleSectionProps {
   scale: ScaleEntry[];
   canEdit: boolean;
+  allUsers: User[];
   availableUsers: User[];
   onAdd: (userId: string, userName: string, papel: string) => string | null;
   onRemove: (entryId: string) => void;
-  onEditPapel: (entryId: string, papel: string) => void;
+  onEditPapel: (entryId: string, papel: string) => string | null;
 }
 
 interface AddFormState {
@@ -23,29 +26,45 @@ interface AddFormState {
 export function ScaleSection({
   scale,
   canEdit,
+  allUsers,
   availableUsers,
   onAdd,
   onRemove,
   onEditPapel,
 }: ScaleSectionProps) {
+  function getAllowedRoles(user: User | undefined): string[] {
+    if (!user) return PAPEIS;
+    try {
+      return resolveMemberAllowedRoles(user);
+    } catch {
+      return PAPEIS;
+    }
+  }
+
+  const defaultUser = availableUsers[0];
+  const defaultRoles = getAllowedRoles(defaultUser);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState<AddFormState>({
-    userId: "",
-    papel: PAPEIS[0],
+    userId: defaultUser?.id ?? "",
+    papel: defaultRoles[0] ?? DEFAULT_ROLE,
   });
   const [addError, setAddError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [editPapel, setEditPapel] = useState(PAPEIS[0]);
+  const [editPapel, setEditPapel] = useState(defaultRoles[0] ?? DEFAULT_ROLE);
+  const [editError, setEditError] = useState<string | null>(null);
 
   function openAddForm() {
-    setAddForm({ userId: availableUsers[0]?.id ?? "", papel: PAPEIS[0] });
+    const user = availableUsers[0];
+    const roles = getAllowedRoles(user);
+    setAddForm({ userId: user?.id ?? "", papel: roles[0] ?? DEFAULT_ROLE });
     setAddError(null);
     setShowAddForm(true);
   }
 
   function closeAddForm() {
     setShowAddForm(false);
-    setAddForm({ userId: "", papel: PAPEIS[0] });
+    setAddForm({ userId: "", papel: defaultRoles[0] ?? DEFAULT_ROLE });
     setAddError(null);
   }
 
@@ -68,17 +87,27 @@ export function ScaleSection({
   }
 
   function openEditPapel(entry: ScaleEntry) {
+    const user = allUsers.find((item) => item.id === entry.userId);
+    const roles = getAllowedRoles(user);
     setEditingEntryId(entry.id);
-    setEditPapel(entry.papel);
+    setEditPapel(
+      roles.includes(entry.papel) ? entry.papel : (roles[0] ?? DEFAULT_ROLE),
+    );
+    setEditError(null);
   }
 
   function closeEditPapel() {
     setEditingEntryId(null);
+    setEditError(null);
   }
 
   function handleConfirmEditPapel() {
     if (editingEntryId) {
-      onEditPapel(editingEntryId, editPapel);
+      const errorMsg = onEditPapel(editingEntryId, editPapel);
+      if (errorMsg) {
+        setEditError(errorMsg);
+        return;
+      }
     }
     closeEditPapel();
   }
@@ -232,12 +261,16 @@ export function ScaleSection({
                   <select
                     id="scale-user"
                     value={addForm.userId}
-                    onChange={(e) =>
-                      setAddForm((prev) => ({
-                        ...prev,
+                    onChange={(e) => {
+                      const selectedUser = availableUsers.find(
+                        (user) => user.id === e.target.value,
+                      );
+                      const selectedRoles = getAllowedRoles(selectedUser);
+                      setAddForm({
                         userId: e.target.value,
-                      }))
-                    }
+                        papel: selectedRoles[0] ?? DEFAULT_ROLE,
+                      });
+                    }}
                     className="w-full px-3 py-2 rounded-lg text-sm outline-none border"
                     style={{
                       background: "var(--color-surface)",
@@ -286,7 +319,9 @@ export function ScaleSection({
                       borderColor: "rgba(255,255,255,0.15)",
                     }}
                   >
-                    {PAPEIS.map((p) => (
+                    {getAllowedRoles(
+                      availableUsers.find((u) => u.id === addForm.userId),
+                    ).map((p) => (
                       <option key={p} value={p}>
                         {p}
                       </option>
@@ -355,12 +390,24 @@ export function ScaleSection({
                   borderColor: "rgba(255,255,255,0.15)",
                 }}
               >
-                {PAPEIS.map((p) => (
+                {getAllowedRoles(
+                  allUsers.find(
+                    (user) =>
+                      user.id ===
+                      scale.find((entry) => entry.id === editingEntryId)
+                        ?.userId,
+                  ),
+                ).map((p) => (
                   <option key={p} value={p}>
                     {p}
                   </option>
                 ))}
               </select>
+              {editError && (
+                <span className="text-xs text-red-500" role="alert">
+                  {editError}
+                </span>
+              )}
             </div>
 
             <div className="flex gap-3 justify-end">

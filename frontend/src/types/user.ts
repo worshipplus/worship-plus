@@ -7,5 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  primaryScaleRole: string;
+  secondaryScaleRoles: string[];
   createdAt: string;
 }
