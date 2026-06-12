@@ -114,7 +114,7 @@ describe("EventDetailPage", () => {
     );
     expect(draftEvent).toBeDefined();
     if (!draftEvent) return;
-    renderDetail(draftEvent.id);
+    renderDetail(draftEvent.id, { role: "admin", name: "Ana Lima" });
     expect(screen.getByText(/nenhuma música no setlist/i)).toBeInTheDocument();
   });
 
@@ -161,6 +161,33 @@ describe("EventDetailPage", () => {
     expect(
       screen.queryByRole("button", { name: /adicionar música/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("team-member sem ownership não pode visualizar Event em rascunho", () => {
+    const draftEvent = EVENT_DATA.find((item) => item.status === "draft");
+    expect(draftEvent).toBeDefined();
+    if (!draftEvent) return;
+    renderDetail(draftEvent.id, { role: "team-member", name: "Ana Lima" });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /não tem permissão para visualizar este evento em rascunho/i,
+    );
+    expect(
+      screen.queryByRole("heading", { name: /event setlist/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("team-member owner pode visualizar Event em rascunho", () => {
+    const draftEvent = EVENT_DATA.find((item) => item.status === "draft");
+    expect(draftEvent).toBeDefined();
+    if (!draftEvent) return;
+    renderDetail(draftEvent.id, {
+      role: "team-member",
+      name: draftEvent.owner,
+    });
+    expect(screen.getByText(draftEvent.title)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /event setlist/i }),
+    ).toBeInTheDocument();
   });
 
   it("permite reordenar músicas por drag-and-drop", () => {

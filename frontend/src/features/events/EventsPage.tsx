@@ -12,6 +12,7 @@ import type { UserRole, EventStatus, Event } from "../../types/event";
 import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
 import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 import { useCreateEvent } from "../../hooks/useCreateEvent";
+import { canViewEvent } from "./permissions";
 
 interface EventsPageProps {
   userRole?: UserRole;
@@ -91,6 +92,7 @@ export function EventsPage({
 
   const now = new Date();
   const filtered = events.filter((event) => {
+    if (!canViewEvent(event, userRole, currentUserName)) return false;
     if (filter === "upcoming") {
       return new Date(event.date) >= now;
     }

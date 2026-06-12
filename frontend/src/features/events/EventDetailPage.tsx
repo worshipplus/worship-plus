@@ -25,6 +25,7 @@ import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 import { ScaleSection } from "./ScaleSection";
 import { useEventSetlistMutations } from "../../hooks/useEventSetlistMutations";
 import { useScaleMutations } from "../../hooks/useScaleMutations";
+import { canViewEvent } from "./permissions";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -162,6 +163,35 @@ export function EventDetailPage({
         >
           Carregando evento...
         </p>
+      </div>
+    );
+  }
+
+  const hasEventVisibility = canViewEvent(
+    event,
+    currentUserRole,
+    currentUserName,
+  );
+
+  if (!hasEventVisibility) {
+    return (
+      <div className="min-h-screen p-4 sm:p-6 flex flex-col items-center justify-center gap-4">
+        <p
+          className="text-center text-sm"
+          style={{ color: "var(--color-text-secondary)" }}
+          role="alert"
+        >
+          Você não tem permissão para visualizar este evento em rascunho.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/events")}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-opacity hover:opacity-70"
+          style={{ color: "var(--color-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Voltar para Eventos
+        </button>
       </div>
     );
   }
