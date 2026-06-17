@@ -1,19 +1,17 @@
 import { Router } from "express";
-import { setlistItems } from "../data/setlist.js";
+import { getDb, rowToSetlistItem } from "../db.js";
 
 const router = Router();
 
 const YOUTUBE_REGEX = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
-
-// Estado em memória (inicializado a partir dos dados mock)
-let store = [...setlistItems];
 
 /**
  * GET /api/setlist
  * Retorna todos os itens do Setlist
  */
 router.get("/", (_req, res) => {
-  res.json(store);
+  const rows = getDb().prepare("SELECT * FROM setlist_items ORDER BY created_at DESC").all();
+  res.json(rows.map(rowToSetlistItem));
 });
 
 /**
@@ -21,9 +19,9 @@ router.get("/", (_req, res) => {
  * Retorna um item pelo id
  */
 router.get("/:id", (req, res) => {
-  const item = store.find((s) => s.id === req.params.id);
-  if (!item) return res.status(404).json({ error: "Item não encontrado." });
-  res.json(item);
+  const row = getDb().prepare("SELECT * FROM setlist_items WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Item não encontrado." });
+  res.json(rowToSetlistItem(row));
 });
 
 /**
@@ -51,13 +49,17 @@ router.post("/", (req, res) => {
     id: String(Date.now()),
     title: String(title).trim(),
     author: String(author).trim(),
-    key: key ? String(key).trim() : undefined,
+    key: key ? String(key).trim() : null,
     youtubeUrl: String(youtubeUrl).trim(),
     createdAt: new Date().toISOString(),
   };
 
-  store.unshift(newItem);
-  res.status(201).json(newItem);
+  getDb().prepare(`
+    INSERT INTO setlist_items (id, title, author, key, youtube_url, created_at)
+    VALUES (@id, @title, @author, @key, @youtubeUrl, @createdAt)
+  `).run(newItem);
+
+  res.status(201).json({ ...newItem, key: newItem.key ?? undefined });
 });
 
 /**
@@ -66,8 +68,9 @@ router.post("/", (req, res) => {
  * Body: { title?, author?, key?, youtubeUrl? }
  */
 router.put("/:id", (req, res) => {
-  const idx = store.findIndex((s) => s.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Item não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM setlist_items WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Item não encontrado." });
 
   const { title, author, key, youtubeUrl } = req.body;
 
@@ -86,15 +89,20 @@ router.put("/:id", (req, res) => {
     }
   }
 
-  store[idx] = {
-    ...store[idx],
-    ...(title !== undefined && { title: String(title).trim() }),
-    ...(author !== undefined && { author: String(author).trim() }),
-    ...(key !== undefined && { key: String(key).trim() || undefined }),
-    ...(youtubeUrl !== undefined && { youtubeUrl: String(youtubeUrl).trim() }),
+  const updated = {
+    title: title !== undefined ? String(title).trim() : row.title,
+    author: author !== undefined ? String(author).trim() : row.author,
+    key: key !== undefined ? (String(key).trim() || null) : row.key,
+    youtube_url: youtubeUrl !== undefined ? String(youtubeUrl).trim() : row.youtube_url,
   };
 
-  res.json(store[idx]);
+  db.prepare(`
+    UPDATE setlist_items SET title = @title, author = @author, key = @key, youtube_url = @youtube_url
+    WHERE id = @id
+  `).run({ ...updated, id: req.params.id });
+
+  const result = db.prepare("SELECT * FROM setlist_items WHERE id = ?").get(req.params.id);
+  res.json(rowToSetlistItem(result));
 });
 
 /**
@@ -102,9 +110,10 @@ router.put("/:id", (req, res) => {
  * Remove um item do Setlist
  */
 router.delete("/:id", (req, res) => {
-  const idx = store.findIndex((s) => s.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Item não encontrado." });
-  store.splice(idx, 1);
+  const db = getDb();
+  const row = db.prepare("SELECT id FROM setlist_items WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Item não encontrado." });
+  db.prepare("DELETE FROM setlist_items WHERE id = ?").run(req.params.id);
   res.status(204).end();
 });
 

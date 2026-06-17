@@ -1,11 +1,15 @@
 import express from "express";
 import cors from "cors";
+import { initDb } from "./db.js";
 import usersRouter from "./routes/users.js";
 import setlistRouter from "./routes/setlist.js";
 import eventsRouter from "./routes/events.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
+
+// Inicializa banco de dados (migrations + seed)
+initDb();
 
 // Middlewares
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));

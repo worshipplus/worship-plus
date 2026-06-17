@@ -1,21 +1,15 @@
 import { Router } from "express";
-import { events } from "../data/events.js";
+import { getDb, rowToEvent } from "../db.js";
 
 const router = Router();
-
-// Estado em memória (inicializado a partir dos dados mock)
-let store = events.map((e) => ({
-  ...e,
-  eventSetlist: [...e.eventSetlist],
-  scale: [...e.scale],
-}));
 
 /**
  * GET /api/events
  * Retorna todos os eventos
  */
 router.get("/", (_req, res) => {
-  res.json(store);
+  const rows = getDb().prepare("SELECT * FROM events ORDER BY date DESC").all();
+  res.json(rows.map(rowToEvent));
 });
 
 /**
@@ -23,9 +17,9 @@ router.get("/", (_req, res) => {
  * Retorna um evento pelo id
  */
 router.get("/:id", (req, res) => {
-  const event = store.find((e) => e.id === req.params.id);
-  if (!event) return res.status(404).json({ error: "Evento não encontrado." });
-  res.json(event);
+  const row = getDb().prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
+  res.json(rowToEvent(row));
 });
 
 /**
@@ -68,7 +62,16 @@ router.post("/", (req, res) => {
     scale: [],
   };
 
-  store.unshift(newEvent);
+  getDb().prepare(`
+    INSERT INTO events (id, title, date, status, owner, owner_id, description, event_setlist, scale, created_at)
+    VALUES (@id, @title, @date, @status, @owner, @owner_id, @description, @eventSetlist, @scale, @createdAt)
+  `).run({
+    ...newEvent,
+    eventSetlist: JSON.stringify(newEvent.eventSetlist),
+    scale: JSON.stringify(newEvent.scale),
+    createdAt: new Date().toISOString(),
+  });
+
   res.status(201).json(newEvent);
 });
 
@@ -77,8 +80,9 @@ router.post("/", (req, res) => {
  * Atualiza campos de um evento (title, date, description, status, owner, owner_id)
  */
 router.put("/:id", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
 
   const { title, date, description, status, owner, owner_id } = req.body;
   const validStatuses = ["draft", "scheduled", "locked"];
@@ -93,17 +97,23 @@ router.put("/:id", (req, res) => {
     }
   }
 
-  store[idx] = {
-    ...store[idx],
-    ...(title !== undefined && { title: String(title).trim() }),
-    ...(date !== undefined && { date: new Date(date).toISOString() }),
-    ...(description !== undefined && { description: String(description).trim() }),
-    ...(status !== undefined && { status }),
-    ...(owner !== undefined && { owner: String(owner).trim() }),
-    ...(owner_id !== undefined && { owner_id: String(owner_id).trim() }),
+  const updated = {
+    title: title !== undefined ? String(title).trim() : row.title,
+    date: date !== undefined ? new Date(date).toISOString() : row.date,
+    description: description !== undefined ? String(description).trim() : row.description,
+    status: status !== undefined ? status : row.status,
+    owner: owner !== undefined ? String(owner).trim() : row.owner,
+    owner_id: owner_id !== undefined ? String(owner_id).trim() : row.owner_id,
   };
 
-  res.json(store[idx]);
+  db.prepare(`
+    UPDATE events SET title = @title, date = @date, description = @description,
+      status = @status, owner = @owner, owner_id = @owner_id
+    WHERE id = @id
+  `).run({ ...updated, id: req.params.id });
+
+  const result = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  res.json(rowToEvent(result));
 });
 
 /**
@@ -112,17 +122,21 @@ router.put("/:id", (req, res) => {
  * Body: { id, title, author, key?, youtubeUrl }
  */
 router.post("/:id/setlist", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
 
   const { id, title, author, key, youtubeUrl } = req.body;
   if (!id || !title || !author || !youtubeUrl) {
     return res.status(400).json({ error: "Campos obrigatórios: id, title, author, youtubeUrl." });
   }
 
-  const item = { id: String(id), title: String(title), author: String(author), key, youtubeUrl: String(youtubeUrl) };
-  store[idx].eventSetlist.push(item);
-  res.status(201).json(store[idx]);
+  const eventSetlist = JSON.parse(row.event_setlist);
+  eventSetlist.push({ id: String(id), title: String(title), author: String(author), key, youtubeUrl: String(youtubeUrl) });
+
+  db.prepare("UPDATE events SET event_setlist = ? WHERE id = ?").run(JSON.stringify(eventSetlist), req.params.id);
+  const result = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  res.status(201).json(rowToEvent(result));
 });
 
 /**
@@ -130,11 +144,14 @@ router.post("/:id/setlist", (req, res) => {
  * Remove um item do Event Setlist
  */
 router.delete("/:id/setlist/:itemId", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
 
-  store[idx].eventSetlist = store[idx].eventSetlist.filter((s) => s.id !== req.params.itemId);
-  res.json(store[idx]);
+  const eventSetlist = JSON.parse(row.event_setlist).filter((s) => s.id !== req.params.itemId);
+  db.prepare("UPDATE events SET event_setlist = ? WHERE id = ?").run(JSON.stringify(eventSetlist), req.params.id);
+  const result = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  res.json(rowToEvent(result));
 });
 
 /**
@@ -143,17 +160,21 @@ router.delete("/:id/setlist/:itemId", (req, res) => {
  * Body: { id, userId, userName, papel }
  */
 router.post("/:id/scale", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
 
   const { id, userId, userName, papel } = req.body;
   if (!id || !userId || !userName || !papel) {
     return res.status(400).json({ error: "Campos obrigatórios: id, userId, userName, papel." });
   }
 
-  const entry = { id: String(id), userId: String(userId), userName: String(userName), papel: String(papel) };
-  store[idx].scale.push(entry);
-  res.status(201).json(store[idx]);
+  const scale = JSON.parse(row.scale);
+  scale.push({ id: String(id), userId: String(userId), userName: String(userName), papel: String(papel) });
+
+  db.prepare("UPDATE events SET scale = ? WHERE id = ?").run(JSON.stringify(scale), req.params.id);
+  const result = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  res.status(201).json(rowToEvent(result));
 });
 
 /**
@@ -161,11 +182,14 @@ router.post("/:id/scale", (req, res) => {
  * Remove um membro da escala do evento
  */
 router.delete("/:id/scale/:entryId", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
 
-  store[idx].scale = store[idx].scale.filter((s) => s.id !== req.params.entryId);
-  res.json(store[idx]);
+  const scale = JSON.parse(row.scale).filter((s) => s.id !== req.params.entryId);
+  db.prepare("UPDATE events SET scale = ? WHERE id = ?").run(JSON.stringify(scale), req.params.id);
+  const result = db.prepare("SELECT * FROM events WHERE id = ?").get(req.params.id);
+  res.json(rowToEvent(result));
 });
 
 /**
@@ -173,9 +197,10 @@ router.delete("/:id/scale/:entryId", (req, res) => {
  * Remove um evento
  */
 router.delete("/:id", (req, res) => {
-  const idx = store.findIndex((e) => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Evento não encontrado." });
-  store.splice(idx, 1);
+  const db = getDb();
+  const row = db.prepare("SELECT id FROM events WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Evento não encontrado." });
+  db.prepare("DELETE FROM events WHERE id = ?").run(req.params.id);
   res.status(204).end();
 });
 

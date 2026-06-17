@@ -1,17 +1,15 @@
 import { Router } from "express";
-import { users } from "../data/users.js";
+import { getDb, rowToUser } from "../db.js";
 
 const router = Router();
-
-// Estado em memória (inicializado a partir dos dados mock)
-let store = [...users];
 
 /**
  * GET /api/users
  * Retorna todos os usuários
  */
 router.get("/", (_req, res) => {
-  res.json(store);
+  const rows = getDb().prepare("SELECT * FROM users ORDER BY created_at ASC").all();
+  res.json(rows.map(rowToUser));
 });
 
 /**
@@ -19,9 +17,9 @@ router.get("/", (_req, res) => {
  * Retorna um usuário pelo id
  */
 router.get("/:id", (req, res) => {
-  const user = store.find((u) => u.id === req.params.id);
-  if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
-  res.json(user);
+  const row = getDb().prepare("SELECT * FROM users WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Usuário não encontrado." });
+  res.json(rowToUser(row));
 });
 
 /**
@@ -45,7 +43,10 @@ router.post("/", (req, res) => {
   if (!role || !validRoles.includes(role)) {
     return res.status(400).json({ error: "Privilégio inválido.", field: "role" });
   }
-  if (store.some((u) => u.email === String(email).trim())) {
+
+  const db = getDb();
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(String(email).trim());
+  if (existing) {
     return res.status(409).json({ error: "E-mail já cadastrado.", field: "email" });
   }
 
@@ -59,7 +60,14 @@ router.post("/", (req, res) => {
     createdAt: new Date().toISOString(),
   };
 
-  store.push(newUser);
+  db.prepare(`
+    INSERT INTO users (id, name, email, role, primary_scale_role, secondary_scale_roles, created_at)
+    VALUES (@id, @name, @email, @role, @primaryScaleRole, @secondaryScaleRoles, @createdAt)
+  `).run({
+    ...newUser,
+    secondaryScaleRoles: JSON.stringify(newUser.secondaryScaleRoles),
+  });
+
   res.status(201).json(newUser);
 });
 
@@ -69,8 +77,9 @@ router.post("/", (req, res) => {
  * Body: { role }
  */
 router.put("/:id", (req, res) => {
-  const idx = store.findIndex((u) => u.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Usuário não encontrado." });
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM users WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Usuário não encontrado." });
 
   const { role } = req.body;
   const validRoles = ["admin", "ministro", "team-member"];
@@ -78,8 +87,9 @@ router.put("/:id", (req, res) => {
     return res.status(400).json({ error: "Privilégio inválido.", field: "role" });
   }
 
-  store[idx] = { ...store[idx], role };
-  res.json(store[idx]);
+  db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, req.params.id);
+  const updated = db.prepare("SELECT * FROM users WHERE id = ?").get(req.params.id);
+  res.json(rowToUser(updated));
 });
 
 /**
@@ -87,9 +97,10 @@ router.put("/:id", (req, res) => {
  * Remove um usuário
  */
 router.delete("/:id", (req, res) => {
-  const idx = store.findIndex((u) => u.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Usuário não encontrado." });
-  store.splice(idx, 1);
+  const db = getDb();
+  const row = db.prepare("SELECT id FROM users WHERE id = ?").get(req.params.id);
+  if (!row) return res.status(404).json({ error: "Usuário não encontrado." });
+  db.prepare("DELETE FROM users WHERE id = ?").run(req.params.id);
   res.status(204).end();
 });
 
