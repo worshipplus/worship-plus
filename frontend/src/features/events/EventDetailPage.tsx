@@ -258,6 +258,7 @@ export function EventDetailPage({
   }
 
   function handleEditPapel(entryId: string, papel: string): string | null {
+    if (!event) return null;
     const member = event.scale.find((entry) => entry.id === entryId);
     if (!member) return "Integrante não encontrado na Escala.";
 
