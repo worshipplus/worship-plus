@@ -101,6 +101,8 @@ export function UsersPage() {
       name: form.name.trim(),
       email: form.email.trim(),
       role: form.role,
+      primaryScaleRole: "Outro",
+      secondaryScaleRoles: [],
       createdAt: new Date().toISOString(),
     };
     setUsers((prev) => [...prev, newUser]);
