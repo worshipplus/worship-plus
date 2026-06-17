@@ -36,7 +36,13 @@ router.post("/", (req, res) => {
   if (!email || !String(email).trim()) {
     return res.status(400).json({ error: "E-mail é obrigatório.", field: "email" });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+  const trimmedEmail = String(email).trim();
+  const atIdx = trimmedEmail.indexOf("@");
+  if (
+    atIdx <= 0 ||
+    atIdx !== trimmedEmail.lastIndexOf("@") ||
+    !trimmedEmail.slice(atIdx + 1).includes(".")
+  ) {
     return res.status(400).json({ error: "E-mail inválido.", field: "email" });
   }
   const validRoles = ["admin", "ministro", "team-member"];
@@ -45,7 +51,7 @@ router.post("/", (req, res) => {
   }
 
   const db = getDb();
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(String(email).trim());
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(trimmedEmail);
   if (existing) {
     return res.status(409).json({ error: "E-mail já cadastrado.", field: "email" });
   }
@@ -53,7 +59,7 @@ router.post("/", (req, res) => {
   const newUser = {
     id: `u${Date.now()}`,
     name: String(name).trim(),
-    email: String(email).trim(),
+    email: trimmedEmail,
     role,
     primaryScaleRole: primaryScaleRole ? String(primaryScaleRole).trim() : "Outro",
     secondaryScaleRoles: Array.isArray(secondaryScaleRoles) ? secondaryScaleRoles : [],
