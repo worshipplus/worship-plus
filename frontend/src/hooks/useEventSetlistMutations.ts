@@ -9,7 +9,7 @@ export type AddToEventSetlistResult =
   | { ok: false; message: string };
 
 export type RemoveFromEventSetlistResult =
-  | { ok: true }
+  | { ok: true; updatedSetlist: EventSetlistItem[] }
   | { ok: false; message: string };
 
 export function useEventSetlistMutations(
@@ -20,7 +20,10 @@ export function useEventSetlistMutations(
     event: Event | undefined,
     song: SetlistItem,
   ) => AddToEventSetlistResult;
-  removeSong: (event: Event | undefined) => RemoveFromEventSetlistResult;
+  removeSong: (
+    event: Event | undefined,
+    songId: string,
+  ) => RemoveFromEventSetlistResult;
 } {
   function addSong(
     event: Event | undefined,
@@ -41,10 +44,18 @@ export function useEventSetlistMutations(
     }
   }
 
-  function removeSong(event: Event | undefined): RemoveFromEventSetlistResult {
+  function removeSong(
+    event: Event | undefined,
+    songId: string,
+  ): RemoveFromEventSetlistResult {
     try {
-      new RemoveFromEventSetlistUseCase().execute(role, callerName, event);
-      return { ok: true };
+      const updatedSetlist = new RemoveFromEventSetlistUseCase().execute(
+        role,
+        callerName,
+        event,
+        songId,
+      );
+      return { ok: true, updatedSetlist };
     } catch (err) {
       if (err instanceof DomainError)
         return { ok: false, message: err.message };

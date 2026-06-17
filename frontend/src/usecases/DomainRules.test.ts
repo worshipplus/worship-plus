@@ -266,6 +266,7 @@ describe("DOMAIN-004: Autorização para editar Event Setlist", () => {
           "team-member",
           "Fernanda Oliveira",
           openEvent,
+          "s1",
         ),
       DomainErrorCode.UNAUTHORIZED_EDIT_EVENT_SETLIST,
     );
@@ -325,7 +326,12 @@ describe("DOMAIN-005: Autorização para editar Escala", () => {
   it("team-member não pode remover da Escala", () => {
     expectDomainError(
       () =>
-        new RemoveFromScaleUseCase().execute("team-member", "u3", openEvent),
+        new RemoveFromScaleUseCase().execute(
+          "team-member",
+          "u3",
+          openEvent,
+          "sc1",
+        ),
       DomainErrorCode.UNAUTHORIZED_EDIT_SCALE,
     );
   });
@@ -607,7 +613,8 @@ describe("DOMAIN-012: Event não encontrado", () => {
 
   it("RemoveFromScale rejeita event undefined", () => {
     expectDomainError(
-      () => new RemoveFromScaleUseCase().execute("admin", "u1", undefined),
+      () =>
+        new RemoveFromScaleUseCase().execute("admin", "u1", undefined, "sc1"),
       DomainErrorCode.EVENT_NOT_FOUND,
     );
   });
@@ -673,6 +680,7 @@ describe("DOMAIN-014: Event Locked não aceita mutações", () => {
           "admin",
           "Ana Lima",
           lockedEvent,
+          "s1",
         ),
       DomainErrorCode.EVENT_LOCKED,
     );
@@ -696,7 +704,8 @@ describe("DOMAIN-014: Event Locked não aceita mutações", () => {
 
   it("bloqueio ao remover da Escala de Event Locked", () => {
     expectDomainError(
-      () => new RemoveFromScaleUseCase().execute("admin", "u1", lockedEvent),
+      () =>
+        new RemoveFromScaleUseCase().execute("admin", "u1", lockedEvent, "sc1"),
       DomainErrorCode.EVENT_LOCKED,
     );
   });

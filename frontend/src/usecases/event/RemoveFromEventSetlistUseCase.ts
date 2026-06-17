@@ -1,13 +1,14 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
-import type { UserRole, Event } from "../../types/event";
+import type { UserRole, Event, EventSetlistItem } from "../../types/event";
 
 export class RemoveFromEventSetlistUseCase {
   execute(
     callerRole: UserRole,
     callerName: string,
     event: Event | undefined,
-  ): void {
+    songId: string,
+  ): EventSetlistItem[] {
     if (!event) {
       throw new DomainError(
         DomainErrorCode.EVENT_NOT_FOUND,
@@ -26,5 +27,6 @@ export class RemoveFromEventSetlistUseCase {
         "Sem privilégio para editar o Event Setlist.",
       );
     }
+    return event.eventSetlist.filter((item) => item.id !== songId);
   }
 }

@@ -9,7 +9,7 @@ export type AddToScaleResult =
   | { ok: false; message: string };
 
 export type RemoveFromScaleResult =
-  | { ok: true }
+  | { ok: true; updatedScale: ScaleEntry[] }
   | { ok: false; message: string };
 
 export function useScaleMutations(
@@ -23,7 +23,10 @@ export function useScaleMutations(
     userName: string,
     papel: string,
   ) => AddToScaleResult;
-  removeFromScale: (event: Event | undefined) => RemoveFromScaleResult;
+  removeFromScale: (
+    event: Event | undefined,
+    entryId: string,
+  ) => RemoveFromScaleResult;
 } {
   function addToScale(
     event: Event | undefined,
@@ -49,10 +52,18 @@ export function useScaleMutations(
     }
   }
 
-  function removeFromScale(event: Event | undefined): RemoveFromScaleResult {
+  function removeFromScale(
+    event: Event | undefined,
+    entryId: string,
+  ): RemoveFromScaleResult {
     try {
-      new RemoveFromScaleUseCase().execute(role, callerId, event);
-      return { ok: true };
+      const updatedScale = new RemoveFromScaleUseCase().execute(
+        role,
+        callerId,
+        event,
+        entryId,
+      );
+      return { ok: true, updatedScale };
     } catch (err) {
       if (err instanceof DomainError)
         return { ok: false, message: err.message };

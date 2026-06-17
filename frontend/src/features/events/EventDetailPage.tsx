@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,20 +12,14 @@ import {
   GripVertical,
   X,
 } from "lucide-react";
-import type {
-  Event,
-  EventStatus,
-  UserRole,
-  EventSetlistItem,
-  ScaleEntry,
-} from "../../types/event";
+import type { Event, EventStatus, UserRole } from "../../types/event";
 import { useGetEventsByOwner } from "../../hooks/useGetEventsByOwner";
 import { useSearchSetlist } from "../../hooks/useSearchSetlist";
 import { useGetAllUsers } from "../../hooks/useGetAllUsers";
 import { ScaleSection } from "./ScaleSection";
 import { useEventSetlistMutations } from "../../hooks/useEventSetlistMutations";
 import { useScaleMutations } from "../../hooks/useScaleMutations";
-import { canViewEvent } from "./permissions";
+import { canViewEvent, canEditEventSetlist, canEditScale } from "./permissions";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   draft: "Rascunho",
@@ -55,18 +49,6 @@ function formatDateTime(isoString: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function isSongInEventSetlist(
-  eventSetlist: EventSetlistItem[],
-  song: EventSetlistItem,
-): boolean {
-  return eventSetlist.some(
-    (item) =>
-      item.title === song.title &&
-      item.author === song.author &&
-      item.youtubeUrl === song.youtubeUrl,
-  );
 }
 
 interface EventDetailPageProps {
@@ -99,18 +81,20 @@ export function EventDetailPage({
   );
   const [search, setSearch] = useState("");
   const { data: filteredSetlist } = useSearchSetlist(search);
-  const [event, setEvent] = useState<Event | undefined>(undefined);
+
+  const baseEvent = useMemo(
+    () => allEvents.find((item) => item.id === id),
+    [allEvents, id],
+  );
+  const [event, setEvent] = useState<Event | undefined>(baseEvent);
   const [showSongModal, setShowSongModal] = useState(false);
   const [songModalError, setSongModalError] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [scale, setScale] = useState<ScaleEntry[]>([]);
 
   useEffect(() => {
-    const found = allEvents.find((item) => item.id === id);
-    setEvent(found);
-    setScale(found?.scale ?? []);
-  }, [allEvents, id]);
+    setEvent(baseEvent);
+  }, [baseEvent]);
 
   if (!eventsLoading && eventsError) {
     return (
@@ -196,16 +180,20 @@ export function EventDetailPage({
     );
   }
 
-  const canEditEventSetlist =
-    event.status !== "locked" &&
-    (currentUserRole === "admin" || event.owner === currentUserName);
+  const canEditSetlist = canEditEventSetlist(
+    event,
+    currentUserRole,
+    currentUserName,
+  );
 
-  const canEditScale =
-    event.status !== "locked" &&
-    (currentUserRole === "admin" || currentUserId === event.owner_id);
+  const canEditScaleSection = canEditScale(
+    event,
+    currentUserRole,
+    currentUserId,
+  );
 
   const usersNotInScale = allUsers.filter(
-    (user) => !scale.some((entry) => entry.userId === user.id),
+    (user) => !event.scale.some((entry) => entry.userId === user.id),
   );
 
   function handleAddSong(songId: string) {
@@ -226,17 +214,10 @@ export function EventDetailPage({
   }
 
   function handleRemoveSong(songId: string) {
-    const result = removeSong(event);
+    const result = removeSong(event, songId);
     if (!result.ok) return;
     setEvent((prev) =>
-      prev
-        ? {
-            ...prev,
-            eventSetlist: prev.eventSetlist.filter(
-              (item) => item.id !== songId,
-            ),
-          }
-        : prev,
+      prev ? { ...prev, eventSetlist: result.updatedSetlist } : prev,
     );
   }
 
@@ -264,19 +245,28 @@ export function EventDetailPage({
   ): string | null {
     const result = addToScale(event, userId, userName, papel);
     if (!result.ok) return result.message;
-    setScale((prev) => [...prev, result.entry]);
+    setEvent((prev) =>
+      prev ? { ...prev, scale: [...prev.scale, result.entry] } : prev,
+    );
     return null;
   }
 
   function handleRemoveFromScale(entryId: string) {
-    const result = removeFromScale(event);
+    const result = removeFromScale(event, entryId);
     if (!result.ok) return;
-    setScale((prev) => prev.filter((entry) => entry.id !== entryId));
+    setEvent((prev) => (prev ? { ...prev, scale: result.updatedScale } : prev));
   }
 
   function handleEditPapel(entryId: string, papel: string) {
-    setScale((prev) =>
-      prev.map((entry) => (entry.id === entryId ? { ...entry, papel } : entry)),
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            scale: prev.scale.map((entry) =>
+              entry.id === entryId ? { ...entry, papel } : entry,
+            ),
+          }
+        : prev,
     );
   }
 
@@ -371,7 +361,7 @@ export function EventDetailPage({
               >
                 Event Setlist
               </h2>
-              {canEditEventSetlist && (
+              {canEditSetlist && (
                 <button
                   type="button"
                   onClick={() => {
@@ -412,7 +402,7 @@ export function EventDetailPage({
                 {event.eventSetlist.map((item, index) => (
                   <li
                     key={item.id}
-                    draggable={canEditEventSetlist}
+                    draggable={canEditSetlist}
                     onDragStart={() => setDragIndex(index)}
                     onDragOver={(dragEvent) => {
                       dragEvent.preventDefault();
@@ -433,7 +423,7 @@ export function EventDetailPage({
                           : undefined,
                     }}
                   >
-                    {canEditEventSetlist && (
+                    {canEditSetlist && (
                       <GripVertical
                         size={14}
                         className="shrink-0 cursor-grab"
@@ -490,7 +480,7 @@ export function EventDetailPage({
                       >
                         <ExternalLink size={15} />
                       </a>
-                      {canEditEventSetlist && (
+                      {canEditSetlist && (
                         <button
                           type="button"
                           aria-label={`Remover ${item.title}`}
@@ -509,8 +499,8 @@ export function EventDetailPage({
         </section>
 
         <ScaleSection
-          scale={scale}
-          canEdit={canEditScale}
+          scale={event.scale}
+          canEdit={canEditScaleSection}
           availableUsers={usersNotInScale}
           onAdd={handleAddToScale}
           onRemove={handleRemoveFromScale}
@@ -565,9 +555,11 @@ export function EventDetailPage({
             />
             <ul className="grid gap-2 overflow-y-auto" role="list">
               {filteredSetlist.map((song) => {
-                const alreadyAdded = isSongInEventSetlist(
-                  event.eventSetlist,
-                  song,
+                const alreadyAdded = event.eventSetlist.some(
+                  (item) =>
+                    item.title === song.title &&
+                    item.author === song.author &&
+                    item.youtubeUrl === song.youtubeUrl,
                 );
                 return (
                   <li
