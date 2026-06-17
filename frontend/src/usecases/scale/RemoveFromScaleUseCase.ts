@@ -1,13 +1,14 @@
 import { DomainError } from "../../domain/errors/DomainError";
 import { DomainErrorCode } from "../../domain/errors/DomainErrorCode";
-import type { UserRole, Event } from "../../types/event";
+import type { UserRole, Event, ScaleEntry } from "../../types/event";
 
 export class RemoveFromScaleUseCase {
   execute(
     callerRole: UserRole,
     callerId: string,
     event: Event | undefined,
-  ): void {
+    entryId: string,
+  ): ScaleEntry[] {
     if (!event) {
       throw new DomainError(
         DomainErrorCode.EVENT_NOT_FOUND,
@@ -26,5 +27,6 @@ export class RemoveFromScaleUseCase {
         "Sem privilégio para editar a Escala.",
       );
     }
+    return event.scale.filter((entry) => entry.id !== entryId);
   }
 }

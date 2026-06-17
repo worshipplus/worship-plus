@@ -10,7 +10,9 @@ export type AddToScaleResult =
   | { ok: true; entry: ScaleEntry; domainEvent: "MemberRoleSetInEvent" }
   | ScaleMutationError;
 
-export type RemoveFromScaleResult = { ok: true } | ScaleMutationError;
+export type RemoveFromScaleResult =
+  | { ok: true; updatedScale: ScaleEntry[] }
+  | ScaleMutationError;
 
 export type UpdateScaleRoleResult =
   | { ok: true; entry: ScaleEntry; domainEvent: "MemberRoleUpdatedInEvent" }
@@ -73,7 +75,10 @@ export function useScaleMutations(
     userName: string,
     papel?: string,
   ) => AddToScaleResult;
-  removeFromScale: (event: Event | undefined) => RemoveFromScaleResult;
+  removeFromScale: (
+    event: Event | undefined,
+    entryId: string,
+  ) => RemoveFromScaleResult;
   updateScaleRole: (
     event: Event | undefined,
     memberId: string,
@@ -103,10 +108,18 @@ export function useScaleMutations(
     }
   }
 
-  function removeFromScale(event: Event | undefined): RemoveFromScaleResult {
+  function removeFromScale(
+    event: Event | undefined,
+    entryId: string,
+  ): RemoveFromScaleResult {
     try {
-      new RemoveFromScaleUseCase().execute(role, callerId, event);
-      return { ok: true };
+      const updatedScale = new RemoveFromScaleUseCase().execute(
+        role,
+        callerId,
+        event,
+        entryId,
+      );
+      return { ok: true, updatedScale };
     } catch (err) {
       if (err instanceof DomainError) return mapDomainError(err);
       throw err;
